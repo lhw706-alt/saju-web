@@ -159,7 +159,8 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .ask-chip:hover { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); } /* coolNeutral 95 — 본문보다 한 단계 밝게 */
 /* 바뀌는 단어: 흐려지며 사라지고, 흐린 상태에서 또렷해지며 나타남 */
 .rotator { display: inline-grid; justify-items: center; }
-.rotator-word {
+.rotator-word { font-weight: 600; /* 바뀌는 단어만 한 단계 굵게 (나눔스퀘어라운드 보통 굵기를 브라우저가 굵게) */
+ 
   grid-area: 1 / 1; white-space: nowrap; color: var(--gold-2); opacity: 0; filter: blur(10px); transform: scale(0.98);
   transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease;
 }
