@@ -1,9 +1,8 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
-import BirthForm from '../components/BirthForm.jsx';
 import ContentCards from '../components/ContentCards.jsx';
-import { saveInput, loadInput, saveTopic, clearTopic } from '../lib/storage.js';
+import { loadInput, saveTopic } from '../lib/storage.js';
 import { TOPICS, NEXT_YEAR } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -39,8 +38,6 @@ const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career'].map((id) => 
 export default function Home() {
   const navigate = useNavigate();
   const { hash } = useLocation();
-  const [picked, setPicked] = useState(null); // 카드에서 고른 풀이 (입력 전)
-  const formRef = useRef(null);
 
   // 상단 메뉴(#사주 등)로 들어오면 해당 카드 묶음으로 이동
   useEffect(() => {
@@ -49,20 +46,11 @@ export default function Home() {
     if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }, [hash]);
 
-  const onSubmit = (input) => {
-    trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
-    saveInput(input);
-    if (!picked) clearTopic();
-    navigate('/result');
-  };
-
-  // 쓸 수 있는 카드: 입력해 둔 생년월일이 있으면 바로 결과 화면에서 그 풀이 시작, 없으면 입력칸으로
+  // 쓸 수 있는 카드: 입력해 둔 생년월일이 있으면 바로 결과 화면에서 그 풀이 시작, 없으면 입력 화면(/start)으로
   const openContent = (c) => {
     trackEvent('content_click', { content: c.id });
     if (c.topic) saveTopic(c.topic);
-    if (loadInput()) return navigate('/result');
-    setPicked(c);
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    navigate(loadInput() ? '/result' : '/start');
   };
 
   return (
@@ -94,15 +82,6 @@ export default function Home() {
           ))}
         </ul>
       </section>
-
-      <div ref={formRef} id="start" className="form-anchor">
-        {picked && (
-          <p className="picked">
-            <strong>{picked.title}</strong>을(를) 보려면 생년월일시를 넣어 주세요.
-          </p>
-        )}
-        <BirthForm initial={loadInput() || undefined} onSubmit={onSubmit} />
-      </div>
 
       <ContentCards onOpen={openContent} />
 

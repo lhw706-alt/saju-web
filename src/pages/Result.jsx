@@ -25,7 +25,7 @@ export default function Result() {
     }
   }, [input && JSON.stringify(input)]);
 
-  if (!chart) return <Navigate to="/" replace />;
+  if (!chart) return <Navigate to="/start" replace />;
 
   const inp = chart.input;
   const dm = chart.dayMaster;
@@ -54,7 +54,7 @@ export default function Result() {
           )}
           <div><dt>성별·띠</dt><dd>{inp.gender === 'male' ? '남성' : '여성'} · {chart.animal}띠</dd></div>
         </dl>
-        <Link to="/" className="btn-ghost">다시 입력</Link>
+        <Link to="/start" className="btn-ghost">다시 입력</Link>
       </section>
 
       <section className="block">

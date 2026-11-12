@@ -291,7 +291,7 @@ export default function FortuneFab() {
     trackEvent('fortune_cta');
     saveTopic('overall');
     close();
-    navigate(loadInput() ? '/result' : '/#start');
+    navigate(loadInput() ? '/result' : '/start');
   };
 
   const f = state && FORTUNES[state.idx];

@@ -161,10 +161,12 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 @media (prefers-reduced-motion: reduce) { .rotator-word { transition: none; } }
 
 /* 콘텐츠 카드 */
-.form-anchor, .content-group { scroll-margin-top: 16px; }
-.picked { margin: 0 0 10px; padding: 12px 16px; border-radius: var(--r-md); background: var(--primary-soft); color: var(--text); font-size: 14px; letter-spacing: var(--ls-label); }
-.picked strong { color: var(--primary); }
-.contents { margin-top: 56px; display: grid; gap: 40px; }
+.content-group { scroll-margin-top: 16px; }
+/* 입력 화면 (/start) */
+.start { padding: 28px 0 0; }
+.start-title { margin: 0; font-family: var(--title); font-size: clamp(24px, 6vw, 30px); font-weight: 400; letter-spacing: -0.02em; }
+.start-lead { margin: 8px 0 20px; color: var(--text-2); }
+.contents { margin-top: 48px; display: grid; gap: 40px; }
 .content-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 640px) { .content-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .content-grid > li { display: flex; }
