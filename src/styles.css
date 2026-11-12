@@ -702,9 +702,9 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-text { display: grid; gap: 2px; min-width: 0; }
 .saved-text b { font-size: 16px; font-weight: 500; }
 .saved-text span { font-size: 14px; color: var(--muted); word-break: keep-all; }
-/* 약한 계층 버튼: 테두리만 있는 작은 알약 */
-.saved-go { flex: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); font-size: 14px; font-weight: 500; transition: border-color 0.15s ease, color 0.15s ease; }
-.saved-load:hover .saved-go { border-color: var(--primary-line); color: var(--primary); }
+/* 불러오기: 테두리 없는 금색 글자 링크 (줄 전체를 눌러도 불러옴) */
+.saved-go { flex: none; color: var(--primary); font-size: 14px; font-weight: 500; }
+.saved-load:hover .saved-go { text-decoration: underline; text-underline-offset: 3px; }
 .saved-del { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-right: 6px; border: 0; border-radius: 10px; background: none; color: var(--faint); cursor: pointer; }
 .saved-del:hover { color: var(--text-2); background: var(--track); }
 .saved-more { justify-self: start; padding: 4px 2px; border: 0; background: none; color: var(--text-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
