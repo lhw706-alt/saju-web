@@ -70,7 +70,7 @@ const LOADER_STEPS = [
   { at: 1800, face: { eyes: 'star', mouth: 'open', brows: 'raise' }, line: '보인다… 나왔다!' },
 ];
 const LOADER_ART = LOADER_STEPS.map((s) => dosaFaceSvg(s.face, 'life'));
-function DosaLoader({ onDone }) {
+export function DosaLoader({ onDone }) {
   const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [step, setStep] = useState(0);
   const [out, setOut] = useState(false);
@@ -407,4 +407,11 @@ export default function LifeReport({ chart, input }) {
 
     </>
   );
+}
+
+// 주제별 결과 화면용: 입력을 막 마치고 들어왔을 때만 천둥도사 로딩을 한 번 보여 줌 (새로고침이면 안 나옴)
+export function FreshLoader() {
+  const [show, setShow] = useState(peekFresh);
+  useEffect(() => clearFresh(), []);
+  return show ? <DosaLoader onDone={() => setShow(false)} /> : null;
 }

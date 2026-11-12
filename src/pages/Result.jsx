@@ -8,7 +8,7 @@ import DaeunList from '../components/DaeunList.jsx';
 import Reading from '../components/Reading.jsx';
 import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
 import { GOD_SHORT } from '../lib/glossary.js';
-import LifeReport from '../components/LifeReport.jsx';
+import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -54,6 +54,7 @@ export default function Result() {
 
   return (
     <GlossaryProvider>
+      <FreshLoader />
       <section className="result-head">
         <p className="eyebrow">나의 사주</p>
         {/* 제목 줄: 왼쪽 일간 제목, 오른쪽 끝 '사주 다시 보기' */}
