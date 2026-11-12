@@ -1,4 +1,5 @@
-// 입력값은 이 브라우저 탭(sessionStorage)에만 잠시 둔다. 탭을 닫으면 사라지고 서버에는 저장하지 않는다.
+// 입력값은 이 브라우저 탭(sessionStorage)에만 잠시 둔다. 사주 화면(/start·/result)을 벗어나면 지우고(Layout), 탭을 닫아도 사라진다. 서버에는 저장하지 않는다.
+// TODO(추후): 회원 기능이 생기면 "내 사주 프리셋"을 저장해 입력 없이 바로 볼 수 있게 (2026-11-13 사용자 계획)
 const KEY = 'saju:input';
 
 export function saveInput(input) {
@@ -6,6 +7,14 @@ export function saveInput(input) {
     sessionStorage.setItem(KEY, JSON.stringify(input));
   } catch {
     /* 저장 불가(사생활 보호 모드 등) — 무시 */
+  }
+}
+
+export function clearInput() {
+  try {
+    sessionStorage.removeItem(KEY);
+  } catch {
+    /* 무시 */
   }
 }
 

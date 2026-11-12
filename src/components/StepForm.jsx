@@ -154,7 +154,7 @@ export default function StepForm({ initial, onSubmit }) {
           </button>
         )}
       </div>
-      <p className="hint center">이름·연락처는 받지 않아요. 입력한 생년월일시는 저장하지 않습니다.</p>
+      <p className="hint center">이름·연락처는 받지 않아요. 입력한 생년월일시는 저장하지 않아요.</p>
     </form>
   );
 }

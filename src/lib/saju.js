@@ -134,10 +134,10 @@ export function normalizeInput(raw) {
   if (month < 1 || month > 12) throw new SajuInputError('월을 다시 확인해 주세요.');
   if (day < 1 || day > (calendar === 'lunar' ? 30 : 31)) throw new SajuInputError('일을 다시 확인해 주세요.');
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new SajuInputError('태어난 시각을 다시 확인해 주세요.');
-  if (!gender) throw new SajuInputError('성별을 골라 주세요. 대운의 방향을 정하는 데 쓰입니다.');
+  if (!gender) throw new SajuInputError('성별을 골라 주세요. 대운의 방향을 정하는 데 써요.');
   if (calendar === 'solar') {
     const t = new Date(Date.UTC(year, month - 1, day));
-    if (t.getUTCMonth() !== month - 1) throw new SajuInputError('없는 날짜입니다. 날짜를 다시 확인해 주세요.');
+    if (t.getUTCMonth() !== month - 1) throw new SajuInputError('없는 날짜예요. 날짜를 다시 확인해 주세요.');
   }
   return { calendar, year, month, day, leap, timeKnown, hour, minute, gender, city };
 }
@@ -155,7 +155,7 @@ function toSolarDate(inp) {
       throw new Error('mismatch');
     }
   } catch {
-    throw new SajuInputError(inp.leap ? '그해에는 그 윤달이 없습니다. 음력 날짜를 다시 확인해 주세요.' : '없는 음력 날짜입니다. 다시 확인해 주세요.');
+    throw new SajuInputError(inp.leap ? '그해에는 그 윤달이 없어요. 음력 날짜를 다시 확인해 주세요.' : '없는 음력 날짜예요. 다시 확인해 주세요.');
   }
   return [s.getYear(), s.getMonth(), s.getDay()];
 }

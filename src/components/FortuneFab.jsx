@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
-import { loadInput, saveTopic } from '../lib/storage.js';
+import { saveTopic } from '../lib/storage.js';
 
 // 오른쪽 아래 '오늘의 운세' 플로팅 부적 (다모아픽 FortuneFab 을 사주천문 다크·금박 스타일로 옮김).
 // - 금박 부적을 긁으면 오늘의 운세가 드러남. 하루 한 번: 이 브라우저(localStorage)에 날짜·운세 번호만 저장, 서버로 안 보냄
@@ -286,12 +286,12 @@ export default function FortuneFab() {
     });
   };
 
-  // 내 사주로 자세히: 입력해 둔 생년월일이 있으면 결과 화면에서 바로 풀이, 없으면 메인 입력칸으로
+  // 내 사주로 자세히: 평생 사주 입력 화면으로 (다 입력한 뒤 리포트)
   const goReading = () => {
     trackEvent('fortune_cta');
     saveTopic('overall');
     close();
-    navigate(loadInput() ? '/result?v=life' : '/start');
+    navigate('/start');
   };
 
   const f = state && FORTUNES[state.idx];

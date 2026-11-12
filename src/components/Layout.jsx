@@ -5,6 +5,7 @@ import Logo from './Logo.jsx';
 import { GROUPS } from '../lib/contents.js';
 import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
+import { clearInput } from '../lib/storage.js';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -21,6 +22,8 @@ export default function Layout() {
   const closeContact = useCallback(() => setContact(false), []);
   useEffect(() => {
     window.scrollTo(0, 0);
+    // 사주 화면(입력·결과)을 벗어나면 입력한 생년월일시를 지움 → 다음엔 처음부터 입력
+    if (!pathname.startsWith('/start') && !pathname.startsWith('/result')) clearInput();
     // 검색용: 주소마다 대표 주소(canonical) 지정, 개인 결과 화면은 색인 제외
     setHeadTag('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' }), (el) => {
       el.href = SITE.url + pathname;

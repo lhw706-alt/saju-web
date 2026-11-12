@@ -339,7 +339,7 @@ export default function LifeReport({ chart, input }) {
           </li>
           <li>
             <span>부족한 기운</span>
-            <b>{missing.length ? missing.map((e) => `${PLAIN[e]}(${ELEMENT_HANJA[e]})`).join('·') : '고루 있음'}</b>
+            <b>{missing.length ? missing.map((e) => `${PLAIN[e]}(${ELEMENT_HANJA[e]})`).join('·') : '고루 있어요'}</b>
           </li>
           <li>
             <span>음양</span>
@@ -396,7 +396,7 @@ export default function LifeReport({ chart, input }) {
         </section>
       ))}
 
-      <p className="ai-note report-note">천둥도사의 풀이는 계산된 원국을 바탕으로 생성형 AI가 쓴 참고용 해석입니다.</p>
+      <p className="ai-note report-note">천둥도사의 풀이는 계산된 원국을 바탕으로 생성형 AI가 쓴 참고용 해석이에요.</p>
     </>
   );
 }

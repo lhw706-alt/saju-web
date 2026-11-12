@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
 import ContentCards from '../components/ContentCards.jsx';
-import { loadInput, saveTopic } from '../lib/storage.js';
+import { saveTopic } from '../lib/storage.js';
 import { TOPICS, NEXT_YEAR } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -49,12 +49,11 @@ export default function Home() {
     if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }, [hash]);
 
-  // 쓸 수 있는 카드: 입력해 둔 생년월일이 있으면 바로 결과 화면에서 그 풀이 시작, 없으면 입력 화면(/start)으로
+  // 쓸 수 있는 카드: 항상 입력 화면(/start)부터 → 다 입력한 뒤에 결과·로딩
   const openContent = (c) => {
     trackEvent('content_click', { content: c.id });
     if (c.topic) saveTopic(c.topic);
-    const dest = c.topic === 'overall' ? '/result?v=life' : '/result'; // 평생 사주는 리포트 화면
-    navigate(loadInput() ? dest : '/start');
+    navigate('/start');
   };
 
   return (

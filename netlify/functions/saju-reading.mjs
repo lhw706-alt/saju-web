@@ -30,14 +30,14 @@ const SYSTEM = `당신은 한국어로 사주명리를 풀어 주는 해설가�
 const rateLimited = createRateLimiter(12);
 
 export default async (req, context) => {
-  if (req.method !== 'POST') return json({ error: '잘못된 요청입니다.' }, 405);
-  if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처입니다.' }, 403);
+  if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+  if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처예요.' }, 403);
 
   let body;
   try {
     body = await req.json();
   } catch {
-    return json({ error: '잘못된 요청입니다.' }, 400);
+    return json({ error: '잘못된 요청이에요.' }, 400);
   }
   const topic = topicById(body?.topic);
   if (!topic) return json({ error: '풀이 주제를 골라 주세요.' }, 400);
@@ -48,11 +48,11 @@ export default async (req, context) => {
   } catch (e) {
     if (e instanceof SajuInputError) return json({ error: e.message }, 400);
     console.error('saju-reading: compute failed');
-    return json({ error: '사주를 계산하지 못했습니다.' }, 400);
+    return json({ error: '사주를 계산하지 못했어요.' }, 400);
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았습니다.', reason: 'disabled' }, 503);
+  if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
 
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
