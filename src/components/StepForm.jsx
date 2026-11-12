@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
-import { loadPreset, savePreset, clearPreset } from '../lib/storage.js';
+import { loadPresets, savePreset, removePreset } from '../lib/storage.js';
 
 // 불러오기 칸에 보여 줄 한 줄 요약: 1990.5.15 (양력) 14:30 · 남성 · 서울
 function presetText(p) {
   const city = CITIES.find((c) => c.id === p.city)?.name || '';
   const time = p.timeKnown ? `${String(p.hour).padStart(2, '0')}:${String(p.minute || 0).padStart(2, '0')}` : '시각 모름';
-  return `${p.year}.${p.month}.${p.day} (${p.calendar === 'lunar' ? `음력${p.leap ? '·윤달' : ''}` : '양력'}) ${time} · ${p.gender === 'male' ? '남성' : '여성'} · ${city}`;
+  return `${p.year}.${p.month}.${p.day} ${p.calendar === 'lunar' ? `음력${p.leap ? '(윤달)' : ''}` : '양력'} · ${time} · ${p.gender === 'male' ? '남성' : '여성'} · ${city}`;
 }
 
 const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '', gender: '', city: 'seoul' };
@@ -62,20 +62,21 @@ export default function StepForm({ initial, onSubmit }) {
     setF((p) => ({ ...p, timeKnown: false, hour: '' }));
     setStep(3);
   };
-  // 이 브라우저에 기억해 둔 지난 입력 (불러오기 / 지우기)
-  const [preset, setPreset] = useState(loadPreset);
+  // 이 브라우저에 기억해 둔 지난 입력 (여러 명이면 드롭다운으로 골라 불러오기 / 지우기)
+  const [presets, setPresets] = useState(loadPresets);
+  const [sel, setSel] = useState(0);
+  const preset = presets[Math.min(sel, presets.length - 1)];
   const [remember, setRemember] = useState(true);
   const finish = (data) => {
     if (remember) savePreset(data);
-    else clearPreset();
     onSubmit(data);
   };
   const applyPreset = () => {
     if (check(preset)) onSubmit(preset); // 불러오면 바로 결과로
   };
-  const removePreset = () => {
-    clearPreset();
-    setPreset(null);
+  const deletePreset = () => {
+    setPresets(removePreset(preset));
+    setSel(0);
   };
 
   const submit = (e) => {
@@ -101,13 +102,22 @@ export default function StepForm({ initial, onSubmit }) {
         <h2 className="step-q">{QUESTIONS[step]}</h2>
 
         {step === 0 && preset && (
-          <div className="preset">
+          <div className={`preset${presets.length > 1 ? ' is-many' : ''}`}>
             <div className="preset-info">
-              <span className="preset-label">지난번에 입력한 정보</span>
-              <b>{presetText(preset)}</b>
+              <span className="preset-label">{presets.length > 1 ? `저장된 정보 ${presets.length}개` : '지난번에 입력한 정보'}</span>
+              {presets.length > 1 ? (
+                <Select
+                  ariaLabel="저장된 정보"
+                  value={String(Math.min(sel, presets.length - 1))}
+                  onChange={(v) => setSel(Number(v))}
+                  options={presets.map((x, i) => ({ value: String(i), label: presetText(x) }))}
+                />
+              ) : (
+                <b>{presetText(preset)}</b>
+              )}
             </div>
             <div className="preset-actions">
-              <button type="button" className="preset-del" onClick={removePreset}>
+              <button type="button" className="preset-del" onClick={deletePreset}>
                 지우기
               </button>
               <button type="button" className="preset-load" onClick={applyPreset}>

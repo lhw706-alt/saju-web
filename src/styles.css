@@ -688,3 +688,8 @@ legend.contact-label { margin-bottom: 12px; }
 .preset-del { height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
 .preset-del:hover { color: var(--text); }
 .check.remember { margin-top: 4px; }
+.preset.is-many { align-items: flex-end; }
+.preset.is-many .preset-info { flex: 1 1 260px; gap: 8px; }
+.preset.is-many .sel-trigger { background: var(--bg); font-size: 15px; }
+.preset.is-many .preset-actions { padding-bottom: 4px; }
+.sel-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

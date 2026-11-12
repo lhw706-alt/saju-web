@@ -75,28 +75,40 @@ export function clearTopic() {
   try { sessionStorage.removeItem(TOPIC_KEY); } catch { /* 무시 */ }
 }
 
-// 불러오기: 사용자가 "이 브라우저에 기억해 두기"를 켜면 생년월일시를 이 브라우저(localStorage)에만 저장.
-// 서버로 보내지 않음. 첫 입력 화면에서 불러오기·지우기 (2026-11-13)
-const PRESET_KEY = 'saju:preset';
+// 불러오기: 사용자가 "내 정보 기억하기"를 켜면 생년월일시를 이 브라우저(localStorage)에만 저장. 서버로 보내지 않음.
+// 한 브라우저에서 여러 명을 볼 수 있어 최근 순 최대 5명까지 (같은 정보는 하나만). 첫 입력 화면에서 불러오기·지우기
+const PRESETS_KEY = 'saju:presets';
+const OLD_PRESET_KEY = 'saju:preset'; // 예전 한 명 저장 방식 → 목록으로 옮김
+const MAX_PRESETS = 5;
+const presetId = (p) => [p.calendar, p.leap ? 1 : 0, p.year, p.month, p.day, p.timeKnown ? `${p.hour}:${p.minute || 0}` : '-', p.gender, p.city].join('|');
+export function loadPresets() {
+  try {
+    let list = JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]');
+    const old = JSON.parse(localStorage.getItem(OLD_PRESET_KEY) || 'null');
+    if (old && old.year && old.gender) {
+      list = [old, ...list.filter((x) => presetId(x) !== presetId(old))].slice(0, MAX_PRESETS);
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(list));
+      localStorage.removeItem(OLD_PRESET_KEY);
+    }
+    return Array.isArray(list) ? list.filter((x) => x && x.year && x.gender) : [];
+  } catch {
+    return [];
+  }
+}
 export function savePreset(input) {
   try {
-    localStorage.setItem(PRESET_KEY, JSON.stringify(input));
+    const list = loadPresets().filter((x) => presetId(x) !== presetId(input));
+    localStorage.setItem(PRESETS_KEY, JSON.stringify([input, ...list].slice(0, MAX_PRESETS)));
   } catch {
     /* 무시 */
   }
 }
-export function loadPreset() {
+export function removePreset(input) {
   try {
-    const v = JSON.parse(localStorage.getItem(PRESET_KEY) || 'null');
-    return v && v.year && v.gender ? v : null;
+    const list = loadPresets().filter((x) => presetId(x) !== presetId(input));
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(list));
+    return list;
   } catch {
-    return null;
-  }
-}
-export function clearPreset() {
-  try {
-    localStorage.removeItem(PRESET_KEY);
-  } catch {
-    /* 무시 */
+    return [];
   }
 }
