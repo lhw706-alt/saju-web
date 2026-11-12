@@ -63,7 +63,6 @@ export default function Result() {
             {dm.ko}{ELEMENT_KO[dm.element]} 일간
             <Help term="일간" />
           </h1>
-          <Link to="/start" className="btn-ghost result-again">사주 다시 보기</Link>
         </div>
         <p className="lead">
           {DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났어요.
@@ -120,6 +119,12 @@ export default function Result() {
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
         <Reading input={inp} initialTopic={initialTopic} />
       </section>
+      {/* 맨 아래: 사주 다시 보기 */}
+      <div className="report-bottom">
+        <Link to="/start" className="btn-primary inline">
+          사주 다시 보기
+        </Link>
+      </div>
     </GlossaryProvider>
   );
 }

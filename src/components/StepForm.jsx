@@ -212,8 +212,7 @@ export default function StepForm({ initial, onSubmit }) {
             <p className="hint">태어난 곳의 경도로 실제 태양 시각을 맞춰 시주를 정해요. 서울은 표준시보다 약 32분 늦어요.</p>
             <label className="check remember">
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-              이 브라우저에 기억해 두기
-              <small>다음에 불러오기로 바로 볼 수 있어요</small>
+              내 정보 기억하기
             </label>
           </>
         )}
@@ -233,7 +232,7 @@ export default function StepForm({ initial, onSubmit }) {
           </button>
         )}
       </div>
-      <p className="hint center">이름·연락처는 받지 않아요. 생년월일시는 서버에 저장하지 않고, 기억해 두기를 켜면 이 브라우저에만 남아요.</p>
+      <p className="hint center">이름·연락처는 받지 않아요. 생년월일시는 서버에 저장하지 않고, 기억하기를 켜면 이 브라우저에만 남아요.</p>
     </form>
   );
 }
