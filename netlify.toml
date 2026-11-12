@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+
+# 화면 주소는 모두 index.html 로 (React Router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,113 @@
+// AI 사주 풀이 (Netlify Function, 서버에서만 실행)
+// - 브라우저가 보낸 생년월일시로 서버가 만세력을 다시 계산하고(src/lib/saju.js), 계산 결과만 AI 에 넘긴다.
+//   이름·연락처는 받지 않는다. 입력과 풀이는 저장하지 않고 로그에도 남기지 않는다.
+// - 풀이 글은 글자 단위로 스트리밍한다 (Netlify 동기 함수 실행 한도 60초 → 55초에서 끊고 안내 문구 추가).
+// - API 키는 Netlify 환경 변수 ANTHROPIC_API_KEY 에만 둔다 (VITE_ 접두사 금지 → 브라우저 번들에 안 들어감).
+
+import Anthropic from '@anthropic-ai/sdk';
+import { computeSaju, chartSummary, SajuInputError } from '../../src/lib/saju.js';
+import { topicById } from '../../src/lib/topics.js';
+import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
+
+const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
+const TIME_LIMIT_MS = 55_000;
+
+const SYSTEM = `당신은 한국어로 사주명리를 풀어 주는 해설가입니다. 사용자의 사주 원국은 서버가 만세력으로 이미 계산해 두었고, 당신은 그 계산 결과만 보고 해석합니다. 간지를 다시 계산하거나 바꾸지 마세요.
+
+글쓰기
+- 따뜻하고 차분한 해요체. 명리 용어(일간, 십성, 대운 등)는 처음 나올 때 괄호로 짧게 풀어 주세요.
+- 근거를 함께 적으세요: "월지에 편관이 있어서 …"처럼 원국의 어느 글자에서 그렇게 읽었는지 밝힙니다.
+- 단정 대신 경향으로 말하세요 ("~한 편이에요", "~하기 쉬워요"). 좋은 점과 조심할 점을 균형 있게 씁니다.
+- 형식: '## 소제목'으로 시작하는 3~5개 단락, 전체 1,200~1,800자. 마지막 단락은 '## 한 줄 조언'으로 1~2문장. 표·이모지·인사말·면책 문구는 쓰지 마세요(화면에 따로 있습니다).
+
+하지 말 것
+- 죽음·수명·큰 사고·이혼·불임 같은 불안을 주는 예언, '살(煞)'로 겁주는 표현.
+- 질병 진단이나 치료 조언, 투자 종목·매매 시점, 법률 판단. 건강은 '생활 습관에서 신경 쓸 부분' 정도로만.
+- 부적·굿·개명·유료 상담 권유, 특정 종교 권유.
+- 원국에 없는 글자나 계산 결과를 지어내는 것. 태어난 시각을 모르면 시주 없이 해석하고, 그 때문에 덜 정확할 수 있는 부분을 한 번만 짧게 언급합니다.`;
+
+const rateLimited = createRateLimiter(4);
+
+export default async (req, context) => {
+  if (req.method !== 'POST') return json({ error: '잘못된 요청입니다.' }, 405);
+  if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처입니다.' }, 403);
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: '잘못된 요청입니다.' }, 400);
+  }
+  const topic = topicById(body?.topic);
+  if (!topic) return json({ error: '풀이 주제를 골라 주세요.' }, 400);
+
+  let chart;
+  try {
+    chart = computeSaju(body?.input);
+  } catch (e) {
+    if (e instanceof SajuInputError) return json({ error: e.message }, 400);
+    console.error('saju-reading: compute failed');
+    return json({ error: '사주를 계산하지 못했습니다.' }, 400);
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return json({ error: 'AI 풀이가 아직 준비되지 않았습니다.', reason: 'disabled' }, 503);
+
+  const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
+  if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
+
+  const userText = `[사주 원국 — 서버 계산 결과]
+${chartSummary(chart)}
+
+[풀이 주제] ${topic.label}
+다룰 내용: ${topic.focus}
+기준 연도: ${chart.seun.year}년`;
+
+  const client = new Anthropic({ apiKey, timeout: TIME_LIMIT_MS, maxRetries: 0 });
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (t) => { try { controller.enqueue(encoder.encode(t)); } catch { /* 방문자가 연결을 끊음 */ } };
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), TIME_LIMIT_MS);
+      req.signal?.addEventListener('abort', () => abort.abort()); // 방문자가 창을 닫으면 생성도 멈춤
+      try {
+        const ms = client.beta.messages.stream({
+          model: MODEL,
+          max_tokens: 6000,
+          betas: ['server-side-fallback-2026-07-01'],
+          fallbacks: 'default',
+          output_config: { effort: 'low' },
+          system: SYSTEM,
+          messages: [{ role: 'user', content: userText }],
+        }, { signal: abort.signal });
+        for await (const event of ms) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') send(event.delta.text);
+        }
+        const final = await ms.finalMessage();
+        if (final.stop_reason === 'refusal') send('\n\n[[END:refusal]]');
+        else if (final.stop_reason === 'max_tokens') send('\n\n[[END:truncated]]');
+      } catch (error) {
+        const kind =
+          abort.signal.aborted || error instanceof Anthropic.APIUserAbortError ? 'timeout'
+          : error instanceof Anthropic.RateLimitError ? 'busy'
+          : error instanceof Anthropic.AuthenticationError ? 'auth'
+          : error instanceof Anthropic.APIConnectionTimeoutError ? 'timeout'
+          : error instanceof Anthropic.APIError ? `api_${error.status}`
+          : 'unknown';
+        console.error('saju-reading failed:', kind);
+        send(`\n\n[[END:${kind === 'timeout' ? 'timeout' : 'error'}]]`);
+      } finally {
+        clearTimeout(timer);
+        try { controller.close(); } catch { /* 이미 닫힘 */ }
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
+  });
+};
+
+export const config = { path: '/api/reading' };
