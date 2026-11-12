@@ -29,6 +29,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- 문의하기(Netlify Forms) 필드 등록용 숨은 폼 — 실제 전송은 src/components/ContactModal.jsx. 알림 메일 주소는 Netlify 관리 화면에서 설정 -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="bot-field" />
+      <input name="type" />
+      <input name="company" />
+      <input name="email" type="email" />
+      <textarea name="message"></textarea>
+      <input name="page" />
+      <input name="consent" />
+    </form>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

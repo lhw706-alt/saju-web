@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SITE } from '../site.js';
 import Logo from './Logo.jsx';
 import { GROUPS } from '../lib/contents.js';
 import FortuneFab from './FortuneFab.jsx';
+import ContactModal from './ContactModal.jsx';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -16,6 +17,8 @@ function setHeadTag(selector, create, update) {
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const [contact, setContact] = useState(false);
+  const closeContact = useCallback(() => setContact(false), []);
   useEffect(() => {
     window.scrollTo(0, 0);
     // 검색용: 주소마다 대표 주소(canonical) 지정, 개인 결과 화면은 색인 제외
@@ -56,15 +59,17 @@ export default function Layout() {
       <FortuneFab />
 
       <footer className="footer">
-        <p className="disclaimer">
-          천둥도사의 사주 풀이는 전통 명리 이론을 바탕으로 생성형 AI가 만든 참고용 해석입니다. 건강·법률·투자처럼
-          중요한 결정은 해당 분야 전문가와 상의하세요.
-        </p>
         <p className="footer-links">
-          <Link to="/privacy">개인정보 처리방침</Link>
+          <span className="footer-menu">
+            <button type="button" className="footer-contact" aria-haspopup="dialog" onClick={() => setContact(true)}>
+              문의하기
+            </button>
+            <Link to="/privacy">개인정보 처리방침</Link>
+          </span>
           <span>© {new Date().getFullYear()} {SITE.name}</span>
         </p>
       </footer>
+      <ContactModal open={contact} onClose={closeContact} />
     </div>
   );
 }

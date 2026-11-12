@@ -70,7 +70,7 @@ body {
 a { color: inherit; }
 /* 굵기는 최대 600 (2026-11-13 사용자 지시) — 브라우저 기본 굵은체(700)도 600으로 */
 h1, h2, h3, h4, b, strong, th, legend { font-weight: 600; }
-button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
 
 .app { position: relative; min-height: 100vh; overflow-x: hidden; }
 .sky {
@@ -166,6 +166,36 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 .start { padding: 28px 0 0; }
 .start-title { margin: 0; font-family: var(--title); font-size: clamp(24px, 6vw, 30px); font-weight: 400; letter-spacing: -0.02em; }
 .start-lead { margin: 8px 0 20px; color: var(--text-2); }
+/* 단계형 입력 */
+.steps { padding: 20px; display: grid; gap: 20px; }
+.steps-head { display: grid; gap: 10px; }
+.steps-bar { height: 4px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.steps-bar span { display: block; height: 100%; border-radius: 99px; background: var(--primary); transition: width 0.3s ease; }
+.steps-count { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: var(--ls-label); }
+.steps-count b { color: var(--primary); font-weight: 600; }
+.step { display: grid; gap: 12px; min-height: 168px; align-content: start; animation: step-in 0.28s ease-out; }
+@keyframes step-in { from { opacity: 0; transform: translateX(12px); } }
+.step-q { margin: 0 0 4px; font-family: var(--title); font-size: 22px; font-weight: 400; letter-spacing: -0.02em; }
+.step-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.step-choice {
+  height: 96px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer;
+  font-size: 18px; font-weight: 600; transition: border-color 0.15s ease, background 0.15s ease;
+}
+.step-choice:hover { border-color: var(--primary-line); }
+.step-choice.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.step-skip {
+  justify-self: start; display: inline-flex; align-items: baseline; gap: 8px; padding: 10px 14px; border-radius: var(--r-md); border: 1px solid var(--line);
+  background: transparent; color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.step-skip small { color: var(--muted); font-size: 12px; }
+.step-skip:hover { border-color: var(--primary-line); }
+.step .seg-sm { margin-bottom: 0; }
+.step .check { margin-top: 0; }
+.steps-nav { display: flex; gap: 8px; }
+.steps-nav .btn-primary { flex: 1; width: auto; }
+.step-back { flex: none; height: 56px; padding: 0 20px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text-2); font-size: 15px; font-weight: 600; cursor: pointer; }
+.step-back:hover { color: var(--text); border-color: var(--text-2); }
+@media (prefers-reduced-motion: reduce) { .step { animation: none; } .steps-bar span { transition: none; } }
 .contents { margin-top: 48px; display: grid; gap: 40px; }
 .content-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .content-grid > li { display: flex; }
@@ -204,10 +234,7 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
 
-/* 입력 폼 */
-.form { padding: 24px 20px; display: grid; gap: 24px; }
-.field { border: 0; margin: 0; padding: 0; min-width: 0; }
-.field legend { font-weight: 600; font-size: 14px; letter-spacing: var(--ls-label); margin-bottom: 10px; padding: 0; color: var(--text); }
+/* 입력 칸 */
 /* 세그먼트 (Montage seg: 트랙 + 선택 칸) */
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 4px; border-radius: var(--r-md); background: var(--track); }
 .seg label {
@@ -237,12 +264,6 @@ select option { background: var(--surface); }
 .check small { color: var(--muted); font-size: 11px; }
 .error { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: rgba(255, 99, 99, 0.08); border: 1px solid rgba(255, 99, 99, 0.43); color: var(--danger); font-size: 13px; }
 
-/* 소개 */
-.features { margin-top: 48px; }
-.feature-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.feature-list li { padding: 20px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); display: grid; gap: 4px; }
-.feature-list strong { color: var(--text); font-size: 16px; font-weight: 600; letter-spacing: -0.002em; }
-.feature-list span { color: var(--text-2); font-size: 14px; letter-spacing: var(--ls-label); }
 
 /* 결과 머리 */
 .result-head { padding: 36px 0 8px; }
@@ -335,9 +356,59 @@ select option { background: var(--surface); }
 
 /* 푸터 */
 .footer { padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--line-soft); }
-.disclaimer { font-size: 11px; color: var(--muted); margin: 18px 0 8px; letter-spacing: var(--ls-caption); }
 .footer-links { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin: 0; letter-spacing: var(--ls-caption); }
 .footer-links a { color: var(--text-2); }
+.footer-menu { display: inline-flex; gap: 14px; }
+.footer-contact { padding: 0; border: 0; background: none; color: var(--text-2); font-size: inherit; letter-spacing: inherit; text-decoration: underline; cursor: pointer; }
+.footer-contact:hover { color: var(--text); }
+
+/* 문의하기 창 */
+.contact-overlay { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 24px 16px; background: rgba(15, 15, 16, 0.74); overflow-y: auto; animation: fortune-fade 0.18s ease-out; }
+.contact {
+  position: relative; width: 100%; max-width: 460px; padding: 22px 20px 20px; border-radius: 24px;
+  background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.contact-head { display: flex; align-items: center; justify-content: space-between; }
+.contact-head .fortune__close { position: static; margin-right: -8px; }
+.contact-title { margin: 0; font-family: var(--title); font-size: 20px; font-weight: 400; letter-spacing: -0.02em; }
+.contact-form { display: grid; gap: 16px; margin-top: 6px; }
+.contact-lead { margin: 0; font-size: 14px; color: var(--text-2); letter-spacing: var(--ls-label); }
+.contact-field { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.contact-label { padding: 0; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: var(--ls-label); }
+.contact-opt { margin-left: 4px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.contact-types { display: flex; flex-wrap: wrap; gap: 6px; }
+.contact-type {
+  display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); color: var(--text-2); font-size: 13px; font-weight: 500;
+}
+.contact-type.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.contact-type:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+.contact-input {
+  width: 100%; height: 48px; padding: 0 14px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg);
+  color: var(--text); font-size: 16px; outline: none; transition: border-color 0.15s ease;
+}
+.contact-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(226, 194, 122, 0.12); }
+.contact-input::placeholder { color: var(--faint); }
+.contact-input.is-error { border-color: var(--danger); }
+.contact-textarea { height: auto; min-height: 140px; padding: 12px 14px; line-height: 1.6; resize: vertical; }
+.contact-help { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); letter-spacing: var(--ls-caption); }
+.contact-help.is-error, .contact-err { color: var(--danger); font-size: 12px; }
+.contact-count { flex: none; font-variant-numeric: tabular-nums; }
+.contact-err-box { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: rgba(255, 99, 99, 0.08); font-size: 13px; }
+.contact-agree { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); font-size: 12px; line-height: 1.55; color: var(--muted); cursor: pointer; }
+.contact-agree input { flex: none; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--primary); }
+.contact-agree strong { display: block; margin-bottom: 2px; font-size: 13px; font-weight: 600; color: var(--text); }
+.contact-agree a { color: var(--text-2); }
+.contact-agree.is-error { box-shadow: inset 0 0 0 1px var(--danger); }
+.contact .btn-primary:disabled { opacity: 0.6; cursor: default; }
+.contact-done { display: grid; justify-items: center; gap: 8px; padding: 24px 0 4px; text-align: center; }
+.contact-done strong { font-family: var(--title); font-size: 20px; font-weight: 400; }
+.contact-done p { margin: 0 0 12px; font-size: 14px; color: var(--text-2); }
+@media (max-width: 559px) {
+  .contact-overlay { place-items: end center; padding: 0; }
+  .contact { max-width: none; max-height: 92dvh; overflow-y: auto; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; }
+}
 
 /* 로고: 천동이 아이콘 + 흰 글자. 글자 크기는 Logo.jsx 에서 아이콘 높이에 맞춰 지정 */
 .logo { position: relative; display: inline-flex; align-items: flex-end; line-height: 1; color: #fff; }
