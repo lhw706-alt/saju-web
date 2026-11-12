@@ -17,11 +17,12 @@
   --text-2: rgba(194, 196, 200, 0.88); /* secondary */
   --muted: rgba(174, 176, 182, 0.61);  /* tertiary */
   --faint: rgba(174, 176, 182, 0.28);  /* quaternary — 장식·placeholder 만 */
-  /* Montage dark: brand (blue 60) */
-  --primary: #3385ff;
-  --primary-strong: #1a75ff; /* blue 55 */
-  --primary-soft: rgba(51, 133, 255, 0.12);
-  --primary-line: rgba(51, 133, 255, 0.43);
+  /* 사주천문 primary: 금색 (2026-11-13 — 다모아픽 파랑 대신). 금색 바탕 위 글자는 --on-primary(짙은 색) */
+  --primary: #e2c27a;
+  --primary-strong: #d3ae5f;
+  --on-primary: #1b1c1e;
+  --primary-soft: rgba(226, 194, 122, 0.12);
+  --primary-line: rgba(226, 194, 122, 0.43);
   --danger: #ff6363;        /* red 60 */
   /* 천동이·제목 강조용 금색 (사주천문 고유) */
   --gold: #d9b56c;
@@ -121,7 +122,7 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 /* 버튼 (Montage btn--lg / primary) */
 .btn-primary {
   display: flex; align-items: center; justify-content: center; width: 100%; height: 56px; border: 0; border-radius: var(--r-md); cursor: pointer;
-  background: var(--primary); color: #fff; font-weight: 600; font-size: 16px; letter-spacing: 0.0057em;
+  background: var(--primary); color: var(--on-primary); font-weight: 600; font-size: 16px; letter-spacing: 0.0057em;
   transition: background 0.15s ease;
 }
 .btn-primary:hover { background: var(--primary-strong); }
@@ -130,7 +131,7 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
   display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 10px; cursor: pointer;
   border: 0; background: var(--primary-soft); color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: var(--ls-label);
 }
-.btn-ghost:hover { background: rgba(51, 133, 255, 0.2); }
+.btn-ghost:hover { background: rgba(226, 194, 122, 0.2); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* 히어로 */
@@ -219,7 +220,7 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 select { padding-right: 14px; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px; background-size: 5px 5px; background-repeat: no-repeat; }
 select:disabled { opacity: 0.4; }
 select option { background: var(--surface); }
-.input input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(51, 133, 255, 0.12); }
+.input input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(226, 194, 122, 0.12); }
 .input span { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
 .input input::placeholder { color: var(--faint); }
 .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; letter-spacing: var(--ls-label); color: var(--text-2); cursor: pointer; flex-wrap: wrap; }
@@ -288,7 +289,7 @@ select option { background: var(--surface); }
 .daeun-gz { font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: 0; }
 .daeun-ko { font-size: 11px; color: var(--text-2); }
 .daeun-year { font-size: 10px; color: var(--muted); }
-.daeun-now { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 10px; padding: 1px 7px; border-radius: 99px; background: var(--primary); color: #fff; font-weight: 600; }
+.daeun-now { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 10px; padding: 1px 7px; border-radius: 99px; background: var(--primary); color: var(--on-primary); font-weight: 600; }
 
 /* AI 풀이 */
 .topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
@@ -348,20 +349,17 @@ select option { background: var(--surface); }
 @font-face { font-family: 'NanumSquareRound'; font-weight: 400; font-display: swap; src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareRound/NanumSquareRoundR.woff2) format('woff2'), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareRound/NanumSquareRoundR.woff) format('woff'); }
 
 /* 오늘의 운세 플로팅 부적 (다모아픽 FortuneFab 을 다크·금박으로) */
-.fortune-fab {
-  position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 60; display: inline-flex; align-items: center; gap: 8px;
-  height: 52px; padding: 0 18px 0 14px; border: 1px solid rgba(240, 213, 149, 0.35); border-radius: 26px; cursor: pointer;
-  background: #2a2b2f; color: var(--text); font-size: 14px; font-weight: 600; letter-spacing: var(--ls-label);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 24px rgba(240, 213, 149, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+/* 부적만 떠다님 (버튼 테두리·바탕 없음) — 크기·위치는 다모아픽과 같게: PC 68×93 오른쪽 72·아래 36, 모바일 40×55 오른쪽 12·아래 16 */
+.fortune-fab { position: fixed; right: 72px; bottom: calc(36px + env(safe-area-inset-bottom)); z-index: 60; display: inline-flex; padding: 4px; border: 0; border-radius: 12px; background: none; cursor: pointer; }
+.fortune-fab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.fortune-fab__charm { width: 68px; height: 93px; animation: charm-float 3.2s ease-in-out infinite; }
+.fortune-fab:hover .fortune-fab__charm { animation-play-state: paused; }
+@keyframes charm-float { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+@media (max-width: 767px) {
+  .fortune-fab { right: 12px; bottom: calc(16px + env(safe-area-inset-bottom)); padding: 2px; }
+  .fortune-fab__charm { width: 40px; height: 55px; }
 }
-.fortune-fab:hover { background: #313236; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 30px rgba(240, 213, 149, 0.22); }
-.fortune-fab__charm { flex: none; transform: rotate(-8deg); filter: drop-shadow(0 0 6px rgba(240, 213, 149, 0.45)); transition: transform 0.2s ease; }
-.fortune-fab:hover .fortune-fab__charm { transform: rotate(4deg); }
-@media (max-width: 559px) {
-  .fortune-fab { right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 52px; padding: 0; justify-content: center; }
-  .fortune-fab__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-}
+@media (prefers-reduced-motion: reduce) { .fortune-fab__charm { animation: none; transform: rotate(-6deg); } }
 .fortune-overlay { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 24px 16px; background: rgba(15, 15, 16, 0.74); overflow-y: auto; animation: fortune-fade 0.18s ease-out; }
 @keyframes fortune-fade { from { opacity: 0; } }
 .fortune {
@@ -405,4 +403,4 @@ select option { background: var(--surface); }
   .fortune { max-width: none; max-height: 92dvh; overflow-y: auto; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; }
   @keyframes fortune-up { from { transform: translateY(40px); opacity: 0; } }
 }
-@media (prefers-reduced-motion: reduce) { .fortune__card.is-revealed .fortune__result > *, .fortune, .fortune-overlay { animation: none; } .fortune-fab { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .fortune__card.is-revealed .fortune__result > *, .fortune, .fortune-overlay { animation: none; } }

@@ -149,7 +149,7 @@ function paintTalisman(ctx, w, h) {
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.font = '600 14px "Pretendard JP Variable", "Pretendard Variable", Pretendard, sans-serif';
-  ctx.fillText('손가락으로 문질러 긁어 보세요', cx, by + bh / 2 + 1);
+  ctx.fillText('여기를 긁어 보세요', cx, by + bh / 2 + 1);
 }
 
 function Scratch({ onReveal }) {
@@ -236,7 +236,7 @@ function Scratch({ onReveal }) {
 // 부적 아이콘: 금박 종이 + 붉은 테두리·福 도장 (사주천문 자체 도안)
 function CharmIcon() {
   return (
-    <svg className="fortune-fab__charm" width="26" height="35" viewBox="0 0 22 30" aria-hidden="true" focusable="false">
+    <svg className="fortune-fab__charm" width="68" height="93" viewBox="0 0 22 30" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="saju-charm-paper" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#f6e3a8" />
@@ -301,7 +301,7 @@ export default function FortuneFab() {
     <>
       <button type="button" className="fortune-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" title="오늘의 운세">
         <CharmIcon />
-        <span className="fortune-fab__label">오늘의 운세</span>
+        <span className="visually-hidden">오늘의 운세 부적 열기</span>
       </button>
 
       {open &&
@@ -317,7 +317,7 @@ export default function FortuneFab() {
                 오늘의 운세
               </h2>
               <p className="fortune__lead">
-                {state?.revealed ? '오늘의 부적을 열었어요. 내일 또 새 부적이 기다려요.' : '하루에 한 번, 금박 부적을 긁어 오늘의 운을 확인해 보세요.'}
+                {state?.revealed ? '내일 또 새 부적이 기다리고 있어요.' : '부적을 긁어서 오늘 운세를 확인해 보세요.'}
               </p>
 
               {f && (
@@ -358,11 +358,11 @@ export default function FortuneFab() {
 
               {f && state.revealed && (
                 <button type="button" className="btn-primary fortune__cta" onClick={goReading}>
-                  내 사주로 자세히 풀어 보기
+                  내 사주 풀이 보러 가기
                 </button>
               )}
 
-              <p className="fortune__note">재미로 보는 운세예요. 내 사주와 상관없이 하루 한 장 무작위로 뽑혀요.</p>
+              <p className="fortune__note">재미로 보는 운세예요. 사주와 상관없이 하루 한 장씩 뽑혀요.</p>
             </div>
           </div>,
           document.body
