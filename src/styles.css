@@ -678,3 +678,14 @@ legend.contact-label { margin-bottom: 12px; }
 .field-with-msg { display: grid; gap: 6px; align-content: start; }
 .field-msg { margin: 0; font-size: 14px; color: var(--danger); letter-spacing: var(--ls-label); }
 .input input[aria-invalid="true"] { border-color: var(--danger); }
+/* 불러오기 (지난 입력) */
+.preset { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--r-md); background: var(--primary-soft); border: 1px solid var(--primary-line); }
+.preset-info { display: grid; gap: 2px; min-width: 0; }
+.preset-label { font-size: 14px; color: var(--muted); }
+.preset-info b { font-size: 15px; font-weight: 600; color: var(--text); word-break: keep-all; }
+.preset-actions { display: flex; gap: 6px; flex: none; }
+.preset-load { height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: var(--on-primary); font-size: 14px; font-weight: 600; cursor: pointer; }
+.preset-load:hover { background: var(--primary-strong); }
+.preset-del { height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
+.preset-del:hover { color: var(--text); }
+.check.remember { margin-top: 4px; }

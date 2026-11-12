@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
+import { loadPreset, savePreset, clearPreset } from '../lib/storage.js';
+
+// 불러오기 칸에 보여 줄 한 줄 요약: 1990.5.15 (양력) 14:30 · 남성 · 서울
+function presetText(p) {
+  const city = CITIES.find((c) => c.id === p.city)?.name || '';
+  const time = p.timeKnown ? `${String(p.hour).padStart(2, '0')}:${String(p.minute || 0).padStart(2, '0')}` : '시각 모름';
+  return `${p.year}.${p.month}.${p.day} (${p.calendar === 'lunar' ? `음력${p.leap ? '·윤달' : ''}` : '양력'}) ${time} · ${p.gender === 'male' ? '남성' : '여성'} · ${city}`;
+}
 
 const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '', gender: '', city: 'seoul' };
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({ value: String(i), label: `${String(i).padStart(2, '0')}시` }));
@@ -54,12 +62,28 @@ export default function StepForm({ initial, onSubmit }) {
     setF((p) => ({ ...p, timeKnown: false, hour: '' }));
     setStep(3);
   };
+  // 이 브라우저에 기억해 둔 지난 입력 (불러오기 / 지우기)
+  const [preset, setPreset] = useState(loadPreset);
+  const [remember, setRemember] = useState(true);
+  const finish = (data) => {
+    if (remember) savePreset(data);
+    else clearPreset();
+    onSubmit(data);
+  };
+  const applyPreset = () => {
+    if (check(preset)) onSubmit(preset); // 불러오면 바로 결과로
+  };
+  const removePreset = () => {
+    clearPreset();
+    setPreset(null);
+  };
+
   const submit = (e) => {
     e.preventDefault();
     if (step === 1) return nextFromDate();
     if (step === 2) return nextFromTime();
     if (step !== 3) return;
-    if (check(f)) onSubmit(f);
+    if (check(f)) finish(f);
   };
 
   return (
@@ -75,6 +99,23 @@ export default function StepForm({ initial, onSubmit }) {
 
       <div className="step" key={step}>
         <h2 className="step-q">{QUESTIONS[step]}</h2>
+
+        {step === 0 && preset && (
+          <div className="preset">
+            <div className="preset-info">
+              <span className="preset-label">지난번에 입력한 정보</span>
+              <b>{presetText(preset)}</b>
+            </div>
+            <div className="preset-actions">
+              <button type="button" className="preset-del" onClick={removePreset}>
+                지우기
+              </button>
+              <button type="button" className="preset-load" onClick={applyPreset}>
+                불러오기
+              </button>
+            </div>
+          </div>
+        )}
 
         {step === 0 && (
           <div className="step-choices">
@@ -169,6 +210,11 @@ export default function StepForm({ initial, onSubmit }) {
           <>
             <Select ariaLabel="태어난 곳" value={f.city} onChange={(v) => setF((p) => ({ ...p, city: v }))} options={CITY_OPTIONS} />
             <p className="hint">태어난 곳의 경도로 실제 태양 시각을 맞춰 시주를 정해요. 서울은 표준시보다 약 32분 늦어요.</p>
+            <label className="check remember">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              이 브라우저에 기억해 두기
+              <small>다음에 불러오기로 바로 볼 수 있어요</small>
+            </label>
           </>
         )}
 
@@ -187,7 +233,7 @@ export default function StepForm({ initial, onSubmit }) {
           </button>
         )}
       </div>
-      <p className="hint center">이름·연락처는 받지 않아요. 입력한 생년월일시는 저장하지 않아요.</p>
+      <p className="hint center">이름·연락처는 받지 않아요. 생년월일시는 서버에 저장하지 않고, 기억해 두기를 켜면 이 브라우저에만 남아요.</p>
     </form>
   );
 }

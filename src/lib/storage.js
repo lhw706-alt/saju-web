@@ -1,5 +1,5 @@
 // 입력값(과 평생 사주 풀이)은 이 브라우저 탭(sessionStorage)에만 잠시 둔다. 사주 화면(/start·/result)을 벗어나면 지우고(Layout), 탭을 닫아도 사라진다. 서버에는 저장하지 않는다.
-// TODO(추후): 회원 기능이 생기면 "내 사주 프리셋"을 저장해 입력 없이 바로 볼 수 있게 (2026-11-13 사용자 계획)
+// 지난 입력 불러오기는 아래 PRESET (localStorage, 사용자가 켰을 때만). 회원 기능이 생기면 계정에 저장하는 방식으로 옮길 수 있음
 const KEY = 'saju:input';
 
 export function saveInput(input) {
@@ -73,4 +73,30 @@ export function peekTopic() {
 }
 export function clearTopic() {
   try { sessionStorage.removeItem(TOPIC_KEY); } catch { /* 무시 */ }
+}
+
+// 불러오기: 사용자가 "이 브라우저에 기억해 두기"를 켜면 생년월일시를 이 브라우저(localStorage)에만 저장.
+// 서버로 보내지 않음. 첫 입력 화면에서 불러오기·지우기 (2026-11-13)
+const PRESET_KEY = 'saju:preset';
+export function savePreset(input) {
+  try {
+    localStorage.setItem(PRESET_KEY, JSON.stringify(input));
+  } catch {
+    /* 무시 */
+  }
+}
+export function loadPreset() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PRESET_KEY) || 'null');
+    return v && v.year && v.gender ? v : null;
+  } catch {
+    return null;
+  }
+}
+export function clearPreset() {
+  try {
+    localStorage.removeItem(PRESET_KEY);
+  } catch {
+    /* 무시 */
+  }
 }

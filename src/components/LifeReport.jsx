@@ -388,7 +388,6 @@ export default function LifeReport({ chart, input }) {
           <h2 className="report-sec-title">
             <span className="report-sec-glyph" aria-hidden="true">{glyph}</span>
             <span>
-              <small>{i + 1}</small>
               {title}
             </span>
           </h2>
