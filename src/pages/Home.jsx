@@ -95,7 +95,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <div ref={formRef} className="form-anchor">
+      <div ref={formRef} id="start" className="form-anchor">
         {picked && (
           <p className="picked">
             <strong>{picked.title}</strong>을(를) 보려면 생년월일시를 넣어 주세요.
