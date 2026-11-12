@@ -700,9 +700,11 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-item:hover { background: #26272b; }
 .saved-load { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 6px 12px 16px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
 .saved-text { display: grid; gap: 2px; min-width: 0; }
-.saved-text b { font-size: 16px; font-weight: 600; }
-.saved-text span { font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.saved-go { flex: none; color: var(--primary); }
+.saved-text b { font-size: 16px; font-weight: 500; }
+.saved-text span { font-size: 14px; color: var(--muted); word-break: keep-all; }
+/* 약한 계층 버튼: 테두리만 있는 작은 알약 */
+.saved-go { flex: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); font-size: 14px; font-weight: 500; transition: border-color 0.15s ease, color 0.15s ease; }
+.saved-load:hover .saved-go { border-color: var(--primary-line); color: var(--primary); }
 .saved-del { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-right: 6px; border: 0; border-radius: 10px; background: none; color: var(--faint); cursor: pointer; }
 .saved-del:hover { color: var(--text-2); background: var(--track); }
 .saved-more { justify-self: start; padding: 4px 2px; border: 0; background: none; color: var(--text-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
