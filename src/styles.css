@@ -443,10 +443,11 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 /* 푸터 */
 .footer { padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--line-soft); }
 .footer-links { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin: 0; letter-spacing: var(--ls-caption); }
-.footer-links a { color: var(--text-2); }
+.footer-links a { color: var(--text-2); text-decoration: none; transition: color 0.15s ease; }
+.footer-links a:hover { color: var(--text-strong); }
 .footer-menu { display: inline-flex; gap: 14px; }
-.footer-contact { padding: 0; border: 0; background: none; color: var(--text-2); font-size: inherit; letter-spacing: inherit; text-decoration: underline; cursor: pointer; }
-.footer-contact:hover { color: var(--text); }
+.footer-contact { padding: 0; border: 0; background: none; color: var(--text-2); font-size: inherit; letter-spacing: inherit; text-decoration: none; cursor: pointer; transition: color 0.15s ease; }
+.footer-contact:hover { color: var(--text-strong); }
 
 /* 문의하기 창 */
 .contact-overlay { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 24px 16px; background: rgba(15, 15, 16, 0.74); overflow-y: auto; animation: fortune-fade 0.18s ease-out; }
