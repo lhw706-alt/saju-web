@@ -674,3 +674,7 @@ legend.contact-label { margin-bottom: 12px; }
   .report-sec { padding: 18px 14px; }
   .report-sec .chart { padding: 10px 6px; }
 }
+/* 입력칸 바로 아래 안내 (테두리·배경 없이 글자만) */
+.field-with-msg { display: grid; gap: 6px; align-content: start; }
+.field-msg { margin: 0; font-size: 14px; color: var(--danger); letter-spacing: var(--ls-label); }
+.input input[aria-invalid="true"] { border-color: var(--danger); }

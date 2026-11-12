@@ -15,6 +15,7 @@ export default function StepForm({ initial, onSubmit }) {
   const [f, setF] = useState({ ...EMPTY, ...initial });
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
+  const [minuteError, setMinuteError] = useState(''); // 분 칸 바로 아래에 보이는 안내
   const yearRef = useRef(null);
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e?.target ? (e.target.type === 'checkbox' ? e.target.checked : e.target.value) : e }));
 
@@ -45,7 +46,7 @@ export default function StepForm({ initial, onSubmit }) {
   const nextFromTime = () => {
     if (f.timeKnown && f.hour === '') return setError('태어난 시를 골라 주세요. 모르면 “시각을 몰라요”를 눌러 주세요.');
     const min = f.minute === '' ? 0 : Number(f.minute);
-    if (f.timeKnown && !(min >= 0 && min <= 59)) return setError('분은 0에서 59 사이로 적어 주세요.');
+    if (f.timeKnown && !(min >= 0 && min <= 59)) return setMinuteError('분은 0에서 59까지만 적을 수 있어요.');
     setF((p) => ({ ...p, minute: String(min) }));
     setStep(3);
   };
@@ -127,6 +128,7 @@ export default function StepForm({ initial, onSubmit }) {
                 onChange={(v) => setF((p) => ({ ...p, hour: String(v), timeKnown: true }))}
                 options={HOUR_OPTIONS}
               />
+              <div className="field-with-msg">
               <label className="input">
                 <input
                   inputMode="numeric"
@@ -138,16 +140,24 @@ export default function StepForm({ initial, onSubmit }) {
                     // 60 이상을 적으면 칸을 비우고 바로 안내
                     if (v !== '' && Number(v) > 59) {
                       setF((p) => ({ ...p, minute: '', timeKnown: true }));
-                      setError('분은 0에서 59까지만 적을 수 있어요.');
+                      setMinuteError('분은 0에서 59까지만 적을 수 있어요.');
                       return;
                     }
-                    setError('');
+                    setMinuteError('');
                     setF((p) => ({ ...p, minute: v, timeKnown: true }));
                   }}
                   aria-label="태어난 분"
+                  aria-invalid={!!minuteError}
+                  aria-describedby={minuteError ? 'minute-err' : undefined}
                 />
                 <span>분</span>
               </label>
+              {minuteError && (
+                <p id="minute-err" className="field-msg" role="alert">
+                  {minuteError}
+                </p>
+              )}
+              </div>
             </div>
             <button type="button" className="step-skip" onClick={timeUnknown}>
               시각을 몰라요 <small>시주 없이 여섯 글자로 봐요</small>
