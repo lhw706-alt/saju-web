@@ -296,14 +296,43 @@ function createFace() {
   const mouthY = faceY(-0.08);
   let lastKey = '';
 
-  // look: 눈동자 방향(-1~1), anger: 0~1, blink: 0(뜸)~1(감음)
-  function draw({ lookX = 0, lookY = 0, anger = 0, blink = 0 }) {
-    const key = `${lookX.toFixed(2)}|${lookY.toFixed(2)}|${anger.toFixed(2)}|${blink.toFixed(2)}`;
+  // 평소: 편안하게 감은 눈(‿) — 접신 중인 천동이 (2026-11-13 사용자: 뜬 눈보다 감은 눈이 낫다)
+  const closedEyes = [-0.34, 0.34].map((x) => ({ x: faceX(x), y: faceY(0.24) }));
+  function drawClosed() {
+    g.strokeStyle = '#2a2440';
+    g.lineWidth = 24;
+    g.lineCap = 'round';
+    closedEyes.forEach((e) => {
+      g.beginPath();
+      g.moveTo(e.x - 80, e.y - 4);
+      g.quadraticCurveTo(e.x, e.y + 56, e.x + 80, e.y - 4);
+      g.stroke();
+    });
+  }
+
+  // anger: 0(평소, 감은 눈) ~ 1(화남, 눈 뜨고 노려봄). 그 사이는 겹쳐서 서서히 바뀜
+  function draw({ lookX = 0, lookY = 0, anger = 0 }) {
+    // 감은 눈일 땐 시선이 안 보이므로 다시 그리지 않음 (캔버스 갱신 줄이기)
+    const key = anger > 0 ? `${lookX.toFixed(2)}|${lookY.toFixed(2)}|${anger.toFixed(2)}` : 'calm';
     if (key === lastKey) return;
     lastKey = key;
     g.clearRect(0, 0, FW, FH);
-    // 평소: 크고 동그란 눈 + 큰 눈동자(믿음직하고 귀엽게), 눈썹만 살짝 단호하게.
-    // 화나면 윗눈꺼풀이 안쪽부터 내려와 눈을 가늘게 하고, 눈썹이 확 내려감.
+    if (anger < 1) {
+      g.globalAlpha = 1 - anger;
+      drawClosed();
+    }
+    if (anger > 0) {
+      g.globalAlpha = anger;
+      drawAngry(lookX, lookY);
+    }
+    g.globalAlpha = 1;
+    texture.needsUpdate = true;
+  }
+
+  // 화난 얼굴: 눈을 뜨고 노려봄(윗눈꺼풀·눈썹이 안쪽으로 내려감), 'へ' 입, 💢
+  function drawAngry(lookX, lookY) {
+    const anger = 1;
+    const blink = 0;
     const rx = 100;
     const ry = 114;
     eyes.forEach((e, i) => {
@@ -407,9 +436,8 @@ function createFace() {
     }
     g.stroke();
     // 화났을 때 이마 옆 '💢' 핏대
-    if (anger > 0.05) {
+    {
       g.save();
-      g.globalAlpha = Math.min(1, anger * 1.4);
       g.translate(faceX(0.62, 0.95), faceY(0.6));
       g.strokeStyle = '#e0343c';
       g.lineWidth = 10;
@@ -424,7 +452,6 @@ function createFace() {
       });
       g.restore();
     }
-    texture.needsUpdate = true;
   }
   draw({});
   return { texture, draw };
@@ -507,10 +534,7 @@ export default function Mascot3D({ className = '', interactive = true }) {
       window.addEventListener('pointermove', onMove, { passive: true });
       renderer.domElement.addEventListener('pointerdown', onDown);
     }
-    const faceState = { lookX: 0, lookY: 0, anger: 0, blink: 0 };
-    let nextBlink = 2.5;
-    const blushCalm = new THREE.Color('#ff9fb4');
-    const blushAngry = new THREE.Color('#ff4f5a');
+    const faceState = { lookX: 0, lookY: 0, anger: 0 };
 
     const resize = () => {
       const w = host.clientWidth || 1;
@@ -552,20 +576,14 @@ export default function Mascot3D({ className = '', interactive = true }) {
       m.char.rotation.y += ((pointer.x * 0.25) - m.char.rotation.y) * 0.04;
       m.char.rotation.x += ((pointer.y * 0.1) - m.char.rotation.x) * 0.04;
 
-      // 표정: 눈동자가 포인터를 따라가고, 가끔 깜빡이고, 눌리면 화냄
+      // 표정: 평소엔 감은 눈, 눌리면 눈을 뜨고 화냄(눈동자는 포인터 쪽)
       const angry = t < angryUntil;
       faceState.anger += ((angry ? 1 : 0) - faceState.anger) * (angry ? 0.25 : 0.08);
       if (faceState.anger < 0.01) faceState.anger = 0;
       faceState.lookX += (THREE.MathUtils.clamp(pointer.x * 1.3, -1, 1) - faceState.lookX) * 0.15;
       faceState.lookY += (THREE.MathUtils.clamp(pointer.y * 1.3, -1, 1) - faceState.lookY) * 0.15;
-      if (!reduce && t > nextBlink) {
-        const p = (t - nextBlink) / 0.18;
-        faceState.blink = p < 1 ? Math.sin(p * Math.PI) : 0;
-        if (p >= 1) nextBlink = t + 2.8 + Math.random() * 3;
-      }
       m.face.draw(faceState);
-      m.blushMat.color.copy(blushCalm).lerp(blushAngry, faceState.anger);
-      m.blushMat.opacity = 0.28 + faceState.anger * 0.3;
+      m.blushMat.opacity = 0.28 * (1 - faceState.anger); // 화낼 땐 볼 홍조를 지움
       // 화난 순간 부르르 떨림
       const shake = angry && angryUntil - t > 1.2 && !reduce ? Math.sin(t * 70) * 0.035 : 0;
       m.char.position.x = shake;
