@@ -56,6 +56,22 @@ expect('년지 십성(午 본기 丁)', c.pillars.year.branchGod, '정관');
 const y27 = c.nextSeun.year === 2027 ? c.nextSeun : c.seun.year === 2027 ? c.seun : null;
 if (y27) { expect('2027 세운', y27.ganzhi, '丁未'); expect('2027 세운 십성', y27.stemGod + '·' + y27.branchGod, '정관·정인'); }
 
+// 입력 범위: 태어난 해는 올해까지, 아직 오지 않은 날짜는 받지 않음
+const errOf = (inp) => {
+  try {
+    computeSaju(inp);
+    return 'ok';
+  } catch (e) {
+    return e.message;
+  }
+};
+const Y = new Date().getFullYear();
+expect('내년 출생 거부', errOf({ calendar: 'solar', year: Y + 1, month: 1, day: 1, timeKnown: false, gender: 'male' }), `1900년부터 ${Y}년 사이로 입력해 주세요.`);
+const tomorrow = new Date(Date.now() + 86400000);
+if (tomorrow.getFullYear() === Y) {
+  expect('내일 날짜 거부', errOf({ calendar: 'solar', year: Y, month: tomorrow.getMonth() + 1, day: tomorrow.getDate(), timeKnown: false, gender: 'male' }), '아직 오지 않은 날짜예요. 태어난 날짜를 확인해 주세요.');
+}
+
 console.log('\n' + chartSummary(c));
 if (fail) {
   console.error(`\n${fail}개 실패`);

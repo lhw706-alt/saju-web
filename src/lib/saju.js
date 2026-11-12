@@ -130,7 +130,10 @@ export function normalizeInput(raw) {
   const city = CITIES.find((c) => c.id === raw?.city) ? raw.city : 'seoul';
 
   if (![year, month, day, hour, minute].every(Number.isInteger)) throw new SajuInputError('생년월일을 숫자로 입력해 주세요.');
-  if (year < 1900 || year > 2100) throw new SajuInputError('1900년부터 2100년 사이로 입력해 주세요.');
+  // 태어난 해는 1900년부터 올해까지 (미래 날짜는 받지 않음)
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  if (year < 1900 || year > thisYear) throw new SajuInputError(`1900년부터 ${thisYear}년 사이로 입력해 주세요.`);
   if (month < 1 || month > 12) throw new SajuInputError('월을 다시 확인해 주세요.');
   if (day < 1 || day > (calendar === 'lunar' ? 30 : 31)) throw new SajuInputError('일을 다시 확인해 주세요.');
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new SajuInputError('태어난 시각을 다시 확인해 주세요.');
@@ -138,6 +141,7 @@ export function normalizeInput(raw) {
   if (calendar === 'solar') {
     const t = new Date(Date.UTC(year, month - 1, day));
     if (t.getUTCMonth() !== month - 1) throw new SajuInputError('없는 날짜예요. 날짜를 다시 확인해 주세요.');
+    if (t > Date.UTC(thisYear, now.getMonth(), now.getDate())) throw new SajuInputError('아직 오지 않은 날짜예요. 태어난 날짜를 확인해 주세요.');
   }
   return { calendar, year, month, day, leap, timeKnown, hour, minute, gender, city };
 }
