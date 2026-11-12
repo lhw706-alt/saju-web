@@ -102,7 +102,7 @@ export default function StepForm({ initial, onSubmit }) {
         {step === 0 && presets.length > 0 && (
           <div className="saved">
             <div className="saved-head">
-              <h2 className="saved-title">전에 본 사주를 바로 볼 수 있어요</h2>
+              <h2 className="saved-title">입력했던 정보를 불러올 수 있어요</h2>
               <p className="saved-note">최근 5명까지 기억해요</p>
             </div>
             <ul className="saved-list">
