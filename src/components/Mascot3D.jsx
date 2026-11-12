@@ -148,15 +148,15 @@ export function buildCheondong() {
     char.add(hand);
   });
 
-  // 감은 눈 (편안한 ‿)
-  const lidMat = new THREE.MeshStandardMaterial({ color: '#2a2440', roughness: 0.6 });
-  [-0.34, 0.34].forEach((x) => {
-    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-0.13, 0.01, 0), new THREE.Vector3(0, -0.09, 0), new THREE.Vector3(0.13, 0.01, 0));
-    const lid = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.019, 10, false), lidMat);
-    lid.position.set(x, 0.24, 0.955);
-    lid.lookAt(x * 3, 0.3, 4);
-    char.add(lid);
-  });
+  // 얼굴: 몸 표면에 딱 붙는 얇은 껍질(같은 윤곽의 회전체 일부)에 캔버스로 눈·눈썹·입을 그림
+  // → 눈동자가 포인터를 따라가고, 누르면 화난 표정. 몸과 함께 숨쉬도록 body 의 자식으로 둔다.
+  const faceProfile = profile.filter((v) => v.y >= FACE_Y0 && v.y <= FACE_Y1).map((v) => new THREE.Vector2(v.x * 1.006, v.y));
+  const face = createFace();
+  const faceMesh = new THREE.Mesh(
+    new THREE.LatheGeometry(faceProfile, 48, -FACE_PHI, FACE_PHI * 2),
+    new THREE.MeshStandardMaterial({ map: face.texture, transparent: true, roughness: 0.45, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
+  );
+  body.add(faceMesh);
 
   // 볼
   const blushMat = new THREE.MeshBasicMaterial({ color: '#ff9fb4', transparent: true, opacity: 0.28, depthWrite: false });
@@ -270,7 +270,164 @@ export function buildCheondong() {
   shadow.position.y = 0.01;
   floor.add(shadow);
 
-  return { root, char, body, spirits, crescent, mark, aura, sparks, floor, disc, shadow };
+  return { root, char, body, spirits, crescent, mark, aura, sparks, floor, disc, shadow, face, blushMat };
+}
+
+// ── 얼굴 캔버스 ──
+// 껍질은 몸 앞쪽 ±FACE_PHI 라디안, 높이 FACE_Y0~FACE_Y1. 캔버스 가로 = 각도, 세로 = 높이.
+const FACE_PHI = 0.8;
+const FACE_Y0 = -0.25;
+const FACE_Y1 = 0.78;
+const FW = 1024;
+const FH = 640;
+const faceX = (x, r = 1.02) => ((Math.asin(THREE.MathUtils.clamp(x / r, -1, 1)) + FACE_PHI) / (FACE_PHI * 2)) * FW; // 몸 위 x → 캔버스 x
+const faceY = (y) => (1 - (y - FACE_Y0) / (FACE_Y1 - FACE_Y0)) * FH; // 몸 위 y → 캔버스 y
+
+function createFace() {
+  const canvas = document.createElement('canvas');
+  canvas.width = FW;
+  canvas.height = FH;
+  const g = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  const INK = '#221c36';
+  const eyes = [-0.36, 0.36].map((x) => ({ x: faceX(x), y: faceY(0.18) }));
+  const mouthY = faceY(-0.08);
+  let lastKey = '';
+
+  // look: 눈동자 방향(-1~1), anger: 0~1, blink: 0(뜸)~1(감음)
+  function draw({ lookX = 0, lookY = 0, anger = 0, blink = 0 }) {
+    const key = `${lookX.toFixed(2)}|${lookY.toFixed(2)}|${anger.toFixed(2)}|${blink.toFixed(2)}`;
+    if (key === lastKey) return;
+    lastKey = key;
+    g.clearRect(0, 0, FW, FH);
+    // 평소: 크고 동그란 눈 + 큰 눈동자(믿음직하고 귀엽게), 눈썹만 살짝 단호하게.
+    // 화나면 윗눈꺼풀이 안쪽부터 내려와 눈을 가늘게 하고, 눈썹이 확 내려감.
+    const rx = 100;
+    const ry = 114;
+    eyes.forEach((e, i) => {
+      const side = i === 0 ? -1 : 1; // 왼눈 -1, 오른눈 +1
+      const drop = anger * ry * 0.62 + blink * ry * 2.2; // 눈꺼풀이 내려온 정도
+      const xin = e.x - side * rx * 1.3;
+      const xout = e.x + side * rx * 1.3;
+      const yin = e.y - ry * 1.05 + drop + anger * 70; // 화나면 안쪽이 더 내려옴
+      const yout = e.y - ry * 1.15 + drop * 0.75;
+      const ctrlY = e.y - ry * 1.5 + drop * 1.15;
+      const lid = () => {
+        g.beginPath();
+        g.moveTo(xin, yin);
+        g.quadraticCurveTo(e.x, ctrlY, xout, yout);
+      };
+      g.save();
+      // 눈꺼풀 아래만 보이게 자름
+      lid();
+      g.lineTo(xout, e.y + ry + 60);
+      g.lineTo(xin, e.y + ry + 60);
+      g.closePath();
+      g.clip();
+      // 흰자
+      g.fillStyle = '#fbf8f2';
+      g.beginPath();
+      g.ellipse(e.x, e.y, rx, ry, 0, 0, Math.PI * 2);
+      g.fill();
+      // 큰 눈동자 (포인터 방향)
+      const px = e.x + lookX * rx * 0.24;
+      const py = e.y + lookY * ry * 0.18 + 8;
+      const pr = 72 - anger * 14;
+      const grad = g.createRadialGradient(px, py + pr * 0.35, 6, px, py, pr * 1.1);
+      grad.addColorStop(0, anger > 0.5 ? '#7a2a30' : '#5b4a96');
+      grad.addColorStop(0.55, anger > 0.5 ? '#3a1218' : '#2a2150');
+      grad.addColorStop(1, '#110d1f');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.ellipse(px, py, pr, pr * 1.1, 0, 0, Math.PI * 2);
+      g.fill();
+      // 반짝임 (큰 것 + 작은 것)
+      g.fillStyle = 'rgba(255,255,255,0.96)';
+      g.beginPath();
+      g.ellipse(px + pr * 0.32, py - pr * 0.42, 22, 19, -0.4, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.arc(px - pr * 0.36, py + pr * 0.4, 9, 0, Math.PI * 2);
+      g.fill();
+      // 눈 테두리 (눈꺼풀 아래 부분만 보임)
+      g.strokeStyle = INK;
+      g.lineWidth = 8;
+      g.beginPath();
+      g.ellipse(e.x, e.y, rx, ry, 0, 0, Math.PI * 2);
+      g.stroke();
+      g.restore();
+      // 윗눈꺼풀 선: 눈 위로 내려왔을 때만 보이도록 눈 둘레 안쪽으로 자름
+      g.save();
+      g.beginPath();
+      g.ellipse(e.x, e.y, rx + 6, ry + 6, 0, 0, Math.PI * 2);
+      g.clip();
+      g.strokeStyle = INK;
+      g.lineWidth = 14;
+      g.lineCap = 'round';
+      lid();
+      g.stroke();
+      g.restore();
+      // 바깥 눈꼬리 속눈썹 한 가닥
+      g.strokeStyle = INK;
+      g.lineWidth = 9;
+      g.lineCap = 'round';
+      const ang = side > 0 ? -0.55 : Math.PI + 0.55;
+      const lx = e.x + Math.cos(ang) * rx * 0.98;
+      const ly = e.y + Math.sin(ang) * ry * 0.98 + drop * 0.5;
+      g.beginPath();
+      g.moveTo(lx, ly);
+      g.lineTo(lx + side * 22, ly - 16);
+      g.stroke();
+      // 눈썹: 평소엔 살짝 안쪽이 낮은 짧은 눈썹(만만치 않게), 화나면 안쪽이 확 내려감
+      const by = e.y - ry - 46 + blink * 10;
+      const bIn = by + 12 + anger * 70;
+      const bOut = by - 4 - anger * 14;
+      g.lineWidth = 15;
+      g.beginPath();
+      g.moveTo(e.x - side * 44, bIn);
+      g.quadraticCurveTo(e.x, (bIn + bOut) / 2 - 10 + anger * 10, e.x + side * 52, bOut);
+      g.stroke();
+    });
+    // 입: 평소엔 한쪽만 올라간 작은 미소, 화나면 'へ' 자로 다문 입
+    g.strokeStyle = INK;
+    g.lineWidth = 9;
+    g.lineCap = 'round';
+    g.beginPath();
+    const mx = FW / 2;
+    if (anger < 0.5) {
+      const k = 1 - anger * 2;
+      g.moveTo(mx - 26, mouthY + 2);
+      g.quadraticCurveTo(mx - 2, mouthY + 18 * k + 2, mx + 28, mouthY - 8 * k);
+    } else {
+      const k = (anger - 0.5) * 2;
+      g.moveTo(mx - 30, mouthY + 10);
+      g.quadraticCurveTo(mx, mouthY - 16 * k, mx + 30, mouthY + 10);
+    }
+    g.stroke();
+    // 화났을 때 이마 옆 '💢' 핏대
+    if (anger > 0.05) {
+      g.save();
+      g.globalAlpha = Math.min(1, anger * 1.4);
+      g.translate(faceX(0.62, 0.95), faceY(0.6));
+      g.strokeStyle = '#e0343c';
+      g.lineWidth = 10;
+      [0, 1, 2, 3].forEach((q) => {
+        g.save();
+        g.rotate((q * Math.PI) / 2);
+        g.beginPath();
+        g.moveTo(10, 30);
+        g.quadraticCurveTo(12, 12, 30, 10);
+        g.stroke();
+        g.restore();
+      });
+      g.restore();
+    }
+    texture.needsUpdate = true;
+  }
+  draw({});
+  return { texture, draw };
 }
 
 export default function Mascot3D({ className = '', interactive = true }) {
@@ -324,12 +481,36 @@ export default function Mascot3D({ className = '', interactive = true }) {
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const pointer = { x: 0, y: 0 };
+    // 천동이를 눌렀는지: 화면 좌표 → 광선 → 몸에 닿았는지
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const hitChar = (e) => {
+      const r = renderer.domElement.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return false;
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      return raycaster.intersectObject(m.char, true).length > 0;
+    };
     const onMove = (e) => {
       const r = host.getBoundingClientRect();
       pointer.x = THREE.MathUtils.clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1.5, 1.5);
       pointer.y = THREE.MathUtils.clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1.5, 1.5);
+      renderer.domElement.style.cursor = hitChar(e) ? 'pointer' : '';
     };
-    if (interactive) window.addEventListener('pointermove', onMove, { passive: true });
+    // 누르면 화냄 (1.6초 뒤 원래 표정)
+    let angryUntil = -1;
+    const onDown = (e) => {
+      if (!hitChar(e)) return;
+      angryUntil = clock.getElapsedTime() + 1.6;
+    };
+    if (interactive) {
+      window.addEventListener('pointermove', onMove, { passive: true });
+      renderer.domElement.addEventListener('pointerdown', onDown);
+    }
+    const faceState = { lookX: 0, lookY: 0, anger: 0, blink: 0 };
+    let nextBlink = 2.5;
+    const blushCalm = new THREE.Color('#ff9fb4');
+    const blushAngry = new THREE.Color('#ff4f5a');
 
     const resize = () => {
       const w = host.clientWidth || 1;
@@ -370,6 +551,24 @@ export default function Mascot3D({ className = '', interactive = true }) {
       // 포인터 쪽으로 아주 살짝 몸을 기울임
       m.char.rotation.y += ((pointer.x * 0.25) - m.char.rotation.y) * 0.04;
       m.char.rotation.x += ((pointer.y * 0.1) - m.char.rotation.x) * 0.04;
+
+      // 표정: 눈동자가 포인터를 따라가고, 가끔 깜빡이고, 눌리면 화냄
+      const angry = t < angryUntil;
+      faceState.anger += ((angry ? 1 : 0) - faceState.anger) * (angry ? 0.25 : 0.08);
+      if (faceState.anger < 0.01) faceState.anger = 0;
+      faceState.lookX += (THREE.MathUtils.clamp(pointer.x * 1.3, -1, 1) - faceState.lookX) * 0.15;
+      faceState.lookY += (THREE.MathUtils.clamp(pointer.y * 1.3, -1, 1) - faceState.lookY) * 0.15;
+      if (!reduce && t > nextBlink) {
+        const p = (t - nextBlink) / 0.18;
+        faceState.blink = p < 1 ? Math.sin(p * Math.PI) : 0;
+        if (p >= 1) nextBlink = t + 2.8 + Math.random() * 3;
+      }
+      m.face.draw(faceState);
+      m.blushMat.color.copy(blushCalm).lerp(blushAngry, faceState.anger);
+      m.blushMat.opacity = 0.28 + faceState.anger * 0.3;
+      // 화난 순간 부르르 떨림
+      const shake = angry && angryUntil - t > 1.2 && !reduce ? Math.sin(t * 70) * 0.035 : 0;
+      m.char.position.x = shake;
 
       // 접신: 이마 표식·후광 맥동, 구슬이 차례로 빛남
       const pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
@@ -412,6 +611,7 @@ export default function Mascot3D({ className = '', interactive = true }) {
       ro.disconnect();
       io.disconnect();
       window.removeEventListener('pointermove', onMove);
+      renderer.domElement.removeEventListener('pointerdown', onDown);
       scene.traverse((o) => {
         o.geometry?.dispose?.();
         const mats = Array.isArray(o.material) ? o.material : [o.material];

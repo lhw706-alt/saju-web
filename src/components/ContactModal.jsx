@@ -7,7 +7,7 @@ import { trackEvent } from '../lib/analytics.js';
 // 운영자 문의 폼 (푸터 '문의하기') — 다모아픽 ContactModal 과 같은 방식.
 // - 전송: Netlify Forms (index.html 의 숨은 form name="contact" 로 필드 등록). 접수되면 Netlify 가 알림 메일 발송
 //   → 받는 주소는 Netlify 관리 화면 Forms > Form notifications 에서 설정 (다모아픽과 같은 주소, 코드에 메일 주소를 두지 않음)
-// - 받는 정보: 문의 유형, 회사·브랜드명(제휴만, 선택), 답변 받을 이메일, 내용, 문의한 페이지 주소. 이름·전화번호·생년월일은 받지 않음
+// - 받는 정보: 문의 유형, 회사·브랜드명(제휴만, 선택), 내용, 답변 받을 이메일(선택), 문의한 페이지 주소. 이름·전화번호·생년월일은 받지 않음
 // - 스팸: honeypot 필드(bot-field)
 const TYPES = [
   { key: 'site', label: '이용 문의' },
@@ -75,7 +75,7 @@ export default function ContactModal({ open, onClose }) {
 
   if (!open) return null;
 
-  const emailOk = EMAIL_RE.test(email.trim());
+  const emailOk = !email.trim() || EMAIL_RE.test(email.trim()); // 이메일은 선택 (적었다면 형식만 확인)
   const msgOk = message.trim().length >= 10;
   const valid = emailOk && msgOk && agree;
 
@@ -121,11 +121,15 @@ export default function ContactModal({ open, onClose }) {
         {status === 'done' ? (
           <div className="contact-done" role="status">
             <strong>문의가 접수됐어요</strong>
-            <p>
-              적어 주신 이메일({email.trim()})로 답변드릴게요.
-              <br />
-              보통 영업일 기준 2~3일 안에 답변해요.
-            </p>
+            {email.trim() ? (
+              <p>
+                적어 주신 이메일({email.trim()})로 답변드릴게요.
+                <br />
+                보통 영업일 기준 2~3일 안에 답변해요.
+              </p>
+            ) : (
+              <p>보내 주신 내용은 꼼꼼히 확인할게요.</p>
+            )}
             <button type="button" className="btn-primary" onClick={onClose}>
               확인
             </button>
@@ -170,30 +174,6 @@ export default function ContactModal({ open, onClose }) {
             )}
 
             <div className="contact-field">
-              <label className="contact-label" htmlFor="contact-email">
-                답변 받을 이메일
-              </label>
-              <input
-                id="contact-email"
-                className={`contact-input${touched && !emailOk ? ' is-error' : ''}`}
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={email}
-                maxLength={100}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                aria-invalid={touched && !emailOk}
-                aria-describedby={touched && !emailOk ? 'contact-email-err' : undefined}
-              />
-              {touched && !emailOk && (
-                <span id="contact-email-err" className="contact-err">
-                  이메일 주소를 확인해 주세요.
-                </span>
-              )}
-            </div>
-
-            <div className="contact-field">
               <label className="contact-label" htmlFor="contact-message">
                 문의 내용
               </label>
@@ -216,11 +196,35 @@ export default function ContactModal({ open, onClose }) {
               </span>
             </div>
 
+            <div className="contact-field">
+              <label className="contact-label" htmlFor="contact-email">
+                답변 받을 이메일 <span className="contact-opt">선택</span>
+              </label>
+              <input
+                id="contact-email"
+                className={`contact-input${touched && !emailOk ? ' is-error' : ''}`}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                maxLength={100}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="답변이 필요하면 적어 주세요"
+                aria-invalid={touched && !emailOk}
+                aria-describedby={touched && !emailOk ? 'contact-email-err' : undefined}
+              />
+              {touched && !emailOk && (
+                <span id="contact-email-err" className="contact-err">
+                  이메일 주소를 확인해 주세요.
+                </span>
+              )}
+            </div>
+
             <label className={`contact-agree${touched && !agree ? ' is-error' : ''}`}>
               <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>
                 <strong>개인정보 수집·이용에 동의해요 (필수)</strong>
-                수집 항목: 이메일, 문의 내용 · 목적: 문의 확인과 답변 · 보유 기간: 답변 완료 후 1년 뒤 삭제.{' '}
+                수집 항목: 문의 내용, 이메일(적은 경우) · 목적: 문의 확인과 답변 · 보유 기간: 답변 완료 후 1년 뒤 삭제.{' '}
                 <Link to="/privacy" onClick={onClose}>
                   개인정보 처리방침
                 </Link>

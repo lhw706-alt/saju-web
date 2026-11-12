@@ -1,5 +1,5 @@
-// 콘텐츠 카드용 천둥도사(천동이) 일러스트 — 같은 몸(진주빛 물방울·금빛 초승달·이마 표식·감은 눈)에
-// 콘텐츠마다 다른 소품을 들려 그린다. SVG 문자열을 돌려줌 (좌표 160×120, 보이는 영역은 가운데 136×102).
+// 콘텐츠 카드용 천둥도사(천동이) 일러스트 — 같은 몸(진주빛 물방울·금빛 초승달·이마 표식)에 콘텐츠마다 다른 표정(FACES)과
+// 소품(PROPS)을 그린다. SVG 문자열을 돌려줌 (좌표 160×120, 보이는 영역은 가운데 136×102).
 // kind: contents.js 의 id. 모르는 kind 면 소품 없이 기본 모습.
 
 const GOLD = '#f0d595';
@@ -8,11 +8,49 @@ const RED = '#d2373d';
 const INK = '#2a2440';
 const PAPER = '#f6ead0';
 
-function base(id, { sleep = false } = {}) {
+const star = (x, y, r = 3, c = GOLD) =>
+  `<path d="M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3}Z" fill="${c}"/>`;
+
+// 표정: 눈(eyes)·눈썹(brows)·입(mouth) 조합. 눈 중심 (72.3, 62)·(87.7, 62), 입 (80, 71)
+const L = 72.3;
+const R = 87.7;
+const EY = 62;
+const line = (d, w = 2.1) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/>`;
+const dotEye = (x, look = 0) =>
+  `<ellipse cx="${x + look}" cy="${EY}" rx="2.6" ry="3.3" fill="${INK}"/><circle cx="${x + look + 0.9}" cy="${EY - 1.2}" r="0.95" fill="#fff"/>`;
+const heartAt = (x, y, k = 1) =>
+  `<path transform="translate(${x} ${y}) scale(${k})" d="M0 3.2 C-4.6 0 -3.6 -3.4 -1.6 -2.8 C-0.6 -2.5 0 -1.6 0 -1 C0 -1.6 0.6 -2.5 1.6 -2.8 C3.6 -3.4 4.6 0 0 3.2Z" fill="${RED}"/>`;
+const EYES = {
+  closed: () => line('M68.6 62 q3.7 3.6 7.4 0M84 62 q3.7 3.6 7.4 0'),
+  sleep: () => line('M68.6 63 q3.7 2.2 7.4 0M84 63 q3.7 2.2 7.4 0', 2),
+  happy: () => line('M68.8 63.5 q3.5 -4.4 7 0M84.2 63.5 q3.5 -4.4 7 0', 2.2),
+  dot: () => dotEye(L) + dotEye(R),
+  side: () => dotEye(L, 1.4) + dotEye(R, 1.4),
+  wink: () => dotEye(L) + line('M84.2 63 q3.5 -3.6 7 0', 2.2),
+  smug: () => `<path d="M69 61.6 h6.6 a3.3 3 0 0 1 -6.6 0z M84.4 61.6 h6.6 a3.3 3 0 0 1 -6.6 0z" fill="${INK}"/>` + line('M68.4 61.4 h7.8M83.8 61.4 h7.8', 1.6),
+  star: () => [L, R].map((x) => star(x, EY, 3.8, '#ffcf6b') + `<circle cx="${x}" cy="${EY}" r="1" fill="#fff"/>`).join(''),
+  heart: () => heartAt(L, EY) + heartAt(R, EY),
+  wide: () => [L, R].map((x) => `<circle cx="${x}" cy="${EY}" r="3.3" fill="#fff" stroke="${INK}" stroke-width="1.3"/><circle cx="${x}" cy="${EY + 0.4}" r="1.6" fill="${INK}"/>`).join(''),
+};
+const BROWS = {
+  none: '',
+  firm: line('M68.8 56.2 l6.4 1.4M91.2 56.2 l-6.4 1.4', 1.6),
+  raise: line('M69 57 q3 -1.6 6 0M84.6 55.4 q3 -1.6 6 0', 1.5),
+  soft: line('M69 56.6 q3 -1.2 6 0M85 56.6 q3 -1.2 6 0', 1.3),
+};
+const MOUTH = {
+  none: '',
+  smile: line('M77.6 70.4 q2.4 2.4 4.8 0', 1.6),
+  open: `<path d="M76.8 69.8 h6.4 q-0.2 4.6 -3.2 4.6 q-3 0 -3.2 -4.6z" fill="#5a2a3a"/><path d="M78.2 72.8 q1.8 1.2 3.6 0" fill="none" stroke="#ff8fa8" stroke-width="1.4" stroke-linecap="round"/>`,
+  o: `<ellipse cx="80" cy="71.4" rx="1.8" ry="2.2" fill="#5a2a3a"/>`,
+  smirk: line('M77.2 71.2 q2.8 1.2 5.6 -1.4', 1.6),
+  cat: line('M76.6 70.2 q1.7 2 3.4 0 q1.7 2 3.4 0', 1.5),
+  flat: line('M77.6 71.2 h4.8', 1.6),
+};
+
+function base(id, { eyes = 'closed', mouth = 'none', brows = 'none' } = {}) {
   const body = 'M54 104 C50 72 60 40 80 40 C100 40 110 72 106 104 Q80 110 54 104 Z';
-  const eyes = sleep
-    ? `<path d="M68.6 63 q3.7 2.2 7.4 0M84 63 q3.7 2.2 7.4 0" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`
-    : `<path d="M68.6 62 q3.7 3.6 7.4 0M84 62 q3.7 3.6 7.4 0" fill="none" stroke="${INK}" stroke-width="2.1" stroke-linecap="round"/>`;
+  const face = (EYES[eyes] || EYES.closed)() + (BROWS[brows] || '') + (MOUTH[mouth] || '');
   return {
     defs: `
       <radialGradient id="${id}-b" cx="42%" cy="30%" r="78%"><stop offset="0" stop-color="#fffcf5"/><stop offset=".5" stop-color="#f2e8d6"/><stop offset="1" stop-color="#cbbbe4"/></radialGradient>
@@ -25,7 +63,7 @@ function base(id, { sleep = false } = {}) {
       <ellipse cx="70" cy="51" rx="6.5" ry="3.4" transform="rotate(-32 70 51)" fill="#fff" opacity=".55"/>
       <circle cx="80" cy="52" r="4.6" fill="url(#${id}-m)"/>
       <path d="M80 48.5 l2 3.5 -2 3.5 -2 -3.5z" fill="#f2c45e"/>
-      ${eyes}
+      ${face}
       <ellipse cx="65" cy="70" rx="3.6" ry="2" fill="#ff9fb4" opacity=".55"/>
       <ellipse cx="95" cy="70" rx="3.6" ry="2" fill="#ff9fb4" opacity=".55"/>
       <ellipse cx="68" cy="104" rx="8" ry="4.5" fill="#efe3d0"/>
@@ -33,9 +71,6 @@ function base(id, { sleep = false } = {}) {
     hands: `<circle cx="57" cy="86" r="6" fill="#f3e9da"/><circle cx="103" cy="86" r="6" fill="#f3e9da"/>`,
   };
 }
-
-const star = (x, y, r = 3, c = GOLD) =>
-  `<path d="M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3}Z" fill="${c}"/>`;
 
 // 소품: [뒤(몸 뒤에 그림), 앞(손 위에 그림)]
 const PROPS = {
@@ -125,9 +160,33 @@ const PROPS = {
   ],
 };
 
+// 콘텐츠별 표정
+const FACES = {
+  life: { eyes: 'closed', mouth: 'smile' },
+  newyear: { eyes: 'happy', mouth: 'open' },
+  tojeong: { eyes: 'smug', mouth: 'smirk', brows: 'firm' },
+  today: { eyes: 'dot', mouth: 'open' },
+  tomorrow: { eyes: 'wink', mouth: 'smile' },
+  date: { eyes: 'dot', mouth: 'flat', brows: 'firm' },
+  match: { eyes: 'heart', mouth: 'smile' },
+  namematch: { eyes: 'happy', mouth: 'cat' },
+  number: { eyes: 'star', mouth: 'open' },
+  blessing: { eyes: 'happy', mouth: 'cat' },
+  moving: { eyes: 'dot', mouth: 'smile', brows: 'soft' },
+  wish: { eyes: 'closed', mouth: 'smile', brows: 'soft' },
+  charm: { eyes: 'smug', mouth: 'smirk', brows: 'firm' },
+  sal: { eyes: 'dot', mouth: 'flat', brows: 'firm' },
+  ask: { eyes: 'dot', mouth: 'o', brows: 'raise' },
+  dream: { eyes: 'sleep', mouth: 'o' },
+  tarot: { eyes: 'smug', mouth: 'smirk', brows: 'raise' },
+  psych: { eyes: 'side', mouth: 'smile', brows: 'soft' },
+  name: { eyes: 'closed', mouth: 'cat' },
+  face: { eyes: 'wide', mouth: 'o', brows: 'raise' },
+};
+
 export function dosaArtSvg(kind) {
   const id = `da-${kind}`;
-  const b = base(id, { sleep: kind === 'dream' });
+  const b = base(id, FACES[kind] || {});
   const [back, front] = (PROPS[kind] || (() => ['', '']))();
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 10 136 102"><defs>${b.defs}</defs>${back}${b.back}${b.body}${b.hands}${front}</svg>`;
 }

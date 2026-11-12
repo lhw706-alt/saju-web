@@ -51,6 +51,9 @@ export default function Layout() {
             </Link>
           ))}
         </nav>
+        <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setContact(true)}>
+          문의하기
+        </button>
       </header>
 
       <main className="main">
