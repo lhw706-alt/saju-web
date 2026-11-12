@@ -15,7 +15,7 @@ export default function Home() {
       <section className="hero">
         <p className="eyebrow">만세력 · AI 사주 풀이</p>
         <h1>
-          달빛 아래 펼쳐 보는
+          하늘의 흐름으로 읽는
           <br />
           <em>나의 여덟 글자</em>
         </h1>
