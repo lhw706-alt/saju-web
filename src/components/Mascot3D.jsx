@@ -168,55 +168,6 @@ export function buildCheondong() {
     char.add(b);
   });
 
-  // 콧물방울: 만화식 — 흰 풍선 + 진한 갈색 테두리, 콧구멍에서 좁은 목으로 이어져 아래·오른쪽으로 부풂.
-  // 자는 동안 숨 쉴 때마다 커졌다 작아짐 (누르면 톡 터짐). 카메라를 향하는 스프라이트라 늘 같은 모양으로 보임
-  const bubbleTex = canvasTexture(256, (g, size) => {
-    const A = { x: 34, y: 34 }; // 콧구멍 쪽 목
-    const C = { x: 150, y: 150 }; // 풍선 중심
-    const r = 84;
-    const angA = Math.atan2(A.y - C.y, A.x - C.x);
-    const a1 = angA - 0.42;
-    const a2 = angA + 0.42;
-    const neck = { x: C.x + (A.x - C.x) * 0.58, y: C.y + (A.y - C.y) * 0.58 };
-    g.clearRect(0, 0, size, size);
-    g.beginPath();
-    g.moveTo(A.x, A.y);
-    g.quadraticCurveTo(neck.x, neck.y, C.x + Math.cos(a1) * r, C.y + Math.sin(a1) * r);
-    g.arc(C.x, C.y, r, a1, a2, true);
-    g.quadraticCurveTo(neck.x, neck.y, A.x, A.y);
-    g.closePath();
-    const fill = g.createRadialGradient(C.x - 30, C.y - 34, 10, C.x, C.y, r);
-    fill.addColorStop(0, '#ffffff');
-    fill.addColorStop(1, '#e3f1ff');
-    g.fillStyle = fill;
-    g.fill();
-    g.lineWidth = 12;
-    g.lineJoin = 'round';
-    g.strokeStyle = '#4a2a24';
-    g.stroke();
-    // 반짝임 한 줄
-    g.beginPath();
-    g.arc(C.x, C.y, r * 0.7, -2.5, -1.7);
-    g.lineWidth = 8;
-    g.lineCap = 'round';
-    g.strokeStyle = 'rgba(255,255,255,0.95)';
-    g.stroke();
-  });
-  const bubble = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex, transparent: true, depthWrite: false, toneMapped: false }));
-  bubble.center.set(34 / 256, 1 - 34 / 256); // 목(콧구멍)을 기준점으로 커지고 줄어듦
-  bubble.userData.base = new THREE.Vector3(0.03, 0.09, 1.1);
-  bubble.position.copy(bubble.userData.base);
-  char.add(bubble);
-  // 터질 때 튀는 물방울
-  const drops = new THREE.Group();
-  for (let i = 0; i < 8; i++) {
-    const d = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false }));
-    d.userData.dir = new THREE.Vector3(Math.cos((i / 8) * Math.PI * 2), Math.sin((i / 8) * Math.PI * 2), 0.4).normalize();
-    drops.add(d);
-  }
-  drops.position.copy(bubble.userData.base);
-  char.add(drops);
-
   // 자는 표시 zZZ: 크기가 다른 Z 세 개가 머리 오른쪽에서 차례로 떠오름 (누르면 사라졌다가 다시 잠들면 나타남)
   const zTex = canvasTexture(128, (g, size) => {
     g.clearRect(0, 0, size, size);
@@ -342,12 +293,11 @@ export function buildCheondong() {
   shadow.position.y = 0.01;
   floor.add(shadow);
 
-  return { root, char, body, spirits, crescent, mark, aura, sparks, floor, disc, shadow, face, blushMat, bubble, drops, zzz };
+  return { root, char, body, spirits, crescent, mark, aura, sparks, floor, disc, shadow, face, blushMat, zzz };
 }
 
 // ── 얼굴 캔버스 ──
 // 껍질은 몸 앞쪽 ±FACE_PHI 라디안, 높이 FACE_Y0~FACE_Y1. 캔버스 가로 = 각도, 세로 = 높이.
-const BUBBLE_SIZE = 0.38; // 콧물방울 스프라이트 크기 (scale 1 일 때)
 const FACE_PHI = 0.8;
 const FACE_Y0 = -0.25;
 const FACE_Y1 = 0.78;
@@ -371,15 +321,7 @@ function createFace() {
 
   // 평소: 편안하게 감은 눈(‿) — 접신 중인 천동이 (2026-11-13 사용자: 뜬 눈보다 감은 눈이 낫다)
   const closedEyes = [-0.34, 0.34].map((x) => ({ x: faceX(x), y: faceY(0.24) }));
-  const nose = { x: faceX(0.03), y: faceY(0.09) };
-  function drawNose() {
-    g.fillStyle = '#b9837c';
-    g.beginPath();
-    g.ellipse(nose.x, nose.y, 10, 8, 0, 0, Math.PI * 2);
-    g.fill();
-  }
   function drawClosed() {
-    drawNose();
     g.strokeStyle = '#2a2440';
     g.lineWidth = 24;
     g.lineCap = 'round';
@@ -412,7 +354,6 @@ function createFace() {
 
   // 깜짝 놀란 얼굴: 동그랗게 뜬 눈(작은 눈동자), 치켜 올라간 눈썹, 'o' 입, 머리 옆 '!'
   function drawSurprised(lookX, lookY) {
-    drawNose();
     const rx = 92;
     const ry = 104;
     eyes.forEach((e, i) => {
@@ -535,7 +476,7 @@ export default function Mascot3D({ className = '', interactive = true }) {
       pointer.y = THREE.MathUtils.clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1.5, 1.5);
       renderer.domElement.style.cursor = hitChar(e) ? 'pointer' : '';
     };
-    // 누르면 콧물방울이 톡 터지면서 깜짝 놀람 (1.4초 뒤 다시 잠듦, 방울은 천천히 다시 생김)
+    // 누르면 깜짝 놀람: 눈 번쩍·폴짝, zZZ 사라짐 (1.4초 뒤 다시 잠듦)
     let surpriseAt = -10;
     const SURPRISE_SEC = 1.4;
     const onDown = (e) => {
@@ -600,22 +541,6 @@ export default function Mascot3D({ className = '', interactive = true }) {
       const hop = since < 0.5 && !reduce ? Math.sin((since / 0.5) * Math.PI) * 0.28 : 0;
       m.char.position.y = hop;
 
-      // 콧물방울: 숨 쉴 때마다 부풀었다 줄어듦 → 누르면 0.15초 만에 커지며 터지고, 물방울이 튐 → 약 2.5초 뒤 다시 자람
-      const breathe = 0.5 + 0.5 * Math.sin(t * 1.6);
-      const regrow = THREE.MathUtils.clamp((since - 1.0) / 1.5, 0, 1);
-      let bScale;
-      let bOpacity = 0.55;
-      if (since < 0.15) {
-        bScale = (0.55 + breathe * 0.55) * (1 + (since / 0.15) * 0.6);
-        bOpacity = 0.55 * (1 - since / 0.15);
-      } else if (since < 1.0) {
-        bScale = 0.001;
-      } else {
-        bScale = Math.max(0.001, regrow * (reduce ? 0.8 : 0.55 + breathe * 0.55));
-      }
-      m.bubble.scale.setScalar(bScale);
-      m.bubble.material.opacity = bOpacity;
-      m.bubble.visible = bScale > 0.01;
       // zZZ: 차례로 오른쪽 위로 떠오르며 커지고 흐려짐. 놀란 동안은 숨기고, 다시 잠들면 서서히 나타남
       const zShow = THREE.MathUtils.clamp((since - 1.6) / 1.0, 0, 1);
       m.zzz.children.forEach((z) => {
@@ -623,13 +548,6 @@ export default function Mascot3D({ className = '', interactive = true }) {
         z.position.set(ph * 0.45, ph * 0.6, 0);
         z.scale.setScalar(z.userData.size * (0.75 + ph * 0.45));
         z.material.opacity = Math.sin(ph * Math.PI) * zShow;
-      });
-      const dp = since / 0.45;
-      m.drops.children.forEach((d) => {
-        if (dp < 1) {
-          d.position.copy(d.userData.dir).multiplyScalar(0.05 + dp * 0.4);
-          d.material.opacity = 0.9 * (1 - dp);
-        } else d.material.opacity = 0;
       });
 
       // 접신: 이마 표식·후광 맥동, 구슬이 차례로 빛남
