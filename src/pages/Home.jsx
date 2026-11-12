@@ -2,10 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import BirthForm from '../components/BirthForm.jsx';
 import { saveInput, loadInput } from '../lib/storage.js';
 import { TOPICS } from '../lib/topics.js';
+import { trackEvent } from '../lib/analytics.js';
 
 export default function Home() {
   const navigate = useNavigate();
   const onSubmit = (input) => {
+    trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
     navigate('/result');
   };

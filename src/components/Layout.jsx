@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SITE, PARTNER } from '../site.js';
+import { trackEvent } from '../lib/analytics.js';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -45,7 +46,7 @@ export default function Layout() {
       </main>
 
       <footer className="footer">
-        <a className="partner" href={PARTNER.url} target="_blank" rel="noopener">
+        <a className="partner" href={PARTNER.url} target="_blank" rel="noopener" onClick={() => trackEvent('partner_click', { partner: 'damoapick' })}>
           <span className="partner-tag">함께 운영하는 서비스</span>
           <strong>{PARTNER.name}</strong>
           <span>{PARTNER.text} →</span>

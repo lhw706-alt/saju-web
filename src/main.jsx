@@ -6,7 +6,10 @@ import Home from './pages/Home.jsx';
 import Result from './pages/Result.jsx';
 import Privacy from './pages/Privacy.jsx';
 import NotFound from './pages/NotFound.jsx';
+import { initAnalytics } from './lib/analytics.js';
 import './styles.css';
+
+initAnalytics();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

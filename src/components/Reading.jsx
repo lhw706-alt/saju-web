@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { TOPICS } from '../lib/topics.js';
+import { trackEvent } from '../lib/analytics.js';
 
 const END_MESSAGES = {
   refusal: '이 주제는 풀이를 만들지 못했어요. 다른 주제를 골라 주세요.',
@@ -59,6 +60,7 @@ export default function Reading({ input }) {
     abortRef.current = ctrl;
     const update = (patch) => setResults((r) => ({ ...r, [id]: { ...r[id], ...patch } }));
     update({ text: '', status: 'loading', end: null, error: null });
+    trackEvent('reading_start', { topic: id });
 
     try {
       const res = await fetch('/api/reading', {
@@ -85,6 +87,7 @@ export default function Reading({ input }) {
       const clean = text.replace(/\n*\[\[END:\w+\]\]\s*$/, '');
       if (m && !clean.trim()) update({ status: 'error', error: END_MESSAGES[m[1]] || END_MESSAGES.error, text: '' });
       else update({ status: 'done', text: clean, end: m ? m[1] : null });
+      trackEvent(m && !clean.trim() ? 'reading_fail' : 'reading_done', { topic: id, end: m ? m[1] : 'ok' });
     } catch (e) {
       if (e.name === 'AbortError') {
         setResults((r) => {
