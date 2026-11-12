@@ -33,6 +33,34 @@ function Rotator() {
   );
 }
 
+// 입장하면 천둥도사가 말을 건다: 말풍선에 한 글자씩 "무엇이 궁금하느냐?"
+const DOSA_LINE = '무엇이 궁금하느냐?';
+function DosaBubble() {
+  const [n, setN] = useState(() => (reduced() ? DOSA_LINE.length : 0));
+  useEffect(() => {
+    if (reduced()) return;
+    let i = 0;
+    let timer = setTimeout(function tick() {
+      i += 1;
+      setN(i);
+      if (i < DOSA_LINE.length) timer = setTimeout(tick, 110);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <p className={`dosa-bubble${n > 0 ? ' is-on' : ''}`} aria-label={`천둥도사: ${DOSA_LINE}`}>
+      <span className="dosa-name" aria-hidden="true">천둥도사</span>
+      <span aria-hidden="true">
+        {DOSA_LINE.slice(0, n)}
+        <span className="dosa-rest">{DOSA_LINE.slice(n)}</span>
+      </span>
+    </p>
+  );
+}
+
+// 물음에 답하는 바로가기: 풀이 주제 그대로 (결과 화면에서 바로 시작)
+const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career'].map((id) => TOPICS.find((t) => t.id === id)).filter(Boolean);
+
 export default function Home() {
   const navigate = useNavigate();
   const { hash } = useLocation();
@@ -69,8 +97,8 @@ export default function Home() {
           <Suspense fallback={<MascotStill />}>
             <Mascot3D />
           </Suspense>
+          <DosaBubble />
         </div>
-        <p className="eyebrow">영험한 천둥도사의 무료 사주 풀이</p>
         <h1>
           <span className="visually-hidden">{WORDS.join(', ')}까지 </span>
           <Rotator />
@@ -81,6 +109,16 @@ export default function Home() {
           생년월일시를 넣으면 여덟 글자(사주 원국)와 오행·대운을 바로 계산하고,
           <br className="pc" /> 영험한 천둥도사가 원국의 어느 글자에서 그렇게 읽었는지 근거와 함께 풀어 드려요.
         </p>
+        {/* 도사의 물음에 답하듯 고르는 바로가기 (지금 볼 수 있는 풀이만) */}
+        <ul className="ask-chips" aria-label="궁금한 것 고르기">
+          {ASK_CHIPS.map((t) => (
+            <li key={t.id}>
+              <button type="button" className="ask-chip" onClick={() => openContent({ id: `chip_${t.id}`, title: t.label, topic: t.id })}>
+                {t.label}
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div ref={formRef} className="form-anchor">

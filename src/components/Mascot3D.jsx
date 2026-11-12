@@ -46,7 +46,7 @@ function glyphTexture(ch, color) {
     halo.addColorStop(1, `${color}00`);
     g.fillStyle = halo;
     g.fillRect(0, 0, s, s);
-    g.font = `900 ${s * 0.46}px "ChosunSm", serif`;
+    g.font = `600 ${s * 0.46}px "ChosunSm", serif`;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.shadowColor = color;
@@ -56,7 +56,7 @@ function glyphTexture(ch, color) {
     g.shadowBlur = 0;
     g.globalAlpha = 0.35;
     g.fillStyle = '#ffffff';
-    g.font = `900 ${s * 0.44}px "ChosunSm", serif`;
+    g.font = `600 ${s * 0.44}px "ChosunSm", serif`;
     g.fillText(ch, c, c + s * 0.02);
     g.globalAlpha = 1;
   });
@@ -85,7 +85,7 @@ function circleTexture() {
       g.stroke();
     }
     g.globalAlpha = 0.95;
-    g.font = `700 ${s * 0.055}px "ChosunSm", serif`;
+    g.font = `600 ${s * 0.055}px "ChosunSm", serif`;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     BRANCHES.forEach((ch, i) => {
@@ -218,7 +218,7 @@ export function buildCheondong() {
   ELEMENT_GLYPHS.forEach((ch, k) => {
     const col = ELEMENT_COLORS[k];
     const tex = glyphTexture(ch, col);
-    document.fonts?.load('900 160px "ChosunSm"', ch).then(() => tex.userData.redraw()).catch(() => {});
+    document.fonts?.load('600 160px "ChosunSm"', ch).then(() => tex.userData.redraw()).catch(() => {});
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
     sp.scale.setScalar(0.7);
     sp.userData = { angle: (k / ELEMENT_GLYPHS.length) * Math.PI * 2, height: [0.55, -0.25, 0.95, 0.15, -0.5][k], phase: k * 1.3 };
@@ -255,7 +255,7 @@ export function buildCheondong() {
   floor.position.y = -1.35;
   const discTex = circleTexture();
   // 글꼴이 늦게 오면 다시 그림 (처음엔 대체 글꼴로 그려짐)
-  document.fonts?.load('700 56px "ChosunSm"', '子丑寅卯').then(() => discTex.userData.redraw()).catch(() => {});
+  document.fonts?.load('600 56px "ChosunSm"', '子丑寅卯').then(() => discTex.userData.redraw()).catch(() => {});
   const disc = new THREE.Mesh(
     new THREE.PlaneGeometry(4.6, 4.6),
     new THREE.MeshBasicMaterial({ map: discTex, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false })
