@@ -677,21 +677,6 @@ legend.contact-label { margin-bottom: 12px; }
 .field-with-msg { display: grid; gap: 6px; align-content: start; }
 .field-msg { margin: 0; font-size: 14px; color: var(--danger); letter-spacing: var(--ls-label); }
 .input input[aria-invalid="true"] { border-color: var(--danger); }
-/* 불러오기 (지난 입력) */
-.preset { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--r-md); background: var(--primary-soft); border: 1px solid var(--primary-line); }
-.preset-info { display: grid; gap: 2px; min-width: 0; }
-.preset-label { font-size: 14px; color: var(--muted); }
-.preset-info b { font-size: 15px; font-weight: 600; color: var(--text); word-break: keep-all; }
-.preset-actions { display: flex; gap: 6px; flex: none; }
-.preset-load { height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: var(--on-primary); font-size: 14px; font-weight: 600; cursor: pointer; }
-.preset-load:hover { background: var(--primary-strong); }
-.preset-del { height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
-.preset-del:hover { color: var(--text); }
-.check.remember { margin-top: 4px; }
-.preset.is-many { align-items: flex-end; }
-.preset.is-many .preset-info { flex: 1 1 260px; gap: 8px; }
-.preset.is-many .sel-trigger { background: var(--bg); font-size: 15px; }
-.preset.is-many .preset-actions { padding-bottom: 4px; }
 .sel-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 로그인 */
 .login { position: relative; width: 100%; max-width: 400px; padding: 22px 20px 20px; border-radius: 24px; outline: none; background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6); animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
@@ -706,3 +691,20 @@ legend.contact-label { margin-bottom: 12px; }
 .user-menu-list button { width: 100%; height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 14px; text-align: left; cursor: pointer; }
 .user-menu-list button:hover { background: var(--track); }
 @media (max-width: 559px) { .login { max-width: none; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; } }
+
+/* 저장된 정보로 바로 보기 (목록: 줄을 누르면 불러오기, ✕ 지우기) */
+.saved { display: grid; gap: 10px; }
+.saved-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-2); letter-spacing: var(--ls-body); }
+.saved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.saved-item { display: flex; align-items: center; gap: 4px; border-radius: var(--r-md); background: var(--bg); transition: background 0.15s ease; }
+.saved-item:hover { background: #26272b; }
+.saved-load { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 6px 12px 16px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+.saved-text { display: grid; gap: 2px; min-width: 0; }
+.saved-text b { font-size: 16px; font-weight: 600; }
+.saved-text span { font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-go { flex: none; color: var(--primary); }
+.saved-del { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-right: 6px; border: 0; border-radius: 10px; background: none; color: var(--faint); cursor: pointer; }
+.saved-del:hover { color: var(--text-2); background: var(--track); }
+.saved-more { justify-self: start; padding: 4px 2px; border: 0; background: none; color: var(--text-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
+.saved-or { display: flex; align-items: center; gap: 12px; margin: 10px 0 2px; font-size: 14px; color: var(--muted); }
+.saved-or::before, .saved-or::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }

@@ -5,11 +5,14 @@ import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
 import { loadPresets, savePreset, removePreset } from '../lib/storage.js';
 
-// 불러오기 칸에 보여 줄 한 줄 요약: 1990.5.15 (양력) 14:30 · 남성 · 서울
-function presetText(p) {
+// 저장된 정보 한 줄: 큰 글씨(생년월일·성별) / 작은 글씨(양음력·시각·지역)
+function presetMain(p) {
+  return `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
+}
+function presetSub(p) {
   const city = CITIES.find((c) => c.id === p.city)?.name || '';
   const time = p.timeKnown ? `${String(p.hour).padStart(2, '0')}:${String(p.minute || 0).padStart(2, '0')}` : '시각 모름';
-  return `${p.year}.${p.month}.${p.day} ${p.calendar === 'lunar' ? `음력${p.leap ? '(윤달)' : ''}` : '양력'} · ${time} · ${p.gender === 'male' ? '남성' : '여성'} · ${city}`;
+  return [p.calendar === 'lunar' ? `음력${p.leap ? '(윤달)' : ''}` : '양력', time, city].join(' · ');
 }
 
 const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '', gender: '', city: 'seoul' };
@@ -62,21 +65,18 @@ export default function StepForm({ initial, onSubmit }) {
     setF((p) => ({ ...p, timeKnown: false, hour: '' }));
     setStep(3);
   };
-  // 이 브라우저에 기억해 둔 지난 입력 (여러 명이면 드롭다운으로 골라 불러오기 / 지우기)
+  // 이 브라우저에 기억해 둔 지난 입력: 목록에서 줄을 누르면 바로 불러오기, ✕ 로 지우기 (2명까지 보이고 나머지는 더 보기)
   const [presets, setPresets] = useState(loadPresets);
-  const [sel, setSel] = useState(0);
-  const preset = presets[Math.min(sel, presets.length - 1)];
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? presets : presets.slice(0, 2);
   const finish = (data) => {
     savePreset(data); // 입력을 마치면 이 브라우저에 바로 기억 (불러오기용)
     onSubmit(data);
   };
-  const applyPreset = () => {
-    if (check(preset)) onSubmit(preset); // 불러오면 바로 결과로
+  const applyPreset = (x) => {
+    if (check(x)) onSubmit(x); // 불러오면 바로 결과로
   };
-  const deletePreset = () => {
-    setPresets(removePreset(preset));
-    setSel(0);
-  };
+  const deletePreset = (x) => setPresets(removePreset(x));
 
   const submit = (e) => {
     e.preventDefault();
@@ -98,33 +98,42 @@ export default function StepForm({ initial, onSubmit }) {
       </div>
 
       <div className="step" key={step}>
-        <h2 className="step-q">{QUESTIONS[step]}</h2>
 
-        {step === 0 && preset && (
-          <div className={`preset${presets.length > 1 ? ' is-many' : ''}`}>
-            <div className="preset-info">
-              <span className="preset-label">{presets.length > 1 ? `저장된 정보 ${presets.length}개` : '지난번에 입력한 정보'}</span>
-              {presets.length > 1 ? (
-                <Select
-                  ariaLabel="저장된 정보"
-                  value={String(Math.min(sel, presets.length - 1))}
-                  onChange={(v) => setSel(Number(v))}
-                  options={presets.map((x, i) => ({ value: String(i), label: presetText(x) }))}
-                />
-              ) : (
-                <b>{presetText(preset)}</b>
-              )}
-            </div>
-            <div className="preset-actions">
-              <button type="button" className="preset-del" onClick={deletePreset}>
-                지우기
+        {step === 0 && presets.length > 0 && (
+          <div className="saved">
+            <h2 className="saved-title">저장된 정보로 바로 보기</h2>
+            <ul className="saved-list">
+              {shown.map((x) => (
+                <li key={presetMain(x) + presetSub(x)} className="saved-item">
+                  <button type="button" className="saved-load" onClick={() => applyPreset(x)}>
+                    <span className="saved-text">
+                      <b>{presetMain(x)}</b>
+                      <span>{presetSub(x)}</span>
+                    </span>
+                    <svg className="saved-go" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => deletePreset(x)}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {presets.length > 2 && (
+              <button type="button" className="saved-more" onClick={() => setShowAll((v) => !v)}>
+                {showAll ? '접기' : `${presets.length - 2}명 더 보기`}
               </button>
-              <button type="button" className="preset-load" onClick={applyPreset}>
-                불러오기
-              </button>
-            </div>
+            )}
+            <p className="saved-or">
+              <span>또는 새로 입력해요</span>
+            </p>
           </div>
         )}
+
+        <h2 className="step-q">{QUESTIONS[step]}</h2>
 
         {step === 0 && (
           <div className="step-choices">
