@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { SITE } from '../site.js';
 import Logo from './Logo.jsx';
 import { GROUPS } from '../lib/contents.js';
 import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
+import LoginModal from './LoginModal.jsx';
 import { clearInput } from '../lib/storage.js';
 
 function setHeadTag(selector, create, update) {
@@ -17,9 +18,37 @@ function setHeadTag(selector, create, update) {
 }
 
 export default function Layout() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
   const [contact, setContact] = useState(false);
   const closeContact = useCallback(() => setContact(false), []);
+  // 로그인 상태 (카카오 로그인 — 서버 /api/auth/me). enabled: 서버에 카카오 키가 설정됐는지
+  const [auth, setAuth] = useState({ enabled: false, user: null, ready: false });
+  const [login, setLogin] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [notice, setNotice] = useState('');
+  const closeLogin = useCallback(() => setLogin(false), []);
+  useEffect(() => {
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setAuth({ enabled: !!d?.enabled, user: d?.user || null, ready: true }))
+      .catch(() => setAuth((a) => ({ ...a, ready: true })));
+  }, []);
+  // 로그인 실패·준비중으로 돌아왔을 때 안내 (주소의 ?login=… 은 지움)
+  useEffect(() => {
+    const m = search.match(/[?&]login=(\w+)/);
+    if (!m) return undefined;
+    setNotice(m[1] === 'unavailable' ? '로그인은 준비중이에요. 곧 열려요!' : '로그인하지 못했어요. 다시 시도해 주세요.');
+    navigate(pathname + search.replace(/[?&]login=\w+/, '').replace(/^&/, '?'), { replace: true });
+    const t = setTimeout(() => setNotice(''), 2600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  const logout = async () => {
+    setMenu(false);
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    setAuth((a) => ({ ...a, user: null }));
+  };
   useEffect(() => {
     window.scrollTo(0, 0);
     // 사주 화면(입력·결과)을 벗어나면 입력한 생년월일시를 지움 → 다음엔 처음부터 입력
@@ -54,9 +83,25 @@ export default function Layout() {
             </Link>
           ))}
         </nav>
-        <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setContact(true)}>
-          문의하기
-        </button>
+        {/* 로그인 (로그인하면 닉네임 + 로그아웃 메뉴) */}
+        {auth.user ? (
+          <div className="user-menu">
+            <button type="button" className="header-contact" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+              {auth.user.nick || '내 계정'}
+            </button>
+            {menu && (
+              <div className="user-menu-list" role="menu">
+                <button type="button" role="menuitem" onClick={logout}>
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setLogin(true)}>
+            로그인
+          </button>
+        )}
       </header>
 
       <main className="main">
@@ -76,6 +121,10 @@ export default function Layout() {
         </p>
       </footer>
       <ContactModal open={contact} onClose={closeContact} />
+      <LoginModal open={login} enabled={auth.enabled} onClose={closeLogin} />
+      <div className="toast-wrap" role="status" aria-live="polite">
+        {notice && <p className="toast">{notice}</p>}
+      </div>
     </div>
   );
 }

@@ -693,3 +693,16 @@ legend.contact-label { margin-bottom: 12px; }
 .preset.is-many .sel-trigger { background: var(--bg); font-size: 15px; }
 .preset.is-many .preset-actions { padding-bottom: 4px; }
 .sel-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 로그인 */
+.login { position: relative; width: 100%; max-width: 400px; padding: 22px 20px 20px; border-radius: 24px; outline: none; background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6); animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.login-lead { margin: 6px 0 18px; font-size: 15px; color: var(--text-2); }
+.kakao-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 12px; background: #fee500; color: rgba(0, 0, 0, 0.85); font-size: 16px; font-weight: 600; text-decoration: none; }
+.kakao-btn:hover { filter: brightness(0.97); }
+.login-off { margin: 0; padding: 14px; border-radius: 12px; background: var(--bg); color: var(--text-2); text-align: center; font-size: 15px; }
+.login-note { margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.login-note a { color: var(--text-2); }
+.user-menu { position: relative; order: 1; flex: none; }
+.user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 120px; padding: 6px; border-radius: 12px; border: 1px solid var(--line); background: #26272b; box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6); }
+.user-menu-list button { width: 100%; height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 14px; text-align: left; cursor: pointer; }
+.user-menu-list button:hover { background: var(--track); }
+@media (max-width: 559px) { .login { max-width: none; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; } }

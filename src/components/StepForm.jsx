@@ -66,9 +66,8 @@ export default function StepForm({ initial, onSubmit }) {
   const [presets, setPresets] = useState(loadPresets);
   const [sel, setSel] = useState(0);
   const preset = presets[Math.min(sel, presets.length - 1)];
-  const [remember, setRemember] = useState(true);
   const finish = (data) => {
-    if (remember) savePreset(data);
+    savePreset(data); // 입력을 마치면 이 브라우저에 바로 기억 (불러오기용)
     onSubmit(data);
   };
   const applyPreset = () => {
@@ -220,10 +219,6 @@ export default function StepForm({ initial, onSubmit }) {
           <>
             <Select ariaLabel="태어난 곳" value={f.city} onChange={(v) => setF((p) => ({ ...p, city: v }))} options={CITY_OPTIONS} />
             <p className="hint">태어난 곳의 경도로 실제 태양 시각을 맞춰 시주를 정해요. 서울은 표준시보다 약 32분 늦어요.</p>
-            <label className="check remember">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-              내 정보 기억하기
-            </label>
           </>
         )}
 
@@ -242,7 +237,6 @@ export default function StepForm({ initial, onSubmit }) {
           </button>
         )}
       </div>
-      <p className="hint center">이름·연락처는 받지 않아요. 생년월일시는 서버에 저장하지 않고, 기억하기를 켜면 이 브라우저에만 남아요.</p>
     </form>
   );
 }
