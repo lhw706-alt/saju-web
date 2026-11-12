@@ -295,7 +295,7 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 
 /* 결과 머리 */
 .result-head { position: relative; padding: 36px 0 8px; }
-/* 다른 사주 보기: 결과 화면 오른쪽 위 */
+/* 사주 다시 보기(다시 입력): 결과 화면 오른쪽 위 */
 .result-head .result-again { position: absolute; top: 28px; right: 0; }
 .result-title { font-family: var(--title); font-weight: 400; letter-spacing: -0.02em; font-size: clamp(22px, 5.4vw, 30px); margin: 0; display: flex; align-items: center; gap: 14px; }
 .dm { font-family: var(--serif); font-weight: 500; display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; font-size: 32px; background: var(--surface-2); border: 1px solid currentColor; }
