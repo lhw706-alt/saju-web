@@ -20,8 +20,9 @@
   --water: #6b9be6;
 
   --r: 18px;
-  --serif: 'Noto Serif KR', 'Batang', serif;
-  --sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  /* 사이트 전체 서체: 조선신명조 (src/lib/fonts.js 에서 등록). 받는 동안은 기기 기본 명조 */
+  --serif: 'ChosunSm', 'AppleMyungjo', 'Batang', 'Noto Serif KR', serif;
+  --sans: var(--serif);
 }
 
 * { box-sizing: border-box; }

@@ -7,8 +7,10 @@ import Result from './pages/Result.jsx';
 import Privacy from './pages/Privacy.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
+import { loadFonts } from './lib/fonts.js';
 import './styles.css';
 
+loadFonts();
 initAnalytics();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
