@@ -333,8 +333,8 @@ function createFace() {
   function drawAngry(lookX, lookY) {
     const anger = 1;
     const blink = 0;
-    const rx = 100;
-    const ry = 114;
+    const rx = 74;
+    const ry = 86;
     eyes.forEach((e, i) => {
       const side = i === 0 ? -1 : 1; // 왼눈 -1, 오른눈 +1
       const drop = anger * ry * 0.62 + blink * ry * 2.2; // 눈꺼풀이 내려온 정도
@@ -355,37 +355,13 @@ function createFace() {
       g.lineTo(xin, e.y + ry + 60);
       g.closePath();
       g.clip();
-      // 흰자
-      g.fillStyle = '#fbf8f2';
+      // 흰자 없이 검은 눈 (윗눈꺼풀에 잘려 노려보는 모양) — 시선 쪽으로 살짝 치우침
+      const px = e.x + lookX * rx * 0.12;
+      const py = e.y + lookY * ry * 0.08;
+      g.fillStyle = '#16121f';
       g.beginPath();
-      g.ellipse(e.x, e.y, rx, ry, 0, 0, Math.PI * 2);
+      g.ellipse(px, py, rx, ry, 0, 0, Math.PI * 2);
       g.fill();
-      // 큰 눈동자 (포인터 방향)
-      const px = e.x + lookX * rx * 0.24;
-      const py = e.y + lookY * ry * 0.18 + 8;
-      const pr = 72 - anger * 14;
-      const grad = g.createRadialGradient(px, py + pr * 0.35, 6, px, py, pr * 1.1);
-      grad.addColorStop(0, anger > 0.5 ? '#7a2a30' : '#5b4a96');
-      grad.addColorStop(0.55, anger > 0.5 ? '#3a1218' : '#2a2150');
-      grad.addColorStop(1, '#110d1f');
-      g.fillStyle = grad;
-      g.beginPath();
-      g.ellipse(px, py, pr, pr * 1.1, 0, 0, Math.PI * 2);
-      g.fill();
-      // 반짝임 (큰 것 + 작은 것)
-      g.fillStyle = 'rgba(255,255,255,0.96)';
-      g.beginPath();
-      g.ellipse(px + pr * 0.32, py - pr * 0.42, 22, 19, -0.4, 0, Math.PI * 2);
-      g.fill();
-      g.beginPath();
-      g.arc(px - pr * 0.36, py + pr * 0.4, 9, 0, Math.PI * 2);
-      g.fill();
-      // 눈 테두리 (눈꺼풀 아래 부분만 보임)
-      g.strokeStyle = INK;
-      g.lineWidth = 8;
-      g.beginPath();
-      g.ellipse(e.x, e.y, rx, ry, 0, 0, Math.PI * 2);
-      g.stroke();
       g.restore();
       // 윗눈꺼풀 선: 눈 위로 내려왔을 때만 보이도록 눈 둘레 안쪽으로 자름
       g.save();
