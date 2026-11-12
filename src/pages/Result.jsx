@@ -52,13 +52,16 @@ export default function Result() {
   return (
     <GlossaryProvider>
       <section className="result-head">
-        <Link to="/start" className="btn-ghost result-again">사주 다시 보기</Link>
         <p className="eyebrow">나의 사주</p>
-        <h1 className="result-title">
-          <span className={`dm el-${dm.element}`}>{dm.stem}</span>
-          {dm.ko}{ELEMENT_KO[dm.element]} 일간
-          <Help term="일간" />
-        </h1>
+        {/* 제목 줄: 왼쪽 일간 제목, 오른쪽 끝 '사주 다시 보기' */}
+        <div className="result-title-row">
+          <h1 className="result-title">
+            <span className={`dm el-${dm.element}`}>{dm.stem}</span>
+            {dm.ko}{ELEMENT_KO[dm.element]} 일간
+            <Help term="일간" />
+          </h1>
+          <Link to="/start" className="btn-ghost result-again">사주 다시 보기</Link>
+        </div>
         <p className="lead">
           {DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났어요.
           {strong.length > 0 && ` ${strong.map((e) => ELEMENT_KO[e]).join('·')} 기운이 두드러지고`}
