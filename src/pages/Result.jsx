@@ -6,6 +6,8 @@ import ChartTable from '../components/ChartTable.jsx';
 import ElementChart from '../components/ElementChart.jsx';
 import DaeunList from '../components/DaeunList.jsx';
 import Reading from '../components/Reading.jsx';
+import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
+import { GOD_SHORT } from '../lib/glossary.js';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -33,12 +35,13 @@ export default function Result() {
   const missing = ELEMENTS.filter((e) => chart.elements[e] === 0);
 
   return (
-    <>
+    <GlossaryProvider>
       <section className="result-head">
-        <p className="eyebrow">사주 원국</p>
+        <p className="eyebrow">나의 사주</p>
         <h1 className="result-title">
           <span className={`dm el-${dm.element}`}>{dm.stem}</span>
           {dm.ko}{ELEMENT_KO[dm.element]} 일간
+          <Help term="일간" />
         </h1>
         <p className="lead">
           {DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났어요.
@@ -58,22 +61,37 @@ export default function Result() {
       </section>
 
       <section className="block">
-        <h2 className="section-title">여덟 글자</h2>
+        <h2 className="section-title">
+          사주 원국 <Help term="사주원국" label="사주 원국" />
+          <small>태어난 해·달·날·시를 하늘·땅 글자 두 개씩, 모두 여덟 글자로 나타낸 표</small>
+        </h2>
         <ChartTable chart={chart} />
+        <p className="chart-guide">
+          <b>읽는 법</b> 가운데 <em>태어난 날</em>의 윗글자 <em>{dm.stem}({dm.ko})</em>가 바로 나예요. 나머지 글자는 나와 어떤 관계인지(관계·십성)로 풀이해요. 글자나 ? 를 누르면 뜻을 볼 수 있어요.
+        </p>
       </section>
 
       <section className="block">
-        <h2 className="section-title">오행 분포</h2>
+        <h2 className="section-title">
+          오행 분포 <Help term="오행" />
+          <small>여덟 글자 속 다섯 기운(나무·불·흙·쇠·물)의 개수</small>
+        </h2>
         <ElementChart elements={chart.elements} />
       </section>
 
       <section className="block">
         <h2 className="section-title">
-          대운 <small>10년마다 바뀌는 큰 흐름 · {chart.daeunStart.forward ? '순행' : '역행'}</small>
+          대운 <Help term="대운" />
+          <small>10년마다 바뀌는 인생의 큰 흐름 · 칸 위는 시작 나이</small>
         </h2>
         <DaeunList chart={chart} />
-        <p className="hint">
-          {chart.seun.year}년은 {chart.seun.ganzhi}({chart.seun.ko})년 — 내 일간에서 보면 천간은 {chart.seun.stemGod}, 지지는 {chart.seun.branchGod}의 해예요.
+        <p className="seun">
+          <span className="seun-label">
+            올해의 기운 <Help term="세운" />
+          </span>
+          {chart.seun.year}년은 <b>{chart.seun.ganzhi}({chart.seun.ko})년</b>이에요. 나에게는{' '}
+          <TermButton term={chart.seun.stemGod} className="god" />({GOD_SHORT[chart.seun.stemGod]}),{' '}
+          <TermButton term={chart.seun.branchGod} className="god" />({GOD_SHORT[chart.seun.branchGod]})의 기운이 들어오는 해예요.
         </p>
       </section>
 
@@ -81,6 +99,6 @@ export default function Result() {
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
         <Reading input={inp} initialTopic={initialTopic} />
       </section>
-    </>
+    </GlossaryProvider>
   );
 }

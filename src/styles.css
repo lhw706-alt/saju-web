@@ -310,21 +310,71 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .el-water { color: var(--water); --el: var(--water); }
 
 /* 원국표 */
-.chart { border-radius: var(--r); border: 1px solid var(--line-soft); background: var(--bg-2); padding: 12px 10px; overflow: hidden; }
-.chart-row { display: grid; grid-template-columns: 44px repeat(4, 1fr); gap: 6px; align-items: center; text-align: center; padding: 4px 0; }
-.chart-head { color: var(--muted); font-size: 12px; letter-spacing: var(--ls-caption); }
-.chart-head .is-day { color: var(--primary); font-weight: 600; }
-.chart-label { color: var(--muted); font-size: 10px; text-align: left; padding-left: 4px; }
-.chart-row.small { font-size: 11px; color: var(--text-2); border-top: 1px solid var(--line-soft); padding-top: 8px; }
-.chart-row.small + .chart-row.small { border-top: 0; padding-top: 0; }
-.god { font-size: 11px; color: var(--text-2); letter-spacing: var(--ls-caption); }
+.section-title small { display: block; margin: 4px 0 0; }
+.chart { border-radius: var(--r); border: 1px solid var(--line-soft); background: var(--bg-2); padding: 14px 12px; }
+.chart-row { display: grid; grid-template-columns: 52px repeat(4, minmax(0, 1fr)); gap: 6px; align-items: center; text-align: center; padding: 4px 0; }
+.chart-head { padding-bottom: 6px; }
+.chart-col { display: grid; gap: 2px; justify-items: center; }
+.chart-col-main { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: var(--ls-label); }
+.chart-col-sub { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+.chart-col.is-day .chart-col-main { color: var(--primary); }
+.chart-label { display: grid; gap: 1px; justify-items: start; text-align: left; }
+.chart-label-main { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.chart-label-sub { font-size: 10px; color: var(--muted); }
+.god-cell { display: flex; justify-content: center; min-height: 28px; align-items: center; }
 .glyph {
-  aspect-ratio: 1 / 1.08; border-radius: 14px; display: grid; place-content: center; gap: 2px;
+  aspect-ratio: 1 / 1.12; border-radius: 14px; display: grid; place-content: center; gap: 1px;
   background: color-mix(in srgb, var(--el) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--el) 36%, transparent);
 }
-.glyph-char { font-family: var(--serif); font-weight: 500; font-size: clamp(22px, 6.6vw, 34px); line-height: 1; letter-spacing: 0; }
-.glyph-sub { font-size: 10px; color: var(--text-2); }
-.glyph-empty { color: var(--muted); font-size: 20px; background: var(--bg); border: 1px dashed var(--line); }
+.glyph-char { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 7vw, 38px); line-height: 1.05; letter-spacing: 0; }
+.glyph-ko { font-size: 12px; font-weight: 600; color: var(--text); }
+.glyph-sub { font-size: 10px; color: var(--text-2); white-space: nowrap; }
+.glyph-empty { color: var(--muted); font-size: 12px; background: var(--bg); border: 1px dashed var(--line); }
+.chart-extra { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.chart-row.small { font-size: 12px; color: var(--text-2); }
+.chart-guide { margin: 12px 0 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--primary-soft); font-size: 13px; line-height: 1.6; color: var(--text-2); letter-spacing: var(--ls-label); }
+.chart-guide b { margin-right: 6px; color: var(--primary); font-weight: 600; }
+.chart-guide em { font-style: normal; color: var(--text); font-weight: 600; }
+/* 용어 버튼·? 버튼 */
+.term {
+  padding: 3px 8px; border: 0; border-radius: 999px; background: var(--track); color: var(--text); cursor: pointer;
+  font-size: 12px; font-weight: 600; letter-spacing: var(--ls-caption); text-decoration: underline dotted color-mix(in srgb, currentColor 50%, transparent); text-underline-offset: 3px;
+}
+.term:hover { background: var(--primary-soft); color: var(--primary); }
+.term.is-me { background: var(--primary); color: var(--on-primary); text-decoration: none; }
+.help {
+  display: inline-grid; place-items: center; width: 16px; height: 16px; padding: 0; margin-left: 2px; border-radius: 50%; flex: none;
+  border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 10px; font-weight: 600; line-height: 1; cursor: pointer; vertical-align: middle;
+}
+.help:hover { border-color: var(--primary); color: var(--primary); }
+.section-title .help, .result-title .help { width: 18px; height: 18px; font-size: 11px; font-family: var(--sans); }
+@media (max-width: 420px) {
+  .chart { padding: 12px 8px; }
+  .chart-row { grid-template-columns: 44px repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .chart-label-main { font-size: 11px; }
+  .term { padding: 2px 6px; font-size: 11px; }
+  .glyph-sub { font-size: 9px; }
+}
+/* 용어 설명 창 */
+.gloss {
+  position: relative; width: 100%; max-width: 440px; max-height: 86dvh; overflow-y: auto; padding: 22px 20px 20px; border-radius: 24px; outline: none;
+  background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.gloss-title { margin: 0; font-family: var(--title); font-size: 20px; font-weight: 400; letter-spacing: -0.02em; }
+.gloss-body { margin-top: 12px; display: grid; gap: 10px; }
+.gloss-body p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--text-2); }
+.gloss-groups { margin-top: 16px; display: grid; gap: 8px; }
+.gloss-group { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--r-md); background: var(--bg); }
+.gloss-group > span { font-size: 13px; color: var(--muted); }
+.gloss-group > div, .gloss-related > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.gloss-related { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); display: grid; gap: 8px; }
+.gloss-related > span { font-size: 12px; color: var(--muted); }
+.gloss-chip { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; }
+.gloss-chip:hover { border-color: var(--primary-line); color: var(--primary); }
+@media (max-width: 559px) {
+  .gloss { max-width: none; max-height: 86dvh; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; }
+}
 
 /* 오행 막대 */
 .elements { list-style: none; margin: 0; padding: 18px 20px; display: grid; gap: 12px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); }
@@ -337,9 +387,9 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .el-count { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
 
 /* 대운 */
-.daeun { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 8px; scroll-snap-type: x proximity; }
+.daeun { list-style: none; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 12px 8px; padding: 12px 0 4px; }
 .daeun-item {
-  position: relative; flex: 0 0 72px; scroll-snap-align: start; padding: 10px 6px; border-radius: var(--r-md); text-align: center;
+  position: relative; padding: 10px 4px; border-radius: var(--r-md); text-align: center;
   background: var(--bg-2); border: 1px solid var(--line-soft); display: grid; gap: 2px;
 }
 .daeun-item.is-now { border-color: var(--primary-line); background: var(--primary-soft); }
@@ -513,3 +563,8 @@ legend.contact-label { margin-bottom: 12px; }
   @keyframes fortune-up { from { transform: translateY(40px); opacity: 0; } }
 }
 @media (prefers-reduced-motion: reduce) { .fortune__card.is-revealed .fortune__result > *, .fortune, .fortune-overlay { animation: none; } }
+
+/* 올해의 기운(세운) */
+.seun { margin: 12px 0 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); font-size: 14px; line-height: 1.9; color: var(--text-2); }
+.seun-label { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.seun b { color: var(--text); font-weight: 600; }
