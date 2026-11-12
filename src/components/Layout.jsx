@@ -2,10 +2,26 @@ import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SITE, PARTNER } from '../site.js';
 
+function setHeadTag(selector, create, update) {
+  let el = document.head.querySelector(selector);
+  if (!el) {
+    el = create();
+    document.head.appendChild(el);
+  }
+  update(el);
+}
+
 export default function Layout() {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
+    // 검색용: 주소마다 대표 주소(canonical) 지정, 개인 결과 화면은 색인 제외
+    setHeadTag('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' }), (el) => {
+      el.href = SITE.url + pathname;
+    });
+    setHeadTag('meta[name="robots"]', () => Object.assign(document.createElement('meta'), { name: 'robots' }), (el) => {
+      el.content = pathname.startsWith('/result') ? 'noindex,follow' : 'index,follow';
+    });
   }, [pathname]);
 
   return (

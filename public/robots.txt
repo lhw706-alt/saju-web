@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# 결과 화면은 방문자마다 다른 개인 사주라 검색에 올리지 않음
+Disallow: /result
+Disallow: /api/
+
+Sitemap: https://xn--z92bt3ho9hczd.com/sitemap.xml
