@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
 
-const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '0', gender: '', city: 'seoul' };
+const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '', gender: '', city: 'seoul' };
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({ value: String(i), label: `${String(i).padStart(2, '0')}시` }));
-const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i * 5), label: `${String(i * 5).padStart(2, '0')}분` }));
+// 분은 0~59 를 직접 입력 (5분 단위 목록이면 정확한 시각을 못 넣음). 비우면 0분
 const CITY_OPTIONS = CITIES.map((c) => ({ value: c.id, label: c.name }));
 const STEPS = ['성별', '생년월일', '태어난 시각', '태어난 곳'];
 const QUESTIONS = ['성별을 골라 주세요', '언제 태어났나요?', '몇 시에 태어났나요?', '어디에서 태어났나요?'];
@@ -44,6 +44,9 @@ export default function StepForm({ initial, onSubmit }) {
   };
   const nextFromTime = () => {
     if (f.timeKnown && f.hour === '') return setError('태어난 시를 골라 주세요. 모르면 “시각을 몰라요”를 눌러 주세요.');
+    const min = f.minute === '' ? 0 : Number(f.minute);
+    if (f.timeKnown && !(min >= 0 && min <= 59)) return setError('분은 0에서 59 사이로 적어 주세요.');
+    setF((p) => ({ ...p, minute: String(min) }));
     setStep(3);
   };
   const timeUnknown = () => {
@@ -124,7 +127,17 @@ export default function StepForm({ initial, onSubmit }) {
                 onChange={(v) => setF((p) => ({ ...p, hour: String(v), timeKnown: true }))}
                 options={HOUR_OPTIONS}
               />
-              <Select ariaLabel="분" value={f.minute} onChange={(v) => setF((p) => ({ ...p, minute: String(v) }))} options={MINUTE_OPTIONS} />
+              <label className="input">
+                <input
+                  inputMode="numeric"
+                  maxLength={2}
+                  placeholder="0"
+                  value={f.minute}
+                  onChange={(e) => setF((p) => ({ ...p, minute: e.target.value.replace(/\D/g, ''), timeKnown: true }))}
+                  aria-label="태어난 분"
+                />
+                <span>분</span>
+              </label>
             </div>
             <button type="button" className="step-skip" onClick={timeUnknown}>
               시각을 몰라요 <small>시주 없이 여섯 글자로 봐요</small>
