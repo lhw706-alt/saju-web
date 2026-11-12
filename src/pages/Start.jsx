@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import StepForm from '../components/StepForm.jsx';
-import { saveInput, peekTopic } from '../lib/storage.js';
+import { saveInput, peekTopic, markFresh } from '../lib/storage.js';
 import { topicById } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -13,6 +13,7 @@ export default function Start() {
   const onSubmit = (input) => {
     trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
+    markFresh(); // 결과 화면에서 천둥도사 로딩을 한 번 보여 줌
     navigate(peekTopic() === 'overall' ? '/result?v=life' : '/result'); // 평생 사주는 리포트 화면
   };
 

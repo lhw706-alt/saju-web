@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ELEMENTS, ELEMENT_KO, ELEMENT_HANJA } from '../lib/saju.js';
 import { REPORT_PARTS } from '../lib/topics.js';
 import { streamReading } from '../lib/stream.js';
+import { loadReport, saveReportPart, peekFresh, clearFresh } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { GOD_SHORT } from '../lib/glossary.js';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
@@ -240,8 +241,13 @@ function Skeleton() {
 }
 
 export default function LifeReport({ chart, input }) {
-  const [loading, setLoading] = useState(true);
-  const [parts, setParts] = useState({}); // id → { text, status, error }
+  // 로딩은 방금 입력을 마치고 들어왔을 때만 (새로고침이면 안 나옴)
+  const [loading, setLoading] = useState(peekFresh);
+  useEffect(() => clearFresh(), []);
+  // 이미 받은 풀이(새로고침 전)는 그대로 보여 주고 다시 부르지 않음
+  const [parts, setParts] = useState(() =>
+    Object.fromEntries(Object.entries(loadReport(input)).map(([id, text]) => [id, { text, status: 'done', error: null }]))
+  ); // id → { text, status, error }
   const abortRef = useRef(null);
 
   const run = (ids) => {
@@ -253,6 +259,7 @@ export default function LifeReport({ chart, input }) {
       try {
         const r = await streamReading({ input, topic: id, signal: ctrl.signal, onText: (text) => update({ text }) });
         update({ text: r.text, status: r.error ? 'error' : 'done', error: r.error });
+        if (!r.error && r.text) saveReportPart(input, id, r.text);
         trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic: id, end: r.end || 'ok' });
       } catch (e) {
         if (e.name !== 'AbortError') update({ status: 'error', error: '네트워크 연결을 확인하고 다시 시도해 주세요.' });
@@ -263,8 +270,11 @@ export default function LifeReport({ chart, input }) {
   // 화면에 들어오면 네 부분을 한꺼번에 요청 (StrictMode 이중 실행 대비 setTimeout)
   useEffect(() => {
     const t = setTimeout(() => {
+      const saved = loadReport(input);
+      const todo = REPORT_PARTS.map((p) => p.id).filter((id) => !saved[id]);
+      if (!todo.length) return;
       trackEvent('reading_start', { topic: 'life' });
-      run(REPORT_PARTS.map((p) => p.id));
+      run(todo);
     }, 0);
     return () => {
       clearTimeout(t);
@@ -348,7 +358,7 @@ export default function LifeReport({ chart, input }) {
             </b>
           </li>
           <li>
-            <span>두드러진 관계</span>
+            <span>내 사주에 많은 성향</span>
             <b className="report-gods">
               {topGods.map((g) => (
                 <TermButton key={g} term={g} className="god" />

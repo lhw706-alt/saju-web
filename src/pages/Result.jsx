@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { computeSaju, ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
-import { loadInput, peekTopic, clearTopic } from '../lib/storage.js';
+import { loadInput, peekTopic, clearTopic, saveTopic } from '../lib/storage.js';
 import ChartTable from '../components/ChartTable.jsx';
 import ElementChart from '../components/ElementChart.jsx';
 import DaeunList from '../components/DaeunList.jsx';
@@ -37,7 +37,10 @@ export default function Result() {
       <GlossaryProvider>
         <div className="report-top">
           <Link to="/result" className="btn-ghost">주제별 풀이 보기</Link>
-          <Link to="/start" className="btn-ghost result-again">사주 다시 보기</Link>
+          {/* 평생 사주에서 다시 보면 새로 입력한 뒤에도 평생 사주 리포트로 */}
+          <Link to="/start" className="btn-ghost result-again" onClick={() => saveTopic('overall')}>
+            사주 다시 보기
+          </Link>
         </div>
         <LifeReport key={JSON.stringify(input)} chart={chart} input={input} />
       </GlossaryProvider>
