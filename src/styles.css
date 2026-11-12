@@ -169,35 +169,33 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 .contents { margin-top: 48px; display: grid; gap: 40px; }
 .content-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .content-grid > li { display: flex; }
+/* 카드 하나에 글자(왼쪽 위)와 작은 천둥도사(오른쪽 아래)를 함께 — 고를 때 글자가 먼저 읽히게 */
 .content-card {
-  position: relative; width: 100%; text-align: left; cursor: pointer; display: grid; align-content: start; gap: 12px;
-  padding: 8px 8px 16px; border-radius: var(--r); border: 1px solid var(--line-soft); background: var(--bg-2); overflow: hidden;
+  position: relative; width: 100%; min-height: 176px; text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;
+  padding: 16px; border-radius: var(--r); border: 1px solid var(--line-soft);
+  background: radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--el) 16%, transparent), transparent 55%), var(--bg-2);
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 .content-card:hover { border-color: var(--line); transform: translateY(-2px); }
-/* 그림 칸: 오행 색 빛 + 큰 한자 바탕 + 천둥도사 */
-.content-art {
-  position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden;
-  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--el) 22%, transparent), transparent 70%), #17181a;
-}
-.content-art-hanja {
-  position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: clamp(64px, 18vw, 110px); line-height: 1;
-  color: color-mix(in srgb, var(--el) 22%, transparent);
-}
-.content-art-dosa { position: absolute; inset: 0; }
-.content-art-dosa svg { display: block; width: 100%; height: 100%; }
-.content-card:hover .content-art-dosa { animation: dosa-bob 1.2s ease-in-out infinite; }
-@keyframes dosa-bob { 50% { transform: translateY(-3px); } }
-.content-text { display: grid; gap: 4px; padding: 0 8px; }
+.content-text { position: relative; z-index: 1; display: grid; gap: 4px; }
 .content-text strong { font-size: 16px; font-weight: 600; letter-spacing: -0.002em; color: var(--text); }
 .content-text > span:last-child { font-size: 13px; line-height: 1.45; color: var(--text-2); letter-spacing: var(--ls-label); }
 .content-badge {
-  justify-self: start; margin-bottom: 2px; padding: 2px 7px; border-radius: var(--r-sm); font-size: 11px; font-weight: 600; letter-spacing: var(--ls-caption);
+  justify-self: start; margin-bottom: 4px; padding: 2px 7px; border-radius: var(--r-sm); font-size: 11px; font-weight: 600; letter-spacing: var(--ls-caption);
   background: var(--track); color: var(--muted);
 }
 .content-badge.is-live { background: var(--primary); color: var(--on-primary); }
+.content-dosa { position: absolute; right: 2px; bottom: 0; width: 96px; height: 72px; pointer-events: none; }
+.content-dosa svg { display: block; width: 100%; height: 100%; }
+.content-card:hover .content-dosa { animation: dosa-bob 1.2s ease-in-out infinite; }
+@keyframes dosa-bob { 50% { transform: translateY(-3px); } }
 .content-card.is-soon .content-text strong, .content-card.is-soon .content-text > span:last-child { opacity: 0.7; }
-@media (prefers-reduced-motion: reduce) { .content-card:hover .content-art-dosa { animation: none; } }
+@media (min-width: 640px) {
+  .content-card { min-height: 132px; padding: 20px 20px 20px 22px; }
+  .content-text { padding-right: 128px; }
+  .content-dosa { right: 8px; width: 128px; height: 96px; }
+}
+@media (prefers-reduced-motion: reduce) { .content-card:hover .content-dosa { animation: none; } }
 .toast-wrap { position: fixed; left: 0; right: 0; bottom: 84px; z-index: 50; display: flex; justify-content: center; padding: 0 20px; pointer-events: none; }
 .toast {
   margin: 0; max-width: 420px; padding: 12px 18px; border-radius: var(--r-md); background: #f7f7f8; color: #171719;

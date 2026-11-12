@@ -27,16 +27,13 @@ export default function ContentCards({ onOpen }) {
           <ul className="content-grid">
             {CONTENTS.filter((c) => c.group === g.id).map((c) => (
               <li key={c.id}>
-                <button type="button" className={`content-card${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
-                  <span className={`content-art el-${c.el}`} aria-hidden="true">
-                    <span className="content-art-hanja">{c.glyph}</span>
-                    <span className="content-art-dosa" dangerouslySetInnerHTML={{ __html: ART[c.id] }} />
-                  </span>
+                <button type="button" className={`content-card el-${c.el}${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
                   <span className="content-text">
                     <span className={`content-badge${c.status === 'live' ? ' is-live' : ''}`}>{c.status === 'live' ? '무료' : '준비중'}</span>
                     <strong>{c.title}</strong>
                     <span>{c.desc}</span>
                   </span>
+                  <span className="content-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ART[c.id] }} />
                 </button>
               </li>
             ))}
