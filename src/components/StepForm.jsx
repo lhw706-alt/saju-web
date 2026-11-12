@@ -103,7 +103,7 @@ export default function StepForm({ initial, onSubmit }) {
           <div className="saved">
             <div className="saved-head">
               <h2 className="saved-title">전에 본 사주를 바로 볼 수 있어요</h2>
-              <p className="saved-note">최근 5명까지 이 브라우저에만 저장돼요</p>
+              <p className="saved-note">최근 5명까지 기억해요</p>
             </div>
             <ul className="saved-list">
               {shown.map((x) => (
