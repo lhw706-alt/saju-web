@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { TOPICS } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
+import Markdown from './Markdown.jsx';
 
 const END_MESSAGES = {
   refusal: '이 주제는 풀이를 만들지 못했어요. 다른 주제를 골라 주세요.',
@@ -8,40 +9,6 @@ const END_MESSAGES = {
   timeout: '풀이가 오래 걸려 여기서 멈췄어요. 잠시 뒤 다시 시도해 주세요.',
   error: '풀이 중에 문제가 생겼어요. 잠시 뒤 다시 시도해 주세요.',
 };
-
-// '## 제목', '- 항목', '**굵게**' 만 지원하는 작은 렌더러 (HTML 을 직접 넣지 않음)
-function inline(text) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part
-  );
-}
-function Markdown({ text }) {
-  const blocks = [];
-  let para = [];
-  let list = [];
-  const flush = () => {
-    if (para.length) blocks.push(<p key={blocks.length}>{inline(para.join(' '))}</p>);
-    if (list.length) blocks.push(<ul key={blocks.length}>{list.map((l, i) => <li key={i}>{inline(l)}</li>)}</ul>);
-    para = [];
-    list = [];
-  };
-  for (const raw of text.split('\n')) {
-    const line = raw.trim();
-    if (!line) flush();
-    else if (/^#{1,4}\s/.test(line)) {
-      flush();
-      blocks.push(<h3 key={blocks.length}>{line.replace(/^#+\s*/, '')}</h3>);
-    } else if (/^[-*]\s/.test(line)) {
-      if (para.length) flush();
-      list.push(line.slice(2));
-    } else {
-      if (list.length) flush();
-      para.push(line);
-    }
-  }
-  flush();
-  return <>{blocks}</>;
-}
 
 export default function Reading({ input, initialTopic = null }) {
   const [topic, setTopic] = useState(null);

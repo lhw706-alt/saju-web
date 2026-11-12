@@ -575,3 +575,99 @@ legend.contact-label { margin-bottom: 12px; }
 .seun { margin: 12px 0 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); font-size: 14px; line-height: 1.9; color: var(--text-2); }
 .seun-label { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; font-size: 14px; font-weight: 600; color: var(--muted); }
 .seun b { color: var(--text); font-weight: 600; }
+
+/* ── 평생 사주 리포트 ── */
+.report-top { display: flex; gap: 8px; padding: 24px 0 16px; }
+.report-summary { padding: 22px 20px; }
+.report-dm { display: flex; align-items: center; gap: 14px; margin: 6px 0 16px; }
+.report-dm-title { margin: 0; display: flex; align-items: center; gap: 4px; font-family: var(--title); font-size: clamp(22px, 5.4vw, 28px); font-weight: 400; letter-spacing: -0.02em; }
+.report-dm-sub { margin: 4px 0 0; color: var(--text-2); }
+.report-facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.report-facts li { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); }
+.report-facts span { font-size: 14px; color: var(--muted); }
+.report-facts b { font-size: 15px; font-weight: 600; color: var(--text); }
+.report-gods { display: flex; flex-wrap: wrap; gap: 4px; }
+.report-summary-text { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.report-summary-text p { margin: 0 0 8px; font-size: 16px; line-height: 1.75; color: var(--text); }
+.report-toc { display: flex; gap: 8px; overflow-x: auto; margin: 16px -20px 0; padding: 4px 20px 8px; scrollbar-width: none; }
+.report-toc::-webkit-scrollbar { display: none; }
+.report-toc a { flex: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.report-toc a:hover { border-color: var(--primary-line); color: var(--primary); }
+.report-sec { margin-top: 16px; padding: 22px 20px; scroll-margin-top: 16px; }
+.report-sec-title { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font-family: var(--title); font-size: 20px; font-weight: 400; letter-spacing: -0.02em; }
+.report-sec-title small { display: block; font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--primary); letter-spacing: 0.06em; }
+.report-sec-glyph { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); font-family: var(--serif); font-size: 24px; }
+.report-chart { margin-bottom: 18px; }
+.report-sub { display: flex; align-items: center; gap: 4px; margin: 18px 0 10px; font-size: 15px; font-weight: 600; }
+.report-text h4 { margin: 18px 0 6px; font-size: 16px; font-weight: 600; color: var(--primary); }
+.report-text h4:first-child { margin-top: 0; }
+.report-text h3 { margin: 18px 0 6px; font-family: var(--title); font-size: 17px; font-weight: 400; }
+.report-text p { margin: 0 0 8px; line-height: 1.75; color: var(--text-2); }
+.report-text ul { margin: 0 0 8px; padding-left: 20px; color: var(--text-2); }
+.report-text strong { color: var(--text); font-weight: 600; }
+.report-note { margin-top: 20px; border-top: 0; text-align: center; }
+/* 받는 중 자리 표시 */
+.skel { display: grid; gap: 10px; padding: 4px 0; }
+.skel span { height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--track) 0%, rgba(112, 115, 124, 0.38) 50%, var(--track) 100%); background-size: 200% 100%; animation: skel 1.2s linear infinite; }
+.skel span:nth-child(2) { width: 88%; }
+.skel span:nth-child(3) { width: 64%; }
+@keyframes skel { to { background-position: -200% 0; } }
+
+/* 인생 흐름 그래프 */
+.timeline { margin: 0 0 18px; padding: 12px 8px 10px; border-radius: var(--r-md); background: var(--bg); }
+.timeline svg { display: block; width: 100%; height: auto; overflow: visible; }
+.timeline figcaption { margin: 6px 8px 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.timeline figcaption b { color: var(--text-2); font-weight: 600; }
+.tl-axis { stroke: var(--line); stroke-width: 1; }
+.tl-band { fill: var(--muted); font-size: 13px; font-weight: 600; }
+.tl-line { fill: none; stroke: var(--primary); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.tl-line.is-wait { stroke: var(--line); stroke-dasharray: 4 6; }
+.tl-dot { fill: var(--bg-2); stroke: var(--primary); stroke-width: 2.5; }
+.timeline:not(.is-ready) .tl-dot { stroke: var(--line); }
+.tl-dot.is-now { fill: var(--primary); stroke: rgba(226, 194, 122, 0.4); stroke-width: 6; }
+.tl-kw { fill: var(--text); font-size: 14px; font-weight: 600; }
+.tl-age { fill: var(--text-2); font-size: 14px; font-weight: 600; }
+.tl-age.is-now { fill: var(--primary); }
+.tl-gz { fill: var(--muted); font-size: 12px; }
+.tl-turn { stroke: rgba(226, 194, 122, 0.55); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.tl-turn-label { fill: var(--primary); font-size: 12px; font-weight: 600; }
+
+/* 로딩: 천둥도사가 사주를 보다가 눈을 번쩍 */
+.dosa-loader {
+  position: fixed; inset: 0; z-index: 120; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px;
+  background: radial-gradient(circle at 50% 42%, rgba(226, 194, 122, 0.14), transparent 45%), rgba(15, 15, 16, 0.96);
+  transition: opacity 0.3s ease;
+}
+.dosa-loader.is-out { opacity: 0; pointer-events: none; }
+.dosa-loader-art { width: min(64vw, 260px); aspect-ratio: 4 / 3; filter: drop-shadow(0 0 30px rgba(226, 194, 122, 0.25)); animation: loader-float 1.6s ease-in-out infinite; }
+.dosa-loader-art svg { display: block; width: 100%; height: 100%; }
+.dosa-loader-art.step-1 { filter: drop-shadow(0 0 44px rgba(226, 194, 122, 0.5)); }
+.dosa-loader-art.step-2 { animation: loader-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both; filter: drop-shadow(0 0 60px rgba(255, 214, 120, 0.7)); }
+@keyframes loader-float { 50% { transform: translateY(-6px); } }
+@keyframes loader-pop { from { transform: scale(0.92); } to { transform: scale(1.06); } }
+.dosa-loader-line { margin: 0; font-family: var(--title); font-size: 20px; color: var(--text); text-align: center; animation: loader-line 0.3s ease-out; }
+@keyframes loader-line { from { opacity: 0; transform: translateY(6px); } }
+.dosa-loader-dots { display: flex; gap: 6px; }
+.dosa-loader-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: loader-dot 0.9s ease-in-out infinite; }
+.dosa-loader-dots i:nth-child(2) { animation-delay: 0.15s; }
+.dosa-loader-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes loader-dot { 50% { opacity: 0.25; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .dosa-loader-art, .dosa-loader-line, .dosa-loader-dots i, .skel span { animation: none; }
+}
+.timeline svg { max-width: 100%; }
+.is-narrow .tl-age { font-size: 12px; }
+.tl-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.tl-list li { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 10px; background: var(--bg-2); text-align: center; }
+.tl-list li.is-now { box-shadow: inset 0 0 0 1px var(--primary-line); background: var(--primary-soft); }
+.tl-list-age { font-size: 12px; color: var(--muted); }
+.tl-list b { font-size: 14px; font-weight: 600; color: var(--text); word-break: keep-all; }
+.tl-list-turn { font-size: 12px; font-weight: 600; color: var(--primary); }
+/* 좁은 화면 원국표: 기둥 이름은 '태어난 / 날' 두 줄, 글자 설명은 '물 · 양'처럼 짧게 */
+@media (max-width: 420px) {
+  .col-pre { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .term.chart-col-btn { line-height: 1.25; text-align: center; }
+  .glyph-sub-hanja { display: none; }
+  .report-sec { padding: 18px 14px; }
+  .report-sec .chart { padding: 10px 6px; }
+}

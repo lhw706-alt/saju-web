@@ -6,7 +6,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { computeSaju, chartSummary, SajuInputError } from '../../src/lib/saju.js';
-import { topicById } from '../../src/lib/topics.js';
+import { topicById, TOPIC_FORMAT } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
@@ -18,7 +18,7 @@ const SYSTEM = `당신은 한국어로 사주명리를 풀어 주는 해설가�
 - 따뜻하고 차분한 해요체. 명리 용어(일간, 십성, 대운 등)는 처음 나올 때 괄호로 짧게 풀어 주세요.
 - 근거를 함께 적으세요: "월지에 편관이 있어서 …"처럼 원국의 어느 글자에서 그렇게 읽었는지 밝힙니다.
 - 단정 대신 경향으로 말하세요 ("~한 편이에요", "~하기 쉬워요"). 좋은 점과 조심할 점을 균형 있게 씁니다.
-- 형식: '## 소제목'으로 시작하는 3~5개 단락, 전체 1,200~1,800자. 마지막 단락은 '## 한 줄 조언'으로 1~2문장. 표·이모지·인사말·면책 문구는 쓰지 마세요(화면에 따로 있습니다).
+- 형식은 사용자 메시지의 지시를 따르세요. 표·이모지·인사말·면책 문구는 쓰지 마세요(화면에 따로 있습니다).
 
 하지 말 것
 - 죽음·수명·큰 사고·이혼·불임 같은 불안을 주는 예언, '살(煞)'로 겁주는 표현.
@@ -26,7 +26,8 @@ const SYSTEM = `당신은 한국어로 사주명리를 풀어 주는 해설가�
 - 부적·굿·개명·유료 상담 권유, 특정 종교 권유.
 - 원국에 없는 글자나 계산 결과를 지어내는 것. 태어난 시각을 모르면 시주 없이 해석하고, 그 때문에 덜 정확할 수 있는 부분을 한 번만 짧게 언급합니다.`;
 
-const rateLimited = createRateLimiter(4);
+// 평생 사주 리포트는 한 번에 4개를 동시에 요청하므로 넉넉하게 (1분 12회)
+const rateLimited = createRateLimiter(12);
 
 export default async (req, context) => {
   if (req.method !== 'POST') return json({ error: '잘못된 요청입니다.' }, 405);
@@ -61,7 +62,9 @@ ${chartSummary(chart)}
 
 [풀이 주제] ${topic.label}
 다룰 내용: ${topic.focus}
-기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년`;
+기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년
+
+${topic.format || TOPIC_FORMAT}`;
 
   const client = new Anthropic({ apiKey, timeout: TIME_LIMIT_MS, maxRetries: 0 });
   const encoder = new TextEncoder();

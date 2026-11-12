@@ -13,12 +13,12 @@ export default function Start() {
   const onSubmit = (input) => {
     trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
-    navigate('/result');
+    navigate(peekTopic() === 'overall' ? '/result?v=life' : '/result'); // 평생 사주는 리포트 화면
   };
 
   return (
     <section className="start">
-      <h1 className="start-title">{topic ? topic.label : '내 사주 보기'}</h1>
+      <h1 className="start-title">{topic ? (topic.id === 'overall' ? '평생 사주' : topic.label) : '내 사주 보기'}</h1>
       <p className="start-lead">생년월일시를 알려 주면 천둥도사가 여덟 글자를 펼쳐 풀어 드려요.</p>
       <StepForm initial={loadInput() || undefined} onSubmit={onSubmit} />
     </section>

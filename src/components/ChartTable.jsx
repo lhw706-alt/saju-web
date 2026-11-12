@@ -4,10 +4,10 @@ import { TermButton } from './Glossary.jsx';
 // 전통 표기 순서: 오른쪽부터 년·월·일·시 → 화면에서는 왼쪽부터 시·일·월·년
 // 처음 보는 사람도 읽을 수 있게 '태어난 날'·'관계' 같은 쉬운 말만 보이고, 누르면 용어(일주·십성 등) 설명 창
 const COLS = [
-  ['hour', '태어난 시', '시주'],
-  ['day', '태어난 날', '일주'],
-  ['month', '태어난 달', '월주'],
-  ['year', '태어난 해', '년주'],
+  ['hour', '시', '시주'],
+  ['day', '날', '일주'],
+  ['month', '달', '월주'],
+  ['year', '해', '년주'],
 ];
 const PLAIN = { wood: '나무', fire: '불', earth: '흙', metal: '쇠', water: '물' };
 
@@ -17,7 +17,8 @@ function Glyph({ char, ko, element, yang }) {
       <span className="glyph-char">{char}</span>
       <span className="glyph-ko">{ko}</span>
       <span className="glyph-sub">
-        {PLAIN[element]}({ELEMENT_KO[element]}) · {yang ? '양' : '음'}
+        {PLAIN[element]}
+        <span className="glyph-sub-hanja">({ELEMENT_KO[element]})</span> · {yang ? '양' : '음'}
       </span>
     </div>
   );
@@ -42,6 +43,7 @@ export default function ChartTable({ chart }) {
         {COLS.map(([k, plain, term]) => (
           <span key={k} role="columnheader" className={`chart-col${k === 'day' ? ' is-day' : ''}`}>
             <TermButton term={term} className="chart-col-btn">
+              <span className="col-pre">태어난 </span>
               {plain}
             </TermButton>
           </span>

@@ -190,3 +190,11 @@ export function dosaArtSvg(kind) {
   const [back, front] = (PROPS[kind] || (() => ['', '']))();
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 10 136 102"><defs>${b.defs}</defs>${back}${b.back}${b.body}${b.hands}${front}</svg>`;
 }
+
+// 표정을 직접 고른 천둥도사 (평생 사주 로딩 등). face: { eyes, mouth, brows }, propKind: PROPS 의 소품
+export function dosaFaceSvg(face, propKind = '') {
+  const id = `df-${face.eyes || 'closed'}-${face.mouth || 'none'}-${propKind || 'x'}`;
+  const b = base(id, face);
+  const [back, front] = (PROPS[propKind] || (() => ['', '']))();
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 10 136 102"><defs>${b.defs}</defs>${back}${b.back}${b.body}${b.hands}${front}</svg>`;
+}

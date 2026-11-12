@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { computeSaju, ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
 import { loadInput, peekTopic, clearTopic } from '../lib/storage.js';
 import ChartTable from '../components/ChartTable.jsx';
@@ -8,6 +8,7 @@ import DaeunList from '../components/DaeunList.jsx';
 import Reading from '../components/Reading.jsx';
 import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
 import { GOD_SHORT } from '../lib/glossary.js';
+import LifeReport from '../components/LifeReport.jsx';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -16,6 +17,8 @@ const DAY_MASTER_IMAGE = {
 
 export default function Result() {
   const input = loadInput();
+  const [params] = useSearchParams();
+  const life = params.get("v") === "life"; // 평생 사주 리포트 화면
   const [initialTopic] = useState(peekTopic); // 메인 카드에서 고른 주제
   useEffect(() => clearTopic(), []);
   const chart = useMemo(() => {
@@ -28,6 +31,18 @@ export default function Result() {
   }, [input && JSON.stringify(input)]);
 
   if (!chart) return <Navigate to="/start" replace />;
+
+  if (life) {
+    return (
+      <GlossaryProvider>
+        <div className="report-top">
+          <Link to="/start" className="btn-ghost">다시 입력</Link>
+          <Link to="/result" className="btn-ghost">주제별 풀이 보기</Link>
+        </div>
+        <LifeReport key={JSON.stringify(input)} chart={chart} input={input} />
+      </GlossaryProvider>
+    );
+  }
 
   const inp = chart.input;
   const dm = chart.dayMaster;

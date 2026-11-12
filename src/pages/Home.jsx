@@ -33,7 +33,10 @@ function Rotator() {
 }
 
 // 물음에 답하는 바로가기: 풀이 주제 그대로 (결과 화면에서 바로 시작)
-const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career'].map((id) => TOPICS.find((t) => t.id === id)).filter(Boolean);
+const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career']
+  .map((id) => TOPICS.find((t) => t.id === id))
+  .filter(Boolean)
+  .map((t) => (t.id === 'overall' ? { ...t, label: '평생 사주' } : t));
 
 export default function Home() {
   const navigate = useNavigate();
@@ -50,7 +53,8 @@ export default function Home() {
   const openContent = (c) => {
     trackEvent('content_click', { content: c.id });
     if (c.topic) saveTopic(c.topic);
-    navigate(loadInput() ? '/result' : '/start');
+    const dest = c.topic === 'overall' ? '/result?v=life' : '/result'; // 평생 사주는 리포트 화면
+    navigate(loadInput() ? dest : '/start');
   };
 
   return (
