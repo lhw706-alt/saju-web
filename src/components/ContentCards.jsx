@@ -1,6 +1,11 @@
-// 메인 콘텐츠 카드 (분류별). 쓸 수 있는 것은 풀이로 연결, 나머지는 눌렀을 때 '준비중' 알림.
+// 메인 콘텐츠 카드 (분류별, 2열). 카드마다 그 콘텐츠에 맞는 소품을 든 천둥도사(천동이) 그림.
+// 쓸 수 있는 것은 풀이로 연결, 나머지는 눌렀을 때 '준비중' 알림.
 import { useEffect, useRef, useState } from 'react';
 import { GROUPS, CONTENTS, SOON_MESSAGE } from '../lib/contents.js';
+import { dosaArtSvg } from '../brand/dosaArt.js';
+
+// 카드 그림은 한 번만 만들어 둠
+const ART = Object.fromEntries(CONTENTS.map((c) => [c.id, dosaArtSvg(c.id)]));
 
 export default function ContentCards({ onOpen }) {
   const [toast, setToast] = useState(null);
@@ -23,14 +28,15 @@ export default function ContentCards({ onOpen }) {
             {CONTENTS.filter((c) => c.group === g.id).map((c) => (
               <li key={c.id}>
                 <button type="button" className={`content-card${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
-                  <span className={`content-glyph el-${c.el}`} aria-hidden="true">
-                    {c.glyph}
+                  <span className={`content-art el-${c.el}`} aria-hidden="true">
+                    <span className="content-art-hanja">{c.glyph}</span>
+                    <span className="content-art-dosa" dangerouslySetInnerHTML={{ __html: ART[c.id] }} />
                   </span>
                   <span className="content-text">
+                    <span className={`content-badge${c.status === 'live' ? ' is-live' : ''}`}>{c.status === 'live' ? '무료' : '준비중'}</span>
                     <strong>{c.title}</strong>
                     <span>{c.desc}</span>
                   </span>
-                  <span className={`content-badge${c.status === 'live' ? ' is-live' : ''}`}>{c.status === 'live' ? '무료' : '준비중'}</span>
                 </button>
               </li>
             ))}
