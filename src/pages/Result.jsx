@@ -36,8 +36,8 @@ export default function Result() {
     return (
       <GlossaryProvider>
         <div className="report-top">
-          <Link to="/start" className="btn-ghost">다시 입력</Link>
           <Link to="/result" className="btn-ghost">주제별 풀이 보기</Link>
+          <Link to="/start" className="btn-ghost result-again">다른 사주 보기</Link>
         </div>
         <LifeReport key={JSON.stringify(input)} chart={chart} input={input} />
       </GlossaryProvider>
@@ -52,6 +52,7 @@ export default function Result() {
   return (
     <GlossaryProvider>
       <section className="result-head">
+        <Link to="/start" className="btn-ghost result-again">다른 사주 보기</Link>
         <p className="eyebrow">나의 사주</p>
         <h1 className="result-title">
           <span className={`dm el-${dm.element}`}>{dm.stem}</span>
@@ -72,7 +73,6 @@ export default function Result() {
           )}
           <div><dt>성별·띠</dt><dd>{inp.gender === 'male' ? '남성' : '여성'} · {chart.animal}띠</dd></div>
         </dl>
-        <Link to="/start" className="btn-ghost">다시 입력</Link>
       </section>
 
       <section className="block">
