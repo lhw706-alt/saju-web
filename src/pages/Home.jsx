@@ -33,31 +33,6 @@ function Rotator() {
   );
 }
 
-// 입장하면 천둥도사가 말을 건다: 말풍선에 한 글자씩 "무엇이 궁금하느냐?"
-const DOSA_LINE = '무엇이 궁금하느냐?';
-function DosaBubble() {
-  const [n, setN] = useState(() => (reduced() ? DOSA_LINE.length : 0));
-  useEffect(() => {
-    if (reduced()) return;
-    let i = 0;
-    let timer = setTimeout(function tick() {
-      i += 1;
-      setN(i);
-      if (i < DOSA_LINE.length) timer = setTimeout(tick, 110);
-    }, 900);
-    return () => clearTimeout(timer);
-  }, []);
-  return (
-    <p className={`dosa-bubble${n > 0 ? ' is-on' : ''}`} aria-label={`천둥도사: ${DOSA_LINE}`}>
-      <span className="dosa-name" aria-hidden="true">천둥도사</span>
-      <span aria-hidden="true">
-        {DOSA_LINE.slice(0, n)}
-        <span className="dosa-rest">{DOSA_LINE.slice(n)}</span>
-      </span>
-    </p>
-  );
-}
-
 // 물음에 답하는 바로가기: 풀이 주제 그대로 (결과 화면에서 바로 시작)
 const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career'].map((id) => TOPICS.find((t) => t.id === id)).filter(Boolean);
 
@@ -97,7 +72,6 @@ export default function Home() {
           <Suspense fallback={<MascotStill />}>
             <Mascot3D />
           </Suspense>
-          <DosaBubble />
         </div>
         <h1>
           <span className="visually-hidden">{WORDS.join(', ')}까지 </span>

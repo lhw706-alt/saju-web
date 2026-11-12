@@ -143,19 +143,6 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 .hero h1 { font-family: var(--title); font-weight: 400; font-size: clamp(26px, 6vw, 36px); line-height: 1.3; letter-spacing: -0.02em; margin: 0; }
 .hero h1 em { font-style: normal; color: var(--gold-2); }
 .hero .lead { color: #dbdcdf; font-weight: 400; }
-/* 입장 시 천둥도사의 말풍선 */
-.hero-mascot { position: relative; }
-.dosa-bubble {
-  position: absolute; top: 4%; right: 2%; z-index: 2; margin: 0; padding: 10px 16px 11px; border-radius: 18px 18px 18px 4px;
-  background: #f7f7f8; color: #171719; font-family: var(--title); font-size: 17px; line-height: 1.35; text-align: left;
-  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5), 0 0 32px rgba(240, 213, 149, 0.18);
-  opacity: 0; transform: translateY(6px) scale(0.96); transform-origin: 0% 100%; transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.dosa-bubble.is-on { opacity: 1; transform: none; }
-.dosa-bubble::after { content: ''; position: absolute; left: -6px; bottom: 0; border: 8px solid transparent; border-right-color: #f7f7f8; border-bottom-color: #f7f7f8; border-radius: 0 0 0 3px; }
-.dosa-name { display: block; margin-bottom: 2px; font-family: var(--sans); font-size: 11px; font-weight: 600; color: #8a6a26; letter-spacing: var(--ls-caption); }
-.dosa-rest { visibility: hidden; }
-@media (prefers-reduced-motion: reduce) { .dosa-bubble { transition: none; } }
 /* 물음에 답하는 바로가기 칩 (Montage chip) */
 .ask-chips { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .ask-chip {
