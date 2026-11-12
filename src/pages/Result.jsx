@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { computeSaju, ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
-import { loadInput } from '../lib/storage.js';
+import { loadInput, peekTopic, clearTopic } from '../lib/storage.js';
 import ChartTable from '../components/ChartTable.jsx';
 import ElementChart from '../components/ElementChart.jsx';
 import DaeunList from '../components/DaeunList.jsx';
@@ -14,6 +14,8 @@ const DAY_MASTER_IMAGE = {
 
 export default function Result() {
   const input = loadInput();
+  const [initialTopic] = useState(peekTopic); // 메인 카드에서 고른 주제
+  useEffect(() => clearTopic(), []);
   const chart = useMemo(() => {
     if (!input) return null;
     try {
@@ -76,8 +78,8 @@ export default function Result() {
       </section>
 
       <section className="block">
-        <h2 className="section-title">AI 사주 풀이</h2>
-        <Reading input={inp} />
+        <h2 className="section-title">천둥도사의 사주 풀이</h2>
+        <Reading input={inp} initialTopic={initialTopic} />
       </section>
     </>
   );

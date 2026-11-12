@@ -52,6 +52,9 @@ expect('월간 십성', c.pillars.month.stemGod, '겁재');
 expect('시간 십성', c.pillars.hour.stemGod, '상관');
 expect('년지 12운성', c.pillars.year.stage, '목욕');
 expect('년지 십성(午 본기 丁)', c.pillars.year.branchGod, '정관');
+// 세운: 2027년 丁未 → 庚 일간 기준 천간 정관·지지 정인 (내년 세운은 신년운세에 씀)
+const y27 = c.nextSeun.year === 2027 ? c.nextSeun : c.seun.year === 2027 ? c.seun : null;
+if (y27) { expect('2027 세운', y27.ganzhi, '丁未'); expect('2027 세운 십성', y27.stemGod + '·' + y27.branchGod, '정관·정인'); }
 
 console.log('\n' + chartSummary(c));
 if (fail) {

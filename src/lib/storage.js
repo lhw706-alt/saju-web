@@ -17,3 +17,15 @@ export function loadInput() {
     return null;
   }
 }
+
+// 메인 카드에서 고른 풀이 주제 → 결과 화면에서 바로 시작 (결과 화면이 읽은 뒤 지움)
+const TOPIC_KEY = 'saju:topic';
+export function saveTopic(id) {
+  try { sessionStorage.setItem(TOPIC_KEY, id); } catch { /* 무시 */ }
+}
+export function peekTopic() {
+  try { return sessionStorage.getItem(TOPIC_KEY); } catch { return null; }
+}
+export function clearTopic() {
+  try { sessionStorage.removeItem(TOPIC_KEY); } catch { /* 무시 */ }
+}

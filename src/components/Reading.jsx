@@ -43,12 +43,25 @@ function Markdown({ text }) {
   return <>{blocks}</>;
 }
 
-export default function Reading({ input }) {
+export default function Reading({ input, initialTopic = null }) {
   const [topic, setTopic] = useState(null);
   const [results, setResults] = useState({}); // topicId -> { text, status, end, error }
   const abortRef = useRef(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // 메인 카드에서 고른 주제가 있으면 바로 시작하고 풀이 위치로 내려 줌
+  // (setTimeout: 개발 모드 StrictMode 의 이중 실행에서도 한 번만 요청)
+  const rootRef = useRef(null);
+  useEffect(() => {
+    if (!initialTopic || !TOPICS.some((t) => t.id === initialTopic)) return;
+    const timer = setTimeout(() => {
+      run(initialTopic);
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTopic]);
 
   const run = async (id) => {
     setTopic(id);
@@ -103,7 +116,7 @@ export default function Reading({ input }) {
   const cur = topic ? results[topic] : null;
 
   return (
-    <section className="reading">
+    <section className="reading" ref={rootRef}>
       <div className="topics" role="tablist" aria-label="풀이 주제">
         {TOPICS.map((t) => (
           <button
@@ -119,14 +132,14 @@ export default function Reading({ input }) {
         ))}
       </div>
 
-      {!topic && <p className="hint center">궁금한 주제를 고르면 AI 풀이가 시작돼요.</p>}
+      {!topic && <p className="hint center">궁금한 주제를 고르면 천둥도사가 풀이를 시작해요.</p>}
 
       {cur && (
         <article className="reading-body card" aria-live="polite" aria-busy={cur.status === 'loading'}>
           {cur.status === 'loading' && !cur.text && (
             <div className="loading">
               <span className="moon-spin" aria-hidden="true" />
-              원국을 읽고 있어요…
+              천둥도사가 원국을 읽고 있어요…
             </div>
           )}
           {cur.text && <Markdown text={cur.text} />}
@@ -140,7 +153,7 @@ export default function Reading({ input }) {
               </button>
             </div>
           )}
-          {cur.status === 'done' && <p className="ai-note">AI가 계산된 원국을 바탕으로 쓴 참고용 해석입니다.</p>}
+          {cur.status === 'done' && <p className="ai-note">천둥도사의 풀이는 계산된 원국을 바탕으로 생성형 AI가 쓴 참고용 해석입니다.</p>}
         </article>
       )}
     </section>

@@ -1,4 +1,4 @@
-// AI 사주 풀이 (Netlify Function, 서버에서만 실행)
+// 사주 풀이 — 화면 이름 '천둥도사' (Netlify Function, 서버에서만 실행)
 // - 브라우저가 보낸 생년월일시로 서버가 만세력을 다시 계산하고(src/lib/saju.js), 계산 결과만 AI 에 넘긴다.
 //   이름·연락처는 받지 않는다. 입력과 풀이는 저장하지 않고 로그에도 남기지 않는다.
 // - 풀이 글은 글자 단위로 스트리밍한다 (Netlify 동기 함수 실행 한도 60초 → 55초에서 끊고 안내 문구 추가).
@@ -51,7 +51,7 @@ export default async (req, context) => {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return json({ error: 'AI 풀이가 아직 준비되지 않았습니다.', reason: 'disabled' }, 503);
+  if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았습니다.', reason: 'disabled' }, 503);
 
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
@@ -61,7 +61,7 @@ ${chartSummary(chart)}
 
 [풀이 주제] ${topic.label}
 다룰 내용: ${topic.focus}
-기준 연도: ${chart.seun.year}년`;
+기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년`;
 
   const client = new Anthropic({ apiKey, timeout: TIME_LIMIT_MS, maxRetries: 0 });
   const encoder = new TextEncoder();

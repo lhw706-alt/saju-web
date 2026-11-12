@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SITE, PARTNER } from '../site.js';
 import { trackEvent } from '../lib/analytics.js';
 import Logo from './Logo.jsx';
+import { GROUPS } from '../lib/contents.js';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -31,10 +32,21 @@ export default function Layout() {
       <div className="sky" aria-hidden="true" />
       <header className="header">
         <Link to="/" className="brand" aria-label={`${SITE.name} 처음으로`}>
-          <Logo size={28} />
+          <Logo size={22} />
         </Link>
-        <nav className="nav">
-          <Link to="/">사주 보기</Link>
+        {/* GNB: 메인 카드 분류로 이동 (모바일은 헤더 아래 한 줄) */}
+        <nav className="nav" aria-label="주요 메뉴">
+          {GROUPS.map((g) => (
+            <Link
+              key={g.id}
+              to={`/#${g.id}`}
+              onClick={() => {
+                if (pathname === '/') document.getElementById(g.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            >
+              {g.label}
+            </Link>
+          ))}
         </nav>
       </header>
 
@@ -49,8 +61,8 @@ export default function Layout() {
           <span>{PARTNER.text} →</span>
         </a>
         <p className="disclaimer">
-          사주 풀이는 전통 명리 이론과 AI가 만든 참고용 해석입니다. 건강·법률·투자처럼 중요한 결정은 해당 분야
-          전문가와 상의하세요.
+          천둥도사의 사주 풀이는 전통 명리 이론을 바탕으로 생성형 AI가 만든 참고용 해석입니다. 건강·법률·투자처럼
+          중요한 결정은 해당 분야 전문가와 상의하세요.
         </p>
         <p className="footer-links">
           <Link to="/privacy">개인정보 처리방침</Link>

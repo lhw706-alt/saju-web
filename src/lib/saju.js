@@ -220,8 +220,6 @@ export function computeSaju(rawInput, { now = new Date() } = {}) {
   const thisYear = now.getFullYear();
   const currentDaeun = daeun.find((d) => thisYear >= d.startYear && thisYear <= d.endYear) || null;
 
-  // 올해 세운 (입춘 이후 기준: 그해 7월 1일의 연주)
-  const seunGz = Solar.fromYmd(thisYear, 7, 1).getLunar().getYearInGanZhiExact();
 
   const lunarOfBirth = Solar.fromYmd(sy, sm, sd).getLunar();
   return {
@@ -238,11 +236,18 @@ export function computeSaju(rawInput, { now = new Date() } = {}) {
     daeun,
     daeunStart: { years: yun.getStartYear(), months: yun.getStartMonth(), forward: yun.isForward() },
     currentDaeun,
-    seun: { year: thisYear, ganzhi: seunGz, ko: ganzhiKo(seunGz), stemGod: tenGod(dayStem, STEM_ELEMENT[seunGz[0]], STEM_YANG(seunGz[0])), branchGod: tenGod(dayStem, BRANCH_ELEMENT[seunGz[1]], BRANCH_YANG[seunGz[1]]) },
+    seun: seunOf(dayStem, thisYear),
+    nextSeun: seunOf(dayStem, thisYear + 1), // 신년운세용 (내년)
   };
 }
 
-// AI 에 넘길 요약 (계산 결과만, 개인 식별 정보 없음)
+// 세운(그해의 간지): 입춘 이후 기준이라 그해 7월 1일의 연주로 정한다
+function seunOf(dayStem, year) {
+  const gz = Solar.fromYmd(year, 7, 1).getLunar().getYearInGanZhiExact();
+  return { year, ganzhi: gz, ko: ganzhiKo(gz), stemGod: tenGod(dayStem, STEM_ELEMENT[gz[0]], STEM_YANG(gz[0])), branchGod: tenGod(dayStem, BRANCH_ELEMENT[gz[1]], BRANCH_YANG[gz[1]]) };
+}
+
+// 풀이 모델에 넘길 요약 (계산 결과만, 개인 식별 정보 없음)
 export function chartSummary(c) {
   const order = [['년주', c.pillars.year], ['월주', c.pillars.month], ['일주', c.pillars.day], ['시주', c.pillars.hour]];
   const lines = order.map(([name, p]) =>
@@ -262,6 +267,7 @@ export function chartSummary(c) {
     `십성 분포(천간·지지 본기): ${gods}`,
     `대운(${c.daeunStart.forward ? '순행' : '역행'}, 만 나이): ${c.daeun.map((d) => `${d.startAge}세 ${d.ko}`).join(', ')}`,
     `현재 대운: ${c.currentDaeun ? `${c.currentDaeun.ko}(${c.currentDaeun.startYear}~${c.currentDaeun.endYear})` : '대운 시작 전'}`,
-    `${c.seun.year}년 세운: ${c.seun.ganzhi}(${c.seun.ko}) — 천간 ${c.seun.stemGod}, 지지 ${c.seun.branchGod}`,
+    (() => { const y = c.nextSeun.year; const d = c.daeun.find((x) => y >= x.startYear && y <= x.endYear); return `${y}년의 대운: ${d ? `${d.ko}(${d.startYear}~${d.endYear})` : '대운 시작 전'}`; })(),
+    ...[c.seun, c.nextSeun].map((y) => `${y.year}년 세운: ${y.ganzhi}(${y.ko}) — 천간 ${y.stemGod}, 지지 ${y.branchGod}`),
   ].join('\n');
 }
