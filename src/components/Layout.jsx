@@ -31,7 +31,7 @@ export default function Layout() {
       <div className="sky" aria-hidden="true" />
       <header className="header">
         <Link to="/" className="brand" aria-label={`${SITE.name} 처음으로`}>
-          <Logo size={34} />
+          <Logo size={28} />
         </Link>
         <nav className="nav">
           <Link to="/">사주 보기</Link>

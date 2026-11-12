@@ -16,14 +16,12 @@ export function LogoSymbol({ size = 32, withBg = false, className = '' }) {
   );
 }
 
-export default function Logo({ size = 34, hanja = true }) {
+// 글자 높이를 아이콘 높이에 맞춤: 조선신명조 한글의 실제 글자 높이 ≈ 0.94em, 아이콘 그림 높이 ≈ 0.96 × size
+export default function Logo({ size = 28 }) {
   return (
     <span className="logo">
       <LogoSymbol size={size} />
-      <span className="logo-text">
-        <span className="logo-name">사주천문</span>
-        {hanja && <span className="logo-hanja">四柱天文</span>}
-      </span>
+      <span className="logo-name" style={{ fontSize: Math.round(size * 1.02) }}>사주천문</span>
     </span>
   );
 }
