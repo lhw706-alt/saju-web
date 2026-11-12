@@ -53,7 +53,9 @@ export default function ChartTable({ chart }) {
         {COLS.map(([k]) =>
           k === 'day' ? (
             <span key={k} className="god-cell">
-              <TermButton term="일간" className="god is-me">나 (일간)</TermButton>
+              <TermButton term="일간" className="god is-me">
+                나<span className="me-sub"> (일간)</span>
+              </TermButton>
             </span>
           ) : (
             <span key={k} className="god-cell">

@@ -67,7 +67,7 @@ export default function Result() {
         </h2>
         <ChartTable chart={chart} />
         <p className="chart-guide">
-          <b>읽는 법</b> 가운데 <em>태어난 날</em>의 윗글자 <em>{dm.stem}({dm.ko})</em>가 바로 나예요. 나머지 글자는 나와 어떤 관계인지(관계·십성)로 풀이해요. 글자나 ? 를 누르면 뜻을 볼 수 있어요.
+          <b>읽는 법</b> 가운데 <em>태어난 날</em>의 윗글자 <em>{dm.stem}({dm.ko})</em>가 바로 나예요. 나머지 글자는 나와 어떤 관계인지(관계·십성)로 풀이해요. 점선 밑줄이 있는 말을 누르면 뜻을 볼 수 있어요.
         </p>
       </section>
 
