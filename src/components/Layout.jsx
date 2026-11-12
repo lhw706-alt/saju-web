@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SITE, PARTNER } from '../site.js';
 import { trackEvent } from '../lib/analytics.js';
+import Logo from './Logo.jsx';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -30,11 +31,7 @@ export default function Layout() {
       <div className="sky" aria-hidden="true" />
       <header className="header">
         <Link to="/" className="brand" aria-label={`${SITE.name} 처음으로`}>
-          <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-            <path d="M20 5a11 11 0 1 0 6 18A9 9 0 1 1 20 5z" fill="currentColor" />
-          </svg>
-          <span className="brand-name">{SITE.name}</span>
-          <span className="brand-hanja">{SITE.hanja}</span>
+          <Logo size={34} />
         </Link>
         <nav className="nav">
           <Link to="/">사주 보기</Link>

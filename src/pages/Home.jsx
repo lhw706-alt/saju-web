@@ -1,4 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogoSymbol } from '../components/Logo.jsx';
+
+// 3D 천동이는 따로 불러옴 (three.js 가 커서 첫 화면을 막지 않게). 불러오는 동안·3D 불가 시 2D 그림.
+const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
+const MascotStill = () => <LogoSymbol size={170} className="mascot-still" />;
 import BirthForm from '../components/BirthForm.jsx';
 import { saveInput, loadInput } from '../lib/storage.js';
 import { TOPICS } from '../lib/topics.js';
@@ -15,6 +21,11 @@ export default function Home() {
   return (
     <>
       <section className="hero">
+        <div className="hero-mascot">
+          <Suspense fallback={<MascotStill />}>
+            <Mascot3D />
+          </Suspense>
+        </div>
         <p className="eyebrow">만세력 · AI 사주 풀이</p>
         <h1>
           하늘의 흐름으로 읽는
