@@ -133,7 +133,17 @@ export default function StepForm({ initial, onSubmit }) {
                   maxLength={2}
                   placeholder="0"
                   value={f.minute}
-                  onChange={(e) => setF((p) => ({ ...p, minute: e.target.value.replace(/\D/g, ''), timeKnown: true }))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '');
+                    // 60 이상을 적으면 칸을 비우고 바로 안내
+                    if (v !== '' && Number(v) > 59) {
+                      setF((p) => ({ ...p, minute: '', timeKnown: true }));
+                      setError('분은 0에서 59까지만 적을 수 있어요.');
+                      return;
+                    }
+                    setError('');
+                    setF((p) => ({ ...p, minute: v, timeKnown: true }));
+                  }}
                   aria-label="태어난 분"
                 />
                 <span>분</span>

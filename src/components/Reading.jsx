@@ -120,7 +120,6 @@ export default function Reading({ input, initialTopic = null }) {
               </button>
             </div>
           )}
-          {cur.status === 'done' && <p className="ai-note">천둥도사의 풀이는 계산된 원국을 바탕으로 생성형 AI가 쓴 참고용 해석이에요.</p>}
         </article>
       )}
     </section>
