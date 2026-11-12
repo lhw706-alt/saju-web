@@ -2,10 +2,12 @@
 // 입력값은 저장하지 않고 onSubmit 으로만 넘긴다 (Start.jsx 가 sessionStorage 에 잠시 둠).
 import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
+import Select from './Select.jsx';
 
 const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '0', gender: '', city: 'seoul' };
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({ value: String(i), label: `${String(i).padStart(2, '0')}시` }));
+const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i * 5), label: `${String(i * 5).padStart(2, '0')}분` }));
+const CITY_OPTIONS = CITIES.map((c) => ({ value: c.id, label: c.name }));
 const STEPS = ['성별', '생년월일', '태어난 시각', '태어난 곳'];
 const QUESTIONS = ['성별을 골라 주세요', '언제 태어났나요?', '몇 시에 태어났나요?', '어디에서 태어났나요?'];
 
@@ -115,17 +117,14 @@ export default function StepForm({ initial, onSubmit }) {
         {step === 2 && (
           <>
             <div className="row2">
-              <select value={f.timeKnown ? f.hour : ''} onChange={(e) => setF((p) => ({ ...p, hour: e.target.value, timeKnown: true }))} aria-label="시">
-                <option value="">시</option>
-                {HOURS.map((h) => (
-                  <option key={h} value={h}>{String(h).padStart(2, '0')}시</option>
-                ))}
-              </select>
-              <select value={f.minute} onChange={set('minute')} aria-label="분">
-                {MINUTES.map((m) => (
-                  <option key={m} value={m}>{String(m).padStart(2, '0')}분</option>
-                ))}
-              </select>
+              <Select
+                ariaLabel="시"
+                placeholder="시"
+                value={f.timeKnown ? f.hour : ''}
+                onChange={(v) => setF((p) => ({ ...p, hour: String(v), timeKnown: true }))}
+                options={HOUR_OPTIONS}
+              />
+              <Select ariaLabel="분" value={f.minute} onChange={(v) => setF((p) => ({ ...p, minute: String(v) }))} options={MINUTE_OPTIONS} />
             </div>
             <button type="button" className="step-skip" onClick={timeUnknown}>
               시각을 몰라요 <small>시주 없이 여섯 글자로 봐요</small>
@@ -135,11 +134,7 @@ export default function StepForm({ initial, onSubmit }) {
 
         {step === 3 && (
           <>
-            <select value={f.city} onChange={set('city')} aria-label="태어난 곳">
-              {CITIES.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <Select ariaLabel="태어난 곳" value={f.city} onChange={(v) => setF((p) => ({ ...p, city: v }))} options={CITY_OPTIONS} />
             <p className="hint">태어난 곳의 경도로 실제 태양 시각을 맞춰 시주를 정해요. 서울은 표준시보다 약 32분 늦어요.</p>
           </>
         )}
