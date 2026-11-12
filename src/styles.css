@@ -579,7 +579,9 @@ legend.contact-label { margin-bottom: 12px; }
 .seun b { color: var(--text); font-weight: 600; }
 
 /* ── 평생 사주 리포트 ── */
-.report-top { display: flex; justify-content: space-between; gap: 8px; padding: 24px 0 16px; }
+.report-top { height: 24px; }
+.report-bottom { display: flex; justify-content: center; margin-top: 28px; }
+.report-bottom .btn-primary.inline { margin-top: 0; min-width: 220px; }
 .report-summary { padding: 22px 20px; }
 .report-dm { display: flex; align-items: center; gap: 14px; margin: 6px 0 16px; }
 .report-dm-title { margin: 0; display: flex; align-items: center; gap: 4px; font-family: var(--title); font-size: clamp(22px, 5.4vw, 28px); font-weight: 400; letter-spacing: -0.02em; }

@@ -378,7 +378,7 @@ export default function LifeReport({ chart, input }) {
       <nav className="report-toc" aria-label="평생 사주 목차">
         {SECTIONS.map(([key, title], i) => (
           <a key={key} href={`#${key}`} onClick={(e) => { e.preventDefault(); document.getElementById(key)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
-            {i + 1}. {title}
+            {title}
           </a>
         ))}
       </nav>
