@@ -1,7 +1,7 @@
 // Google Analytics 4 연동 (다모아픽과 같은 방식).
 // GA4 측정 ID(G-로 시작)를 넣으면 활성화된다. 비어 있으면 아무것도 전송하지 않는다.
 // 주의: 생년월일·시각·성별·출생지 등 입력값은 이벤트에 절대 넣지 않는다 (주소에도 없음 — sessionStorage 에만 있음).
-export const GA_MEASUREMENT_ID = '';
+export const GA_MEASUREMENT_ID = 'G-6029Q0DB8F';
 
 let initialized = false;
 
