@@ -711,3 +711,5 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-more { justify-self: start; padding: 4px 2px; border: 0; background: none; color: var(--text-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
 .saved-or { display: flex; align-items: center; gap: 12px; margin: 10px 0 2px; font-size: 14px; color: var(--muted); }
 .saved-or::before, .saved-or::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
+.saved-head { display: grid; gap: 2px; }
+.saved-note { margin: 0; font-size: 14px; color: var(--muted); }

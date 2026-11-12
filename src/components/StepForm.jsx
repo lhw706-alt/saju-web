@@ -101,7 +101,10 @@ export default function StepForm({ initial, onSubmit }) {
 
         {step === 0 && presets.length > 0 && (
           <div className="saved">
-            <h2 className="saved-title">저장된 정보로 바로 보기</h2>
+            <div className="saved-head">
+              <h2 className="saved-title">전에 본 사주를 바로 볼 수 있어요</h2>
+              <p className="saved-note">최근 5명까지 이 브라우저에만 저장돼요</p>
+            </div>
             <ul className="saved-list">
               {shown.map((x) => (
                 <li key={presetMain(x) + presetSub(x)} className="saved-item">
