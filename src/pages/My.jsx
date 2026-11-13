@@ -473,7 +473,12 @@ export default function My() {
         {hist === null ? (
           <p className="my-sec-note">불러오는 중…</p>
         ) : hist.length === 0 ? (
-          <p className="my-sec-note">아직 본 풀이가 없어요. 로그인한 채로 사주를 보면 여기에 쌓여요.</p>
+          <div className="hist-empty">
+            <p className="my-sec-note">아직 본 풀이가 없어요.</p>
+            <Link to="/" className="btn-primary inline">
+              사주 보러 가기
+            </Link>
+          </div>
         ) : (
           <ul className="saved-list">
             {hist.map((it) => (

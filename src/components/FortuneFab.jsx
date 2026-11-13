@@ -297,6 +297,12 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     navigate('/', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+  // 부적 도감의 '오늘의 부적 펼치기' 버튼
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener('saju:open-fortune', onOpen);
+    return () => window.removeEventListener('saju:open-fortune', onOpen);
+  }, []);
   // 카카오 공유하려다 로그인했으면 운세 창을 다시 열어 줌
   useEffect(() => {
     if (!loggedIn) return;

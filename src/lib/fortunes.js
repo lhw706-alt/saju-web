@@ -65,11 +65,22 @@ export function collect(idx, date = dayKey()) {
     book[idx] = { ...cur, count: cur.count + 1, last: date };
     localStorage.setItem(BOOK_KEY, JSON.stringify(book));
     localStorage.setItem(DAYS_KEY, JSON.stringify([...days, date].slice(-400)));
+    notify();
     return isNew;
   } catch {
     return false;
   }
 }
+// 도감 화면이 바로 갱신되도록 알림 (같은 탭에선 storage 이벤트가 안 옴)
+const notify = () => {
+  try {
+    window.dispatchEvent(new Event('saju:book'));
+  } catch {
+    /* 서버·테스트 환경 */
+  }
+};
+// 오늘 부적을 이미 펼쳤는지
+export const collectedToday = () => loadDays().includes(dayKey());
 // 오늘(또는 어제)까지 이어진 연속 일수
 export function streak() {
   const days = new Set(loadDays());
@@ -111,6 +122,7 @@ export async function syncBook() {
     const days = [...new Set([...loadDays(), ...(srv.days || [])])].sort().slice(-400);
     localStorage.setItem(BOOK_KEY, JSON.stringify(book));
     localStorage.setItem(DAYS_KEY, JSON.stringify(days));
+    notify();
     await fetch('/api/charms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ book, days }) });
     return true;
   } catch {
