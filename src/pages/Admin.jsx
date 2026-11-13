@@ -58,6 +58,12 @@ export default function Admin() {
               <b>{data.total}명</b>
             </li>
             <li>
+              <span>카카오 · 이메일</span>
+              <b>
+                {data.users.filter((u) => u.provider !== 'email').length} · {data.users.filter((u) => u.provider === 'email').length}
+              </b>
+            </li>
+            <li>
               <span>오늘 로그인</span>
               <b>{todayCount}명</b>
             </li>
@@ -79,8 +85,9 @@ export default function Admin() {
                 <thead>
                   <tr>
                     <th>닉네임</th>
-                    <th>카카오 이름</th>
-                    <th>카카오 회원번호</th>
+                    <th>가입 방법</th>
+                    <th>카카오 이름 / 이메일</th>
+                    <th>회원번호</th>
                     <th>가입</th>
                     <th>마지막 로그인</th>
                     <th>로그인 횟수</th>
@@ -90,7 +97,8 @@ export default function Admin() {
                   {data.users.map((u) => (
                     <tr key={u.id}>
                       <td>{u.displayNick || '-'}</td>
-                      <td>{u.nick || '-'}</td>
+                      <td>{u.provider === 'email' ? '이메일' : '카카오'}</td>
+                      <td>{(u.provider === 'email' ? u.email : u.nick) || '-'}</td>
                       <td className="mono">{u.id}</td>
                       <td>{fmt(u.joinedAt)}</td>
                       <td>{fmt(u.lastLoginAt)}</td>

@@ -93,9 +93,9 @@ export default function Layout() {
     const r = await fetch('/api/auth/delete', { method: 'POST' }).catch(() => null);
     const ok = !!r?.ok;
     if (ok) {
-      trackEvent('withdraw', { method: 'kakao' });
+      trackEvent('withdraw', { method: auth.user?.provider || 'kakao' });
       setAuth((a) => ({ ...a, user: null }));
-      showNotice('탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
+      showNotice(auth.user?.provider === 'email' ? '탈퇴했어요. 그동안 고마웠어요.' : '탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
     } else showNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     return ok;
   };
