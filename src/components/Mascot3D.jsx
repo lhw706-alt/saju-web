@@ -300,7 +300,7 @@ export function buildCheondong() {
 // 네잎클로버: 손에 쥔 줄기 + 하트 잎 네 장 (행운의 번호 화면)
 export function buildClover() {
   const g = new THREE.Group();
-  const leafMat = new THREE.MeshPhysicalMaterial({ color: '#3fa651', roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35, sheen: 0.15, sheenColor: new THREE.Color('#b8f0a0'), emissive: '#0d3314', emissiveIntensity: 0.12 });
+  const leafMat = new THREE.MeshPhysicalMaterial({ color: '#4cb95e', roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color('#c8ffb0'), emissive: '#16481f', emissiveIntensity: 0.2 });
   const stemMat = new THREE.MeshStandardMaterial({ color: '#3f8f4a', roughness: 0.6 });
   const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.06, 0.45, 0.02), new THREE.Vector3(0.02, 0.95, 0.06)]);
   g.add(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 24, 0.035, 10, false), stemMat));
@@ -310,15 +310,21 @@ export function buildClover() {
   heart.bezierCurveTo(-0.05, 0.52, 0, 0.44, 0, 0.38);
   heart.bezierCurveTo(0, 0.44, 0.05, 0.52, 0.15, 0.5);
   heart.bezierCurveTo(0.32, 0.46, 0.28, 0.12, 0, 0);
-  const leafGeo = new THREE.ExtrudeGeometry(heart, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 24 });
+  const leafGeo = new THREE.ExtrudeGeometry(heart, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.03, bevelSegments: 6, curveSegments: 28 });
+  leafGeo.translate(0, 0, -0.025);
   const head = new THREE.Group();
   [0, 1, 2, 3].forEach((i) => {
     const leaf = new THREE.Mesh(leafGeo, leafMat);
-    leaf.rotation.z = (i * Math.PI) / 2 + Math.PI / 4;
-    head.add(leaf);
+    // 잎마다 살짝 위로 오므려 입체감 (평평한 판이 아니게)
+    const holder = new THREE.Group();
+    holder.rotation.z = (i * Math.PI) / 2 + Math.PI / 4;
+    leaf.rotation.x = 0.32;
+    holder.add(leaf);
+    head.add(holder);
   });
   head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), stemMat));
   head.position.set(0.02, 0.97, 0.07);
+  head.rotation.x = -0.4; // 얼굴(카메라) 쪽으로 눕혀 잎 네 장이 잘 보이게
   g.add(head);
   g.userData.head = head;
   return g;
@@ -327,33 +333,36 @@ export function buildClover() {
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
+  // 진짜 3D 공(빛을 받는 광택 구) + 앞면의 흰 원 번호표(늘 카메라를 보는 정원)
   const g = new THREE.Group();
+  const R = 0.3;
+  const sphere = new THREE.SphereGeometry(R, 48, 32);
   const nums = Array.from({ length: count }, (_, i) => ((i * 17 + 7) % 45) + 1);
   nums.forEach((n, i) => {
+    const ball = new THREE.Group();
+    const mat = new THREE.MeshPhysicalMaterial({ color: lottoColor(n), roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: lottoColor(n), emissiveIntensity: 0.12 });
+    ball.add(new THREE.Mesh(sphere, mat));
     const tex = canvasTexture(128, (c, size) => {
-      const r = size / 2;
-      const grd = c.createRadialGradient(r * 0.7, r * 0.6, r * 0.05, r, r, r);
-      grd.addColorStop(0, '#ffffff');
-      grd.addColorStop(0.25, lottoColor(n));
-      grd.addColorStop(1, lottoColor(n));
-      c.fillStyle = grd;
+      const h = size / 2;
+      c.clearRect(0, 0, size, size);
+      c.fillStyle = '#ffffff';
       c.beginPath();
-      c.arc(r, r, r - 2, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = 'rgba(255,255,255,0.92)';
-      c.beginPath();
-      c.arc(r, r, r * 0.46, 0, Math.PI * 2);
+      c.arc(h, h, h - 3, 0, Math.PI * 2); // 정원
       c.fill();
       c.fillStyle = '#1b1c1e';
-      c.font = `600 ${n < 10 ? 52 : 46}px Pretendard, sans-serif`;
+      c.font = `600 ${n < 10 ? 76 : 64}px Pretendard, sans-serif`;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText(String(n), r, r + 3);
+      c.fillText(String(n), h, h + 4);
     });
     document.fonts?.ready.then(() => tex.userData.redraw()).catch(() => {});
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 }));
-    sp.userData = { angle: (i / count) * Math.PI * 2, height: [0.9, 0.2, -0.4, 0.6, -0.1, 1.1, 0.35, -0.55][i % 8], phase: i * 0.9 };
-    g.add(sp);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+    label.scale.setScalar(R * 1.12);
+    label.position.z = R * 1.02; // 공 앞면에 붙은 번호표
+    label.renderOrder = 2;
+    ball.add(label);
+    ball.userData = { angle: (i / count) * Math.PI * 2, height: [0.9, 0.2, -0.4, 0.6, -0.1, 1.1, 0.35, -0.55][i % 8], phase: i * 0.9, label };
+    g.add(ball);
   });
   return g;
 }
@@ -657,8 +666,7 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
           const a = ba + ballSpin;
           const rr = 2.0 + Math.sin(t * 2 + bp) * 0.15 * s;
           b.position.set(Math.cos(a) * rr, bh + Math.sin(t * 3 + bp) * 0.18 * s, Math.sin(a) * rr * 0.7);
-          b.material.opacity = ballShow;
-          b.scale.setScalar(0.56 * (0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.08)); // 앞쪽 공은 조금 크게
+          b.scale.setScalar((0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.06));
         });
       }
       if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;
