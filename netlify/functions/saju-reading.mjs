@@ -6,7 +6,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { computeSaju, chartSummary, dayLuck, dayLuckSummary, SajuInputError } from '../../src/lib/saju.js';
-import { topicById, TOPIC_FORMAT } from '../../src/lib/topics.js';
+import { topicById, TOPIC_FORMAT, ttiYears } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
@@ -99,7 +99,7 @@ ${chartSummary(chart)}
 [풀이 주제] ${topic.label}
 다룰 내용: ${topic.focus}
 ${day ? `[보는 날 — 서버 계산 결과]
-${dayLuckSummary(day)}` : `기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년`}
+${dayLuckSummary(day)}${topic.id === 'tti' ? `\n같은 띠 출생 연도(나이별로 쓸 것, 이 순서대로): ${ttiYears(chart.animal, day.date).map((y) => `${String(y).slice(2)}년생`).join(', ')}` : ''}` :`기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년`}
 
 ${topic.format || TOPIC_FORMAT}`;
 

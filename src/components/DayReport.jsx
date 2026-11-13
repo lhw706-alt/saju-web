@@ -6,13 +6,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
-import { DAY_TOPICS, dayTopicDate, ymdOf } from '../lib/topics.js';
+import { DAY_TOPICS, dayTopicDate, ymdOf, ttiYears } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { FreshLoader } from './LifeReport.jsx';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
 import { computeSaju } from '../lib/saju.js';
-import { zodiacSvg, zodiacMood } from '../brand/zodiacArt.js';
+import { zodiacSvg } from '../brand/zodiacArt.js';
 
 const AXES = ['총운', '재물운', '연애운', '사업운', '건강운', '학업운'];
 const TIMES = ['총운', '오전', '오후', '밤'];
@@ -168,7 +168,7 @@ function useDayPart(input, member, id, date, valid) {
 
 // 점수 + 천둥도사 + 한 줄 요약
 // artOf(score) → 점수 위에 놓을 그림 SVG (그날 운세 = 천둥도사, 띠 운세 = 내 띠 십이지신)
-function ScoreHead({ date, data, cur, artOf, artClass = "", sub }) {
+function ScoreHead({ date, data, cur, artOf, sub }) {
   const score = data && Number.isFinite(Number(data.score)) ? clamp(data.score, 0, 100) : null;
   return (
     <section className="day-top">
@@ -176,7 +176,7 @@ function ScoreHead({ date, data, cur, artOf, artClass = "", sub }) {
       <div className="day-score" aria-live="polite">
         {score != null ? (
           <>
-            <span className={`day-dosa ${artClass}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: artOf(score) }} />
+            <span className="day-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: artOf(score) }} />
             <b>
               {score}
               <small>점</small>
@@ -230,7 +230,7 @@ export default function DayReport({ input, member = false, initial = 'today', pi
   const date = dayTopicDate(topic, pickedFor);
   // 두 풀이를 함께 요청 (탭을 바꿔도 기다리지 않게)
   const [cur, retry] = useDayPart(input, member, topic, date, hasTimes);
-  const [ttiCur, ttiRetry] = useDayPart(input, member, 'tti', date, (t) => typeof t === 'string' && t.length > 0);
+  const [ttiCur, ttiRetry] = useDayPart(input, member, 'tti', date, (t) => typeof t === 'string' && t.includes('년생')); // 나이별 운세 없는 예전 풀이는 새로 받음
 
   const { data, sections } = useMemo(() => parseDay(cur?.text || ''), [cur?.text]);
   const tti = useMemo(() => parseDay(ttiCur?.text || ''), [ttiCur?.text]);
@@ -253,7 +253,10 @@ export default function DayReport({ input, member = false, initial = 'today', pi
     return ymdOf(d);
   })();
   const pickOk = /^\d{4}-\d{2}-\d{2}$/.test(picked) && picked >= today && picked <= maxDate;
-  const lucky = tti.data?.lucky && typeof tti.data.lucky === 'object' ? Object.entries(tti.data.lucky).filter(([, v]) => v != null && String(v).trim()) : [];
+  // 같은 띠 출생 연도 (08년생 → 96년생 → …) 와 그중 내 해
+  const years = animal && date ? ttiYears(animal.name, date) : [];
+  const mineYear = animal ? (years.find((y) => Math.abs(y - Number(animal.year)) <= 1) ?? null) : null;
+  const mineYY = mineYear != null ? String(mineYear).slice(2) : null;
 
   return (
     <>
@@ -320,40 +323,156 @@ export default function DayReport({ input, member = false, initial = 'today', pi
 
       {date && view === 'tti' && (
         <>
-          <ScoreHead
-            date={date}
-            data={tti.data}
-            cur={ttiCur}
-            artClass={animal ? "day-tti-art" : ""}
-            artOf={(sc) => (animal ? zodiacSvg(animal.name, zodiacMood(sc)) : dosaFaceSvg(faceOf(sc), topic))}
-            sub={animal ? `${dateTitle(date)} · ${animal.year}년생 ${animal.name}띠(${ANIMAL_BRANCH[animal.name] || ''})` : dateTitle(date)}
-          />
-          <section className="day-body">
-            {lucky.length > 0 && (
+          <section className="day-top tti-top">
+            <p className="day-date">{dateTitle(date)}</p>
+            {animal && (
               <>
-                <h2 className="day-sub">행운 포인트</h2>
-                <ul className="day-lucky">
-                  {lucky.map(([k, v]) => (
-                    <li key={k}>
-                      <span>{k}</span>
-                      <b>{String(v)}</b>
-                    </li>
-                  ))}
-                </ul>
+                <span className="tti-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: zodiacSvg(animal.name, 'good') }} />
+                <p className="tti-name">
+                  {animal.name}띠 <span className="tti-han">{ANIMAL_BRANCH[animal.name]}</span>
+                </p>
+                <p className="tti-years">{years.map((y) => `${String(y).slice(2)}년생`).join(' · ')}</p>
               </>
             )}
-            {['띠 운세', '한 줄 조언'].map((h) =>
-              tti.sections[h] || (h === '띠 운세' && ttiCur) ? (
-                <article key={h} className="day-text" aria-busy={ttiCur?.status === 'loading'}>
-                  <h2>{h}</h2>
-                  {tti.sections[h] ? <Markdown text={tti.sections[h]} /> : ttiCur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
-                  {h === '띠 운세' && <EndNotice cur={ttiCur} retry={ttiRetry} />}
-                </article>
-              ) : null,
+            <p className="day-summary">{tti.data?.summary || (ttiCur?.status === 'loading' ? '천둥도사가 그날의 띠 기운을 읽고 있어요…' : '')}</p>
+          </section>
+          <section className="day-body">
+            {tti.data?.lucky && <LuckyPoints lucky={tti.data.lucky} />}
+            <article className="day-text" aria-busy={ttiCur?.status === 'loading'}>
+              <h2>띠 운세</h2>
+              {tti.sections['띠 운세'] ? <Markdown text={tti.sections['띠 운세']} /> : ttiCur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
+              <EndNotice cur={ttiCur} retry={ttiRetry} />
+            </article>
+            {tti.sections['나이별 운세'] && <AgeList text={tti.sections['나이별 운세']} mine={mineYY} />}
+            {tti.sections['한 줄 조언'] && (
+              <article className="day-text">
+                <h2>한 줄 조언</h2>
+                <Markdown text={tti.sections['한 줄 조언']} />
+              </article>
             )}
           </section>
         </>
       )}
     </>
+  );
+}
+
+// ── 띠 운세 조각 ──
+// 행운의 색 이름 → 실제 색 (AI 에게 이 목록 안에서 고르게 함, topics.js TTI_FORMAT)
+const LUCKY_COLORS = [
+  [/빨|적색|붉/, '#e5484d'],
+  [/주황|오렌지/, '#f08a3e'],
+  [/노랑|노란|황색/, '#f2c94c'],
+  [/초록|녹색|연두/, '#4caf6a'],
+  [/하늘/, '#6ec6f0'],
+  [/남색|네이비/, '#3949ab'],
+  [/파랑|파란|청색/, '#3b82f6'],
+  [/보라|자주/, '#9b6dd6'],
+  [/분홍|핑크/, '#f28cb1'],
+  [/흰|하양|백색|화이트/, '#f5f5f2'],
+  [/검|흑색|블랙/, '#111214'],
+  [/회색|그레이/, '#9aa0a6'],
+  [/갈색|브라운/, '#9a6b45'],
+  [/금색|황금|골드/, '#e2c27a'],
+  [/은색|실버/, '#c0c6cc'],
+  [/베이지/, '#e8d7b5'],
+];
+const colorOf = (name) => (LUCKY_COLORS.find(([re]) => re.test(name)) || [null, '#e2c27a'])[1];
+// 방향 → 나침반 바늘 각도 (북 = 0°, 시계 방향)
+const DIRS = [
+  [/^(북동|동북)/, 45],
+  [/^(동남|남동)/, 135],
+  [/^(남서|서남)/, 225],
+  [/^(북서|서북)/, 315],
+  [/^북/, 0],
+  [/^동/, 90],
+  [/^남/, 180],
+  [/^서/, 270],
+];
+const angleOf = (name) => {
+  const d = DIRS.find(([re]) => re.test(String(name).trim()));
+  return d ? d[1] : null;
+};
+
+function LuckyPoints({ lucky }) {
+  const color = String(lucky['색'] || '').trim();
+  const num = String(lucky['숫자'] || '').trim();
+  const dir = String(lucky['방향'] || '').trim();
+  const ang = angleOf(dir);
+  return (
+    <section className="lucky" aria-label="행운 포인트">
+      <h2 className="day-sub">행운 포인트</h2>
+      <ul className="lucky-list">
+        {color && (
+          <li>
+            <span className="lucky-swatch" style={{ '--c': colorOf(color) }} aria-hidden="true" />
+            <span className="lucky-k">행운의 색</span>
+            <b>{color}</b>
+          </li>
+        )}
+        {num && (
+          <li>
+            <span className="lucky-coin" aria-hidden="true">
+              <span>{num}</span>
+            </span>
+            <span className="lucky-k">행운의 숫자</span>
+            <b>{num}</b>
+          </li>
+        )}
+        {dir && (
+          <li>
+            <svg className="lucky-compass" viewBox="0 0 64 64" aria-hidden="true">
+              <circle cx="32" cy="32" r="29" fill="#26272b" stroke="rgba(226,194,122,0.55)" strokeWidth="1.5" />
+              <circle cx="32" cy="32" r="22" fill="none" stroke="rgba(194,196,200,0.18)" strokeDasharray="2 3" />
+              <text x="32" y="12.5" textAnchor="middle" fontSize="8" fill="#e8e9ec">북</text>
+              <text x="54" y="35" textAnchor="middle" fontSize="8" fill="#a9abb0">동</text>
+              <text x="32" y="58" textAnchor="middle" fontSize="8" fill="#a9abb0">남</text>
+              <text x="10" y="35" textAnchor="middle" fontSize="8" fill="#a9abb0">서</text>
+              {ang != null && (
+                <g transform={`rotate(${ang} 32 32)`}>
+                  <path d="M32 15 L36 32 L32 30 L28 32z" fill="var(--primary)" />
+                  <path d="M32 49 L36 32 L32 34 L28 32z" fill="rgba(194,196,200,0.35)" />
+                </g>
+              )}
+              <circle cx="32" cy="32" r="2.6" fill="#1b1c1e" stroke="var(--primary)" strokeWidth="1.2" />
+            </svg>
+            <span className="lucky-k">행운의 방향</span>
+            <b>{dir}</b>
+          </li>
+        )}
+      </ul>
+    </section>
+  );
+}
+
+// 나이별 운세: "- 08년생: …" 줄들을 연도 배지 + 글로. 내 출생 연도 줄은 강조
+function AgeList({ text, mine }) {
+  const rows = text
+    .split('\n')
+    .map((l) => /^\s*[-*•]?\s*\**\s*(\d{2})\s*년생\s*\**\s*[:：]?\s*(.+)$/.exec(l))
+    .filter(Boolean)
+    .map((m) => ({ yy: m[1], body: m[2].replace(/\*\*/g, '').trim() }));
+  return (
+    <article className="day-text ages">
+      <h2>나이별 운세</h2>
+      {rows.length === 0 ? (
+        <Markdown text={text} />
+      ) : (
+        <ol className="age-list">
+          {rows.map((r) => (
+            <li key={r.yy} className={mine === r.yy ? 'is-mine' : ''}>
+              <span className="age-yy">
+                {r.yy}
+                <small>년생</small>
+              </span>
+              <p>
+                {mine === r.yy && <span className="age-me">나</span>}
+                {r.body}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </article>
   );
 }
