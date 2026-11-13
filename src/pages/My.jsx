@@ -1,5 +1,5 @@
 // 마이페이지 (/my): 상단 닉네임을 누르면 이동. 카드형(항목 이름 · 값 · 버튼 줄) —
-// 내 프로필 · 기본 정보(가입 방법·이메일·비밀번호 변경) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
+// 내 프로필 · 기본 정보(이메일·비밀번호 변경·휴대폰 본인인증 자리(준비중)) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { CITIES } from '../lib/saju.js';
@@ -111,6 +111,7 @@ export default function My() {
     setPwOpen(false);
     setPwDone('비밀번호를 바꿨어요.');
   };
+  const [phoneMsg, setPhoneMsg] = useState('');
   const pwMsg = (f) => (pwErr.field === f ? pwErr.text : '');
 
   if (!auth.ready) return <section className="my" />;
@@ -192,10 +193,6 @@ export default function My() {
       {/* 기본 정보: 가입 방법 · 이메일 · 비밀번호(이메일 회원만) */}
       <div className="my-sec card">
         <h2 className="my-sec-title">기본 정보</h2>
-        <div className="my-row">
-          <span className="my-row-label">가입 방법</span>
-          <span className="my-row-value">{isEmail ? '이메일' : '카카오'}</span>
-        </div>
         {isEmail && (
           <div className="my-row">
             <span className="my-row-label">이메일</span>
@@ -242,6 +239,20 @@ export default function My() {
         {pwDone && (
           <p className="my-msg" role="status">
             {pwDone}
+          </p>
+        )}
+        {/* 휴대폰 본인인증: 가입 때는 필요 없고, 나중에 코인 결제 전에 받음. 인증 업체 연결 전이라 지금은 '준비중' */}
+        <div className="my-row">
+          <span className="my-row-label">휴대폰 번호</span>
+          <span className={`my-row-value${p.phone ? '' : ' my-muted'}`}>{p.phone || '인증 전'}</span>
+          <button type="button" className="my-set" onClick={() => setPhoneMsg('휴대폰 본인인증은 준비중이에요. 결제 기능과 함께 열릴 예정이에요.')}>
+            {p.phone ? '변경' : '인증하기'}
+          </button>
+        </div>
+        <p className="my-sec-note">결제할 때만 휴대폰 본인인증이 필요해요.</p>
+        {phoneMsg && (
+          <p className="my-msg" role="status">
+            {phoneMsg}
           </p>
         )}
       </div>
