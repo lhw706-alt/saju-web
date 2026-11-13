@@ -16,6 +16,12 @@ const MY_TABS = [
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
+const fmtDateTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p2 = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+};
 const fmtDate = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
@@ -418,6 +424,20 @@ export default function My() {
                   </button>
                   {on && (
                     <div className="inq-body">
+                      {/* 상세 정보 표 */}
+                      <dl className="inq-info">
+                        <dt>문의번호</dt>
+                        <dd className="mono">{q.id.toUpperCase()}</dd>
+                        <dt>유형</dt>
+                        <dd>{INQ_TYPES[q.type] || '문의'}</dd>
+                        <dt>접수일시</dt>
+                        <dd>{fmtDateTime(q.createdAt)}</dd>
+                        <dt>상태</dt>
+                        <dd className={q.answer ? 'is-done' : ''}>{q.answer ? '답변 완료' : '답변 대기'}</dd>
+                        <dt>답변일시</dt>
+                        <dd>{q.answeredAt ? fmtDateTime(q.answeredAt) : '-'}</dd>
+                      </dl>
+                      <span className="inq-sub">문의 내용</span>
                       <p className="inq-msg">{q.message}</p>
                       {q.answer ? (
                         <div className="inq-answer">

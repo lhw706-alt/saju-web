@@ -24,7 +24,6 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
   const [type, setType] = useState('site');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
-  const [agree, setAgree] = useState(false);
   const [bot, setBot] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | done | error
   const [touched, setTouched] = useState(false);
@@ -67,7 +66,6 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
       setStatus('idle');
       setCompany('');
       setMessage('');
-      setAgree(false);
       setTouched(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,7 +74,7 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
   if (!open) return null;
 
   const msgOk = message.trim().length >= 10;
-  const valid = msgOk && agree;
+  const valid = msgOk;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -90,7 +88,7 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
     const r = await fetch('/api/inquiry', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ type, company: t.company ? company.trim() : '', message: message.trim(), page, consent: true }),
+      body: JSON.stringify({ type, company: t.company ? company.trim() : '', message: message.trim(), page }),
     }).catch(() => null);
     const d = await r?.json().catch(() => ({}));
     if (!r?.ok) {
@@ -106,7 +104,7 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
       company: t.company ? company.trim() : '',
       message: message.trim(),
       page,
-      consent: '동의',
+      consent: '처리방침 고지(동의 불필요)',
       inquiry: d.id,
     });
     fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() }).catch(() => {});
@@ -210,16 +208,13 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
               </span>
             </div>
 
-            <label className={`contact-agree${touched && !agree ? ' is-error' : ''}`}>
-              <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-              <span>
-                <strong>개인정보 수집·이용에 동의해요 (필수)</strong>
-                수집 항목: 문의 내용, 회원번호·닉네임 · 목적: 문의 확인과 답변 · 보유 기간: 답변 완료 후 1년 뒤 또는 탈퇴 시 삭제.{' '}
-                <Link to="/privacy" onClick={onClose}>
-                  개인정보 처리방침
-                </Link>
-              </span>
-            </label>
+            {/* 회원 요청 처리에 필요한 정보라 별도 동의 없이 받고 처리방침에 공개 (개인정보 보호법 제15조 1항 4호) */}
+            <p className="contact-notice">
+              문의 내용은 답변을 위해 회원 정보와 함께 보관하고, 답변 후 1년이 지나거나 탈퇴하면 지워요.{' '}
+              <Link to="/privacy" onClick={onClose}>
+                개인정보 처리방침
+              </Link>
+            </p>
 
             {status === 'error' && (
               <p className="contact-err contact-err-box" role="alert">

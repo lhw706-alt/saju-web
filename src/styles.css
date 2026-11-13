@@ -492,11 +492,8 @@ legend.contact-label { margin-bottom: 12px; }
 .contact-help.is-error, .contact-err { color: var(--danger); font-size: 14px; }
 .contact-count { flex: none; font-variant-numeric: tabular-nums; }
 .contact-err-box { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: rgba(255, 99, 99, 0.08); font-size: 14px; }
-.contact-agree { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); font-size: 14px; line-height: 1.55; color: var(--muted); cursor: pointer; }
-.contact-agree input { flex: none; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--primary); }
-.contact-agree strong { display: block; margin-bottom: 2px; font-size: 14px; font-weight: 600; color: var(--text); }
-.contact-agree a { color: var(--text-2); }
-.contact-agree.is-error { box-shadow: inset 0 0 0 1px var(--danger); }
+.contact-notice { margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.contact-notice a { color: var(--text-2); }
 .contact .btn-primary:disabled { opacity: 0.6; cursor: default; }
 .contact-done { display: grid; justify-items: center; gap: 8px; padding: 24px 0 4px; text-align: center; }
 .contact-done strong { font-family: var(--title); font-size: 20px; font-weight: 400; }
@@ -734,7 +731,14 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-dot { padding: 2px 7px; border-radius: 6px; background: rgba(226, 194, 122, 0.16); color: var(--primary); font-size: 12px; }
 .admin-inq .inq-item { display: grid; gap: 10px; padding: 16px; }
 .admin-inq-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.admin-inq .inq-msg { padding-top: 0; border-top: 0; }
+.inq-info { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px 12px; margin: 0; padding: 14px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+.inq-info dt { color: var(--muted); }
+.inq-info dd { margin: 0; color: var(--text); }
+.inq-info dd.mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.inq-info dd.is-done { color: var(--primary); }
+.inq-sub { font-size: 13px; color: var(--muted); margin-bottom: -6px; }
+.inq-msg { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.admin-inq .inq-msg { padding-top: 0; }
 .admin-inq-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .admin-inq-actions .btn-primary.inline { margin: 0; height: 40px; padding: 0 16px; font-size: 14px; }
 /* 상단 닉네임(마이페이지 링크) */
@@ -789,7 +793,6 @@ legend.contact-label { margin-bottom: 12px; }
 .inq-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 500; }
 .inq-meta { grid-column: 2; font-size: 13px; color: var(--muted); }
 .inq-body { padding: 0 16px 16px; display: grid; gap: 12px; }
-.inq-msg { margin: 0; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .inq-answer { padding: 14px; border-radius: var(--r-md); background: rgba(226, 194, 122, 0.08); border: 1px solid rgba(226, 194, 122, 0.2); }
 .inq-answer-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--primary); }
 .inq-answer p { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }

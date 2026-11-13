@@ -435,7 +435,6 @@ export default async (req, context) => {
     if (!type) return json({ error: '문의 유형을 골라 주세요.' }, 400);
     if (message.length < 10 || message.length > 2000) return json({ error: '문의 내용은 10자 이상 2000자 이하로 적어 주세요.' }, 400);
     if (email && (!EMAIL_RE.test(email) || email.length > 100)) return json({ error: '이메일 주소를 확인해 주세요.' }, 400);
-    if (body?.consent !== true) return json({ error: '개인정보 수집·이용에 동의해 주세요.' }, 400);
     const id = `${Date.now().toString(36)}${randomBytes(3).toString('hex')}`;
     const q = {
       id,
