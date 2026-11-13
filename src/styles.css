@@ -221,11 +221,12 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .content-text { position: relative; z-index: 1; display: grid; gap: 4px; }
 .content-text strong { font-size: 16px; font-weight: 600; letter-spacing: -0.002em; color: var(--text); }
 .content-text > span:last-child { font-size: 14px; line-height: 1.45; color: var(--text-2); letter-spacing: var(--ls-label); }
+/* 카드 배지 (2026-11-14 사용자 지시: 무료 배지가 너무 크고 강해서 은은하게 — 연한 금색 바탕 + 금색 글자) */
 .content-badge {
-  justify-self: start; margin-bottom: 4px; padding: 2px 7px; border-radius: var(--r-sm); font-size: 14px; font-weight: 600; letter-spacing: var(--ls-caption);
-  background: var(--track); color: var(--muted);
+  justify-self: start; margin-bottom: 6px; padding: 1px 6px; border-radius: 6px; font-size: 13px; line-height: 18px; font-weight: 500; letter-spacing: var(--ls-caption);
+  background: rgba(255, 255, 255, 0.06); color: rgba(206, 208, 212, 0.86);
 }
-.content-badge.is-live { background: var(--primary); color: var(--on-primary); }
+.content-badge.is-live { background: rgba(226, 194, 122, 0.12); color: var(--primary); }
 .content-dosa { position: absolute; right: 2px; bottom: 0; width: 88px; height: 66px; pointer-events: none; }
 .content-dosa svg { display: block; width: 100%; height: 100%; }
 .content-card:hover .content-dosa { animation: dosa-bob 1.2s ease-in-out infinite; }
