@@ -8,6 +8,7 @@ function devFakeLogin() {
   let loggedIn = false;
   let provider = 'kakao';
   let devPw = 'test1234';
+  const devInqs = [];
   let birth = null;
   let nick = '천동이(테스트)';
   const now = new Date().toISOString();
@@ -59,6 +60,15 @@ function devFakeLogin() {
           loggedIn = true;
           provider = 'email';
           return send(res, 200, { ok: true, nick });
+        }
+        // 문의 흉내: 미리보기 서버 메모리에만
+        if (path === '/api/inquiry') {
+          if (!loggedIn) return send(res, 401, { error: '로그인이 필요해요.', login: true });
+          if (req.method === 'GET') return send(res, 200, { inquiries: devInqs });
+          const body = await readBody(req);
+          const id = Date.now().toString(36);
+          devInqs.unshift({ id, type: body.type, company: body.company || '', email: body.email || '', message: body.message, page: body.page, createdAt: new Date().toISOString(), answer: devInqs.length ? '' : '안녕하세요, 미리보기 답변이에요.', answeredAt: devInqs.length ? null : new Date().toISOString() });
+          return send(res, 200, { ok: true, id });
         }
         if (path === '/api/auth/email/password') {
           const body = await readBody(req);

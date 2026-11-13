@@ -1,7 +1,7 @@
 // 마이페이지 (/my): 상단 닉네임을 누르면 이동. 카드형(항목 이름 · 값 · 버튼 줄) —
 // 내 프로필 · 기본 정보(이메일·비밀번호 변경·휴대폰 본인인증 자리(준비중)) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
@@ -9,9 +9,32 @@ import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset } from '../lib/storage.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
 
+const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
+const fmtDate = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
+};
+
 export default function My() {
   const navigate = useNavigate();
-  const { auth, openLogin, logout, withdraw, setNick } = useOutletContext();
+  const { auth, openLogin, openContact, inquiryVer, logout, withdraw, setNick } = useOutletContext();
+  const { hash } = useLocation();
+
+  // 내 문의내역 (서버 /api/inquiry). 문의를 새로 보내면 inquiryVer 가 바뀌어 다시 읽음
+  const [inqs, setInqs] = useState(null);
+  const [openInq, setOpenInq] = useState(null);
+  useEffect(() => {
+    if (!auth.user) return;
+    fetch('/api/inquiry', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setInqs(d?.inquiries || []))
+      .catch(() => setInqs([]));
+  }, [auth.user, inquiryVer]);
+  // 답변 알림 메일 링크(/my#inquiries)로 들어오면 문의내역으로 스크롤
+  useEffect(() => {
+    if (hash === '#inquiries' && inqs) document.getElementById('inquiries')?.scrollIntoView({ block: 'start' });
+  }, [hash, inqs]);
   const [profile, setProfile] = useState(null);
   const [presets, setPresets] = useState(loadPresets);
   const [editing, setEditing] = useState(false); // 내 사주 정보 등록·수정 중
@@ -327,6 +350,51 @@ export default function My() {
                 </button>
               </li>
             ))}
+          </ul>
+        )}
+      </div>
+
+      {/* 내 문의내역: 접수일 · 유형 · 답변 상태. 누르면 내용과 답변을 펼침 */}
+      <div className="my-sec card" id="inquiries">
+        <div className="my-sec-head">
+          <h2 className="my-sec-title">내 문의내역</h2>
+          <button type="button" className="my-set" onClick={openContact}>
+            문의하기
+          </button>
+        </div>
+        {inqs === null ? (
+          <p className="my-sec-note">불러오는 중…</p>
+        ) : inqs.length === 0 ? (
+          <p className="my-sec-note">아직 남긴 문의가 없어요.</p>
+        ) : (
+          <ul className="inq-list">
+            {inqs.map((q) => {
+              const on = openInq === q.id;
+              return (
+                <li key={q.id} className={`inq-item${on ? ' is-open' : ''}`}>
+                  <button type="button" className="inq-head" aria-expanded={on} onClick={() => setOpenInq(on ? null : q.id)}>
+                    <span className={`inq-badge${q.answer ? ' is-done' : ''}`}>{q.answer ? '답변 완료' : '답변 대기'}</span>
+                    <span className="inq-title">{q.message}</span>
+                    <span className="inq-meta">
+                      {INQ_TYPES[q.type] || '문의'} · {fmtDate(q.createdAt)}
+                    </span>
+                  </button>
+                  {on && (
+                    <div className="inq-body">
+                      <p className="inq-msg">{q.message}</p>
+                      {q.answer ? (
+                        <div className="inq-answer">
+                          <span className="inq-answer-label">운영자 답변 ·{fmtDate(q.answeredAt)}</span>
+                          <p>{q.answer}</p>
+                        </div>
+                      ) : (
+                        <p className="inq-wait">답변을 준비하고 있어요. 보통 영업일 기준 2~3일 안에 답변해요.</p>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

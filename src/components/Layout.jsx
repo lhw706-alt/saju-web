@@ -27,7 +27,13 @@ export default function Layout() {
   const [auth, setAuth] = useState({ enabled: false, user: null, ready: false });
   const [login, setLogin] = useState(false);
   const [notice, setNotice] = useState('');
-  const closeLogin = useCallback(() => setLogin(false), []);
+  // 로그인 창을 그냥 닫으면 '로그인 뒤 문의 창 열기' 예약도 취소
+  const closeLogin = useCallback(() => {
+    setLogin(false);
+    try {
+      sessionStorage.removeItem('sc:afterLogin');
+    } catch {}
+  }, []);
   // 토스트: 4초 동안 보이고(마지막 0.4초는 CSS 로 흐려짐) 사라짐. 새 안내가 오면 처음부터 다시
   const noticeTimer = useRef(null);
   const showNotice = (text) => {
@@ -36,6 +42,26 @@ export default function Layout() {
     noticeTimer.current = setTimeout(() => setNotice(''), 4000);
   };
   useEffect(() => () => clearTimeout(noticeTimer.current), []);
+  // 문의하기는 로그인 회원만: 비로그인이면 로그인 창부터 → 로그인하면 문의 창을 이어서 엶
+  // (카카오 로그인은 페이지를 떠났다 오므로 sessionStorage 로 기억)
+  const [inquiryVer, setInquiryVer] = useState(0); // 문의를 보내면 +1 → 마이페이지 목록 새로 읽기
+  const openContact = () => {
+    if (auth.user) return setContact(true);
+    try {
+      sessionStorage.setItem('sc:afterLogin', 'contact');
+    } catch {}
+    setLogin(true);
+    showNotice('문의하려면 로그인해 주세요.');
+  };
+  useEffect(() => {
+    if (!auth.user) return;
+    let want = null;
+    try {
+      want = sessionStorage.getItem('sc:afterLogin');
+      sessionStorage.removeItem('sc:afterLogin');
+    } catch {}
+    if (want === 'contact') setContact(true);
+  }, [auth.user]);
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
@@ -146,14 +172,14 @@ export default function Layout() {
       </header>
 
       <main className="main">
-        <Outlet context={{ auth, openLogin: () => setLogin(true), logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
+        <Outlet context={{ auth, openLogin: () => setLogin(true), openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
       </main>
       <FortuneFab />
 
       <footer className="footer">
         <p className="footer-links">
           <span className="footer-menu">
-            <button type="button" className="footer-contact" aria-haspopup="dialog" onClick={() => setContact(true)}>
+            <button type="button" className="footer-contact" aria-haspopup="dialog" onClick={openContact}>
               문의하기
             </button>
             <Link to="/privacy">개인정보 처리방침</Link>
@@ -161,7 +187,17 @@ export default function Layout() {
           <span>© {new Date().getFullYear()} {SITE.name}</span>
         </p>
       </footer>
-      <ContactModal open={contact} onClose={closeContact} />
+      <ContactModal
+        open={contact}
+        onClose={closeContact}
+        onSent={() => setInquiryVer((v) => v + 1)}
+        onNeedLogin={() => {
+          // 로그인이 풀린 채로 보낸 경우
+          setContact(false);
+          setAuth((a) => ({ ...a, user: null }));
+          openContact();
+        }}
+      />
       <LoginModal
         open={login}
         enabled={auth.enabled}

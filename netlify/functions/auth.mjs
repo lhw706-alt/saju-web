@@ -11,7 +11,9 @@
 // - /api/auth/nickname       → 사이트 닉네임 변경 (중복 금지) / nickname/suggest → 비어 있는 랜덤 닉네임
 // - /api/auth/birth          → 내 사주 정보 저장(POST)·삭제(DELETE) — 마이페이지
 // - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
-// - /api/admin/users         → 관리자용 회원 목록 (Authorization: Bearer ADMIN_PASSWORD)
+// - /api/inquiry             → 문의 남기기(POST)·내 문의내역(GET), 로그인 회원만
+// - /api/admin/users         → 관리자용 회원 목록 + 문의 목록 (Authorization: Bearer ADMIN_PASSWORD)
+// - /api/admin/inquiry       → 관리자 문의 답변 저장
 // 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
 // 회원번호·닉네임·가입일·마지막 로그인·로그인 횟수만 저장 (2026-11-13).
 // 환경 변수: KAKAO_REST_API_KEY(필수), KAKAO_CLIENT_SECRET(카카오 앱에서 켰다면), SESSION_SECRET(필수, 긴 무작위 문자열),
@@ -29,6 +31,34 @@ const SESSION_DAYS = 30;
 const users = () => getStore('users');
 // 관리자 비밀번호 대입 막기: 같은 IP 는 10분에 5번까지만 시도
 const adminLimited = createRateLimiter(5, 10 * 60_000);
+// 답변 달기처럼 연달아 부르는 관리자 요청용: 틀린 비밀번호만 세서 10분에 5번 넘으면 막음
+const adminFails = new Map();
+function adminAuth(req, ip) {
+  const admin = process.env.ADMIN_PASSWORD;
+  if (!admin) return { error: '관리자 비밀번호가 설정되지 않았어요.', status: 503 };
+  const now = Date.now();
+  const fails = (adminFails.get(ip) || []).filter((t) => now - t < 10 * 60_000);
+  if (fails.length >= 5) return { error: '시도가 너무 많아요. 10분 뒤 다시 해 주세요.', status: 429 };
+  const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!sameSecret(given, admin)) {
+    adminFails.set(ip, [...fails, now]);
+    return { error: '비밀번호가 맞지 않아요.', status: 401 };
+  }
+  return null;
+}
+
+// ── 문의 (2026-11-13, 로그인 회원만) ──
+// Netlify Blobs 'inquiries': 키 = 회원번호/문의번호, 값 = { id, userId, nick, type, company, email, message, page, createdAt, answer, answeredAt }
+// 알림 메일은 화면이 Netlify Forms(contact)에도 같이 보내서 받음. 탈퇴하면 그 회원의 문의도 지움.
+const inquiries = () => getStore('inquiries');
+const INQUIRY_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
+const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분 5건
+async function listInquiries(prefix) {
+  const store = inquiries();
+  const { blobs } = await store.list(prefix ? { prefix } : undefined);
+  const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })))).filter(Boolean);
+  return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
 
 // ── 이메일 회원 (2026-11-13) ──
 // emails: 키 = 정규화한 이메일, 값 = 회원번호(e_…) / pending: 키 = 인증 토큰, 값 = 가입 대기 정보(24시간)
@@ -388,6 +418,76 @@ export default async (req, context) => {
     return json({ ok: true });
   }
 
+  // 문의: POST = 문의 남기기 / GET = 내 문의내역 (로그인 회원만)
+  if (path === '/api/inquiry') {
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (req.method === 'GET') {
+      const list = await listInquiries(`${s.sub}/`);
+      return json({ inquiries: list.map(({ userId, ...q }) => q) });
+    }
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (inquiryLimited(s.sub)) return json({ error: '문의가 많아요. 10분 뒤 다시 남겨 주세요.' }, 429);
+    const body = await readJson();
+    const type = INQUIRY_TYPES[body?.type] ? body.type : null;
+    const message = String(body?.message || '').trim();
+    const email = String(body?.email || '').trim();
+    if (!type) return json({ error: '문의 유형을 골라 주세요.' }, 400);
+    if (message.length < 10 || message.length > 2000) return json({ error: '문의 내용은 10자 이상 2000자 이하로 적어 주세요.' }, 400);
+    if (email && (!EMAIL_RE.test(email) || email.length > 100)) return json({ error: '이메일 주소를 확인해 주세요.' }, 400);
+    if (body?.consent !== true) return json({ error: '개인정보 수집·이용에 동의해 주세요.' }, 400);
+    const id = `${Date.now().toString(36)}${randomBytes(3).toString('hex')}`;
+    const q = {
+      id,
+      userId: s.sub,
+      nick: s.nick || '',
+      type,
+      company: type === 'ad' ? String(body?.company || '').trim().slice(0, 60) : '',
+      email,
+      message,
+      page: String(body?.page || '').slice(0, 300),
+      createdAt: new Date().toISOString(),
+      answer: '',
+      answeredAt: null,
+    };
+    await inquiries().setJSON(`${s.sub}/${id}`, q);
+    return json({ ok: true, id });
+  }
+
+  // 관리자: 문의 답변 저장 (POST {key, answer}) — 답변 받을 이메일을 적은 문의면 답변 등록 알림 메일도 보냄
+  if (path === '/api/admin/inquiry') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const bad = adminAuth(req, ip);
+    if (bad) return json({ error: bad.error }, bad.status);
+    const body = await readJson();
+    const key = String(body?.key || '');
+    if (!/^[\w-]+\/[a-z0-9]+$/.test(key)) return json({ error: '잘못된 문의예요.' }, 400);
+    const q = await inquiries().get(key, { type: 'json' });
+    if (!q) return json({ error: '없는 문의예요. 회원이 탈퇴했을 수 있어요.' }, 404);
+    const answer = String(body?.answer || '').trim().slice(0, 4000);
+    const first = !q.answer && answer;
+    q.answer = answer;
+    q.answeredAt = answer ? new Date().toISOString() : null;
+    await inquiries().setJSON(key, q);
+    let mailed = false;
+    if (first && q.email && emailEnabled) {
+      try {
+        await sendMail(q.email, {
+          subject: '[사주천문] 문의에 답변했어요',
+          title: '문의에 답변했어요',
+          lines: [`남겨 주신 '${INQUIRY_TYPES[q.type] || '문의'}'에 답변을 달았어요.`, '마이페이지의 내 문의내역에서 확인해 주세요.'],
+          button: '답변 확인하기',
+          link: `${url.origin}/my#inquiries`,
+          ignore: '문의한 적이 없다면 이 메일은 무시해 주세요.',
+        });
+        mailed = true;
+      } catch (e) {
+        console.error('answer mail failed:', e?.message);
+      }
+    }
+    return json({ ok: true, answeredAt: q.answeredAt, mailed });
+  }
+
   if (path === '/api/auth/logout') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
@@ -474,6 +574,10 @@ export default async (req, context) => {
         if (owner === s.sub) await nicknames().delete(nickKey(rec.displayNick));
       }
       if (rec?.email) await emails().delete(emailKey(rec.email));
+      // 이 회원이 남긴 문의도 지움
+      const store = inquiries();
+      const { blobs } = await store.list({ prefix: `${s.sub}/` });
+      await Promise.all(blobs.map((b) => store.delete(b.key)));
       await users().delete(s.sub);
     } catch (e) {
       console.error('user delete failed:', e?.name);
@@ -498,7 +602,9 @@ export default async (req, context) => {
     list.sort((a, b) => String(a.joinedAt).localeCompare(String(b.joinedAt)));
     list.forEach((u, i) => (u.no = i + 1));
     list.sort((a, b) => String(b.lastLoginAt).localeCompare(String(a.lastLoginAt)));
-    return json({ total: list.length, users: list });
+    // 문의 목록도 함께 (관리자 화면의 '문의' 탭). key 로 답변을 저장함
+    const inqs = (await listInquiries()).map((q) => ({ ...q, key: `${q.userId}/${q.id}` }));
+    return json({ total: list.length, users: list, inquiries: inqs });
   }
 
   if (path === '/api/auth/kakao/login') {
@@ -565,4 +671,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/admin/users', '/api/admin/inquiry'] };

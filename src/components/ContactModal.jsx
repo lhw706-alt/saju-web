@@ -4,8 +4,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { SITE } from '../site.js';
 import { trackEvent } from '../lib/analytics.js';
 
-// 운영자 문의 폼 (푸터 '문의하기') — 다모아픽 ContactModal 과 같은 방식.
-// - 전송: Netlify Forms (index.html 의 숨은 form name="contact" 로 필드 등록). 접수되면 Netlify 가 알림 메일 발송
+// 운영자 문의 폼 (푸터 '문의하기', 마이페이지 내 문의내역) — 로그인 회원만 (2026-11-13). 비로그인이면 Layout 이 로그인 창부터 띄움.
+// - 저장: /api/inquiry → 계정에 저장(마이페이지 내 문의내역, 관리자 /admin 에서 답변)
+// - 알림: Netlify Forms 에도 같이 보냄 (index.html 의 숨은 form name="contact" 로 필드 등록). 접수되면 Netlify 가 알림 메일 발송
 //   → 받는 주소는 Netlify 관리 화면 Forms > Form notifications 에서 설정 (다모아픽과 같은 주소, 코드에 메일 주소를 두지 않음)
 // - 받는 정보: 문의 유형, 회사·브랜드명(제휴만, 선택), 내용, 답변 받을 이메일(선택), 문의한 페이지 주소. 이름·전화번호·생년월일은 받지 않음
 // - 스팸: honeypot 필드(bot-field)
@@ -18,8 +19,9 @@ const TYPES = [
 const MAX = 2000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ContactModal({ open, onClose }) {
+export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
   const { pathname, search } = useLocation();
+  const [errText, setErrText] = useState('');
   const [type, setType] = useState('site');
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
@@ -84,24 +86,37 @@ export default function ContactModal({ open, onClose }) {
     setTouched(true);
     if (!valid || status === 'sending') return;
     setStatus('sending');
+    setErrText('');
+    if (bot) return setStatus('done'); // 봇이면 저장하지 않고 끝난 척
+    const page = `${SITE.url}${pathname}${search}`;
+    // 1) 계정에 저장 (마이페이지 내 문의내역)
+    const r = await fetch('/api/inquiry', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ type, company: t.company ? company.trim() : '', email: email.trim(), message: message.trim(), page, consent: true }),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    if (!r?.ok) {
+      if (d?.login) return onNeedLogin?.();
+      setErrText(d?.error || '');
+      return setStatus('error');
+    }
+    // 2) 운영자 알림 메일용으로 Netlify Forms 에도 보냄 (실패해도 문의는 이미 저장됨)
     const body = new URLSearchParams({
       'form-name': 'contact',
-      'bot-field': bot,
+      'bot-field': '',
       type: t.label,
       company: t.company ? company.trim() : '',
       email: email.trim(),
       message: message.trim(),
-      page: `${SITE.url}${pathname}${search}`,
+      page,
       consent: '동의',
+      inquiry: d.id,
     });
-    try {
-      const r = await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
-      if (!r.ok) throw new Error(String(r.status));
-      setStatus('done');
-      trackEvent('contact_submit', { contact_type: type });
-    } catch {
-      setStatus('error');
-    }
+    fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() }).catch(() => {});
+    setStatus('done');
+    trackEvent('contact_submit', { contact_type: type });
+    onSent?.();
   };
 
   return createPortal(
@@ -121,18 +136,27 @@ export default function ContactModal({ open, onClose }) {
         {status === 'done' ? (
           <div className="contact-done" role="status">
             <strong>문의가 접수됐어요</strong>
-            {email.trim() ? (
-              <p>
-                적어 주신 이메일({email.trim()})로 답변드릴게요.
-                <br />
-                보통 영업일 기준 2~3일 안에 답변해요.
-              </p>
-            ) : (
-              <p>보내 주신 내용은 꼼꼼히 확인할게요.</p>
-            )}
-            <button type="button" className="btn-primary" onClick={onClose}>
-              확인
-            </button>
+            <p>
+              답변은 마이페이지의 내 문의내역에서 볼 수 있어요.
+              {email.trim() && (
+                <>
+                  <br />
+                  답변을 달면 {email.trim()}(으)로도 알려 드릴게요.
+                </>
+              )}
+              <br />
+              보통 영업일 기준 2~3일 안에 답변해요.
+            </p>
+            <div className="contact-done-btns">
+              <button type="button" className="btn-primary" onClick={onClose}>
+                확인
+              </button>
+              {pathname !== '/my' && (
+                <Link to="/my#inquiries" className="btn-ghost" onClick={onClose}>
+                  내 문의내역 보기
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
           <form className="contact-form" onSubmit={submit} noValidate>
@@ -198,7 +222,7 @@ export default function ContactModal({ open, onClose }) {
 
             <div className="contact-field">
               <label className="contact-label" htmlFor="contact-email">
-                답변 받을 이메일 <span className="contact-opt">선택</span>
+                답변 알림 받을 이메일 <span className="contact-opt">선택</span>
               </label>
               <input
                 id="contact-email"
@@ -209,7 +233,7 @@ export default function ContactModal({ open, onClose }) {
                 value={email}
                 maxLength={100}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="답변이 필요하면 적어 주세요"
+                placeholder="답변이 달리면 메일로도 알려 드려요"
                 aria-invalid={touched && !emailOk}
                 aria-describedby={touched && !emailOk ? 'contact-email-err' : undefined}
               />
@@ -224,7 +248,7 @@ export default function ContactModal({ open, onClose }) {
               <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>
                 <strong>개인정보 수집·이용에 동의해요 (필수)</strong>
-                수집 항목: 문의 내용, 이메일(적은 경우) · 목적: 문의 확인과 답변 · 보유 기간: 답변 완료 후 1년 뒤 삭제.{' '}
+                수집 항목: 문의 내용, 이메일(적은 경우), 회원번호·닉네임 · 목적: 문의 확인과 답변 · 보유 기간: 답변 완료 후 1년 뒤 또는 탈퇴 시 삭제.{' '}
                 <Link to="/privacy" onClick={onClose}>
                   개인정보 처리방침
                 </Link>
@@ -233,7 +257,7 @@ export default function ContactModal({ open, onClose }) {
 
             {status === 'error' && (
               <p className="contact-err contact-err-box" role="alert">
-                전송하지 못했어요. 잠시 후 다시 시도해 주세요.
+                {errText || '전송하지 못했어요. 잠시 후 다시 시도해 주세요.'}
               </p>
             )}
 
