@@ -101,7 +101,20 @@ export default async (req, context) => {
 
   if (path === '/api/auth/me') {
     const s = verify(cookies(req)[SESSION], secret);
-    return json({ enabled, user: s ? { nick: s.nick || '' } : null });
+    if (!s) return json({ enabled, user: null });
+    // 마이페이지용: ?full=1 이면 저장된 회원 정보(가입일·마지막 로그인·횟수)도 함께
+    let profile = null;
+    if (url.searchParams.get('full') === '1') {
+      try {
+        profile = await users().get(s.sub, { type: 'json' });
+      } catch (e) {
+        console.error('profile read failed:', e?.name);
+      }
+    }
+    return json({
+      enabled,
+      user: { nick: s.nick || '', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount } : {}) },
+    });
   }
 
   if (path === '/api/auth/logout') {

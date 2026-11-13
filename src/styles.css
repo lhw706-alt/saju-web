@@ -688,10 +688,6 @@ legend.contact-label { margin-bottom: 12px; }
 .login-off { margin: 0; padding: 14px; border-radius: 12px; background: var(--bg); color: var(--text-2); text-align: center; font-size: 15px; }
 .login-note { margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
 .login-note a { color: var(--text-2); }
-.user-menu { position: relative; order: 1; flex: none; }
-.user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 120px; padding: 6px; border-radius: 12px; border: 1px solid var(--line); background: #26272b; box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6); }
-.user-menu-list button { width: 100%; height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 14px; text-align: left; cursor: pointer; }
-.user-menu-list button:hover { background: var(--track); }
 @media (max-width: 559px) { .login { max-width: none; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; } }
 
 /* 저장된 정보로 바로 보기 (목록: 줄을 누르면 불러오기, ✕ 지우기) */
@@ -714,8 +710,6 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-or::before, .saved-or::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
 .saved-head { display: grid; gap: 2px; }
 .saved-note { margin: 0; font-size: 14px; color: var(--muted); }
-/* 회원 탈퇴 메뉴 */
-.user-menu-list button.is-danger { color: var(--danger); }
 /* 관리자 회원 목록 */
 .admin { padding: 28px 0 0; }
 .admin-login { display: grid; gap: 10px; max-width: 380px; margin-top: 18px; padding: 20px; }
@@ -731,3 +725,32 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-table td.mono { font-variant-numeric: tabular-nums; color: var(--text-2); }
 .admin-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .admin-table tbody tr:last-child td { border-bottom: 0; }
+/* 상단 닉네임(마이페이지 링크) */
+.header-contact.user-link { display: inline-flex; align-items: center; text-decoration: none; }
+/* 마이페이지 */
+.my { padding: 28px 0 0; }
+.my-card { margin-top: 18px; padding: 22px 20px; }
+.my-empty { display: grid; justify-items: start; gap: 4px; }
+.my-empty p { margin: 0; color: var(--text-2); }
+.my-empty .btn-primary.inline { margin-top: 12px; }
+.my-hello { display: flex; align-items: center; gap: 14px; }
+.my-avatar { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--primary-soft); border: 1px solid var(--primary-line); color: var(--primary); font-family: var(--title); font-size: 22px; }
+.my-hello b { display: block; font-size: 18px; font-weight: 600; }
+.my-hello span { font-size: 14px; color: var(--muted); }
+.my-info { margin: 18px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.my-info div { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); }
+.my-info dt { font-size: 14px; color: var(--muted); }
+.my-info dd { margin: 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.my-title { margin-top: 36px; }
+.my-none { margin: 0; padding: 16px; border-radius: var(--r-md); background: var(--bg-2); color: var(--muted); font-size: 14px; }
+.my-actions { display: flex; gap: 8px; }
+.my-action { height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 15px; font-weight: 500; cursor: pointer; }
+.my-action:hover { border-color: var(--text-2); }
+.my-action.is-danger { color: var(--danger); }
+.my-action.is-danger:hover { border-color: rgba(255, 99, 99, 0.5); }
+.my .saved-item { background: var(--bg-2); border: 1px solid var(--line-soft); }
+.my .saved-item:hover { background: #26272b; }
+@media (max-width: 420px) {
+  .my-info div { padding: 10px 12px; }
+  .my-info dd { font-size: 14px; }
+}

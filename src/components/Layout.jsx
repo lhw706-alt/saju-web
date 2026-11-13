@@ -26,7 +26,6 @@ export default function Layout() {
   // 로그인 상태 (카카오 로그인 — 서버 /api/auth/me). enabled: 서버에 카카오 키가 설정됐는지
   const [auth, setAuth] = useState({ enabled: false, user: null, ready: false });
   const [login, setLogin] = useState(false);
-  const [menu, setMenu] = useState(false);
   const [notice, setNotice] = useState('');
   const closeLogin = useCallback(() => setLogin(false), []);
   useEffect(() => {
@@ -61,21 +60,23 @@ export default function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
   const logout = async () => {
-    setMenu(false);
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setAuth((a) => ({ ...a, user: null }));
+    setNotice('로그아웃했어요.');
+    setTimeout(() => setNotice(''), 2400);
   };
-  // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃
+  // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃 → 성공하면 true
   const withdraw = async () => {
-    setMenu(false);
-    if (!window.confirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return;
+    if (!window.confirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return false;
     const r = await fetch('/api/auth/delete', { method: 'POST' }).catch(() => null);
-    if (r?.ok) {
+    const ok = !!r?.ok;
+    if (ok) {
       trackEvent('withdraw', { method: 'kakao' });
       setAuth((a) => ({ ...a, user: null }));
       setNotice('탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
     } else setNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     setTimeout(() => setNotice(''), 3200);
+    return ok;
   };
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -86,7 +87,7 @@ export default function Layout() {
       el.href = SITE.url + pathname;
     });
     setHeadTag('meta[name="robots"]', () => Object.assign(document.createElement('meta'), { name: 'robots' }), (el) => {
-      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') ? 'noindex,nofollow' : 'index,follow';
+      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') || pathname.startsWith('/my') ? 'noindex,nofollow' : 'index,follow';
     });
   }, [pathname]);
 
@@ -111,23 +112,11 @@ export default function Layout() {
             </Link>
           ))}
         </nav>
-        {/* 로그인 (로그인하면 닉네임 + 로그아웃 메뉴) */}
+        {/* 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         {auth.user ? (
-          <div className="user-menu">
-            <button type="button" className="header-contact" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-              {auth.user.nick || '내 계정'}
-            </button>
-            {menu && (
-              <div className="user-menu-list" role="menu">
-                <button type="button" role="menuitem" onClick={logout}>
-                  로그아웃
-                </button>
-                <button type="button" role="menuitem" className="is-danger" onClick={withdraw}>
-                  회원 탈퇴
-                </button>
-              </div>
-            )}
-          </div>
+          <Link to="/my" className="header-contact user-link" aria-label={`${auth.user.nick || '내 계정'} 마이페이지`}>
+            {auth.user.nick || '내 계정'}
+          </Link>
         ) : (
           <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setLogin(true)}>
             로그인
@@ -136,7 +125,7 @@ export default function Layout() {
       </header>
 
       <main className="main">
-        <Outlet />
+        <Outlet context={{ auth, openLogin: () => setLogin(true), logout, withdraw }} />
       </main>
       <FortuneFab />
 
