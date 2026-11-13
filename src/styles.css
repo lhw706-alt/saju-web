@@ -176,7 +176,7 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 /* 단계형 입력 */
 .steps { padding: 20px; display: grid; gap: 20px; }
 .steps-head { display: grid; gap: 10px; }
-.steps-bar { height: 4px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.steps-bar { height: 5px; border-radius: 99px; background: var(--track); overflow: hidden; }
 .steps-bar span { display: block; height: 100%; border-radius: 99px; background: var(--primary); transition: width 0.3s ease; }
 .steps-count { margin: 0; font-size: 14px; color: var(--muted); letter-spacing: var(--ls-label); }
 .steps-count b { color: var(--primary); font-weight: 600; }
@@ -234,12 +234,17 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 }
 @media (prefers-reduced-motion: reduce) { .content-card:hover .content-dosa { animation: none; } }
 .toast-wrap { position: fixed; left: 0; right: 0; bottom: 84px; z-index: 50; display: flex; justify-content: center; padding: 0 20px; pointer-events: none; }
+/* 토스트: 다크 카드 + 금색 점, 4초 동안 보였다가 마지막 0.4초에 자연스럽게 사라짐 (JS 는 4초 뒤 제거) */
 .toast {
-  margin: 0; max-width: 420px; padding: 12px 18px; border-radius: var(--r-md); background: #f7f7f8; color: #171719;
-  font-size: 14px; font-weight: 500; letter-spacing: var(--ls-label); box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.3), 0 24px 38px -10px rgba(0, 0, 0, 0.36);
-  animation: toast-in 0.25s ease;
+  display: flex; align-items: center; gap: 10px; margin: 0; max-width: 420px; padding: 12px 18px; border-radius: var(--r-md);
+  background: #2a2b2f; border: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 500; letter-spacing: var(--ls-label);
+  box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.35), 0 24px 38px -10px rgba(0, 0, 0, 0.45);
+  animation: toast-in 0.3s ease, toast-out 0.4s ease 3.6s forwards;
 }
+.toast::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 10px rgba(226, 194, 122, 0.6); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
 /* 입력 칸 */
 /* 세그먼트 (Montage seg: 트랙 + 선택 칸) */

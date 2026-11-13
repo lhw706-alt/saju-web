@@ -104,9 +104,6 @@ export default function My() {
                 <span>{presetSub(p.birth)}</span>
               </div>
               <div className="my-birth-actions">
-                <button type="button" className="btn-primary inline" onClick={() => view(p.birth)}>
-                  내 사주 보기
-                </button>
                 <button type="button" className="my-link" onClick={() => setEditing(true)}>
                   수정
                 </button>

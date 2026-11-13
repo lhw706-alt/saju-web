@@ -16,7 +16,7 @@ export default function ContentCards({ onOpen }) {
     if (c.status === 'live') return onOpen(c);
     clearTimeout(timer.current);
     setToast({ key: Date.now(), text: `${c.title} — ${SOON_MESSAGE[c.status]}` });
-    timer.current = setTimeout(() => setToast(null), 2400);
+    timer.current = setTimeout(() => setToast(null), 4000);
   };
 
   return (

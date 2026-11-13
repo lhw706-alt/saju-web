@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { SITE } from '../site.js';
 import Logo from './Logo.jsx';
@@ -28,6 +28,14 @@ export default function Layout() {
   const [login, setLogin] = useState(false);
   const [notice, setNotice] = useState('');
   const closeLogin = useCallback(() => setLogin(false), []);
+  // 토스트: 4초 동안 보이고(마지막 0.4초는 CSS 로 흐려짐) 사라짐. 새 안내가 오면 처음부터 다시
+  const noticeTimer = useRef(null);
+  const showNotice = (text) => {
+    clearTimeout(noticeTimer.current);
+    setNotice({ text, key: Date.now() });
+    noticeTimer.current = setTimeout(() => setNotice(''), 4000);
+  };
+  useEffect(() => () => clearTimeout(noticeTimer.current), []);
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
@@ -45,7 +53,7 @@ export default function Layout() {
       if (kind === 'new') trackEvent('sign_up', { method: 'kakao' });
       trackEvent('login', { method: 'kakao' });
     }
-    setNotice(
+    showNotice(
       kind === 'new'
         ? '반가워요! 카카오로 가입했어요.'
         : kind === 'ok'
@@ -55,15 +63,13 @@ export default function Layout() {
             : '로그인하지 못했어요. 다시 시도해 주세요.'
     );
     navigate(pathname + search.replace(/[?&]login=\w+/, '').replace(/^&/, '?'), { replace: true });
-    const t = setTimeout(() => setNotice(''), 2600);
-    return () => clearTimeout(t);
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setAuth((a) => ({ ...a, user: null }));
-    setNotice('로그아웃했어요.');
-    setTimeout(() => setNotice(''), 2400);
+    showNotice('로그아웃했어요.');
   };
   // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃 → 성공하면 true
   const withdraw = async () => {
@@ -73,9 +79,8 @@ export default function Layout() {
     if (ok) {
       trackEvent('withdraw', { method: 'kakao' });
       setAuth((a) => ({ ...a, user: null }));
-      setNotice('탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
-    } else setNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
-    setTimeout(() => setNotice(''), 3200);
+      showNotice('탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
+    } else showNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     return ok;
   };
   useEffect(() => {
@@ -143,7 +148,11 @@ export default function Layout() {
       <ContactModal open={contact} onClose={closeContact} />
       <LoginModal open={login} enabled={auth.enabled} onClose={closeLogin} />
       <div className="toast-wrap" role="status" aria-live="polite">
-        {notice && <p className="toast">{notice}</p>}
+        {notice && (
+          <p key={notice.key} className="toast">
+            {notice.text}
+          </p>
+        )}
       </div>
     </div>
   );
