@@ -330,6 +330,67 @@ export function buildClover() {
   return g;
 }
 
+// 이름 궁합 화면 소품 (2026-11-14): 천동이 둘레를 도는 3D 이름 패(名)와 광택 하트
+export function buildNameCharms() {
+  const g = new THREE.Group();
+  const tabletShape = (() => {
+    const w = 0.42, h = 0.52, rr = 0.07;
+    const sh = new THREE.Shape();
+    sh.moveTo(-w / 2 + rr, -h / 2);
+    sh.lineTo(w / 2 - rr, -h / 2);
+    sh.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + rr);
+    sh.lineTo(w / 2, h / 2 - rr);
+    sh.quadraticCurveTo(w / 2, h / 2, w / 2 - rr, h / 2);
+    sh.lineTo(-w / 2 + rr, h / 2);
+    sh.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - rr);
+    sh.lineTo(-w / 2, -h / 2 + rr);
+    sh.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + rr, -h / 2);
+    return sh;
+  })();
+  const tabletGeo = new THREE.ExtrudeGeometry(tabletShape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 4, curveSegments: 12 });
+  tabletGeo.center();
+  const paper = new THREE.MeshPhysicalMaterial({ color: '#f6ead0', roughness: 0.55, clearcoat: 0.4, clearcoatRoughness: 0.4, emissive: '#3a2a12', emissiveIntensity: 0.08 });
+  const faceTex = canvasTexture(256, (c, size) => {
+    c.clearRect(0, 0, size, size);
+    c.strokeStyle = '#c8373d';
+    c.lineWidth = 10;
+    c.strokeRect(26, 18, size - 52, size - 36);
+    c.lineWidth = 3;
+    c.strokeRect(44, 36, size - 88, size - 72);
+    c.fillStyle = '#7a1f24';
+    c.font = '600 120px ChosunSm, serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('名', size / 2, size / 2 + 6);
+  });
+  document.fonts?.load('600 120px "ChosunSm"', '名').then(() => faceTex.userData.redraw()).catch(() => {});
+  const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false });
+  const heartShape = new THREE.Shape();
+  heartShape.moveTo(0, -0.16);
+  heartShape.bezierCurveTo(-0.32, 0.04, -0.2, 0.3, 0, 0.16);
+  heartShape.bezierCurveTo(0.2, 0.3, 0.32, 0.04, 0, -0.16);
+  const heartGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 0.08, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 8, curveSegments: 24 });
+  heartGeo.center();
+  const heartMat = new THREE.MeshPhysicalMaterial({ color: '#ff7a9a', roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.08, emissive: '#7a1d36', emissiveIntensity: 0.25 });
+  const heights = [0.95, 0.25, -0.35, 0.65, -0.05, 1.05, 0.4, -0.5];
+  for (let i = 0; i < 8; i++) {
+    const item = new THREE.Group();
+    if (i % 2 === 0) {
+      item.add(new THREE.Mesh(tabletGeo, paper));
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), faceMat);
+      face.position.z = 0.055;
+      item.add(face);
+    } else {
+      const heart = new THREE.Mesh(heartGeo, heartMat);
+      heart.scale.setScalar(0.9);
+      item.add(heart);
+    }
+    item.userData = { angle: (i / 8) * Math.PI * 2, height: heights[i], phase: i * 0.9, spin: i % 2 === 0 ? 0.6 : 1.2 };
+    g.add(item);
+  }
+  return g;
+}
+
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -480,7 +541,7 @@ function createFace() {
   return { texture, draw };
 }
 
-// prop: 'lotto' 면 행운의 번호 화면: 네잎클로버를 들고(머리와 안 겹치게 바깥으로), 오행 빛글자 대신 3D 로또 공이 늘 둘레를 돎. 더 크게 둥둥.
+// prop: 'names' 면 이름 궁합 화면: 이름 패(名)·하트가 둘레를 돎(번호 고르는 중엔 빠르게). prop: 'lotto' 면 행운의 번호 화면: 네잎클로버를 들고(머리와 안 겹치게 바깥으로), 오행 빛글자 대신 3D 로또 공이 늘 둘레를 돎. 더 크게 둥둥.
 // mode: 'idle' | 'drawing'(번호 고르는 중: 눈 뜨고 들썩이며 로또 공이 둘레를 빙글빙글) | 'done'(폴짝)
 export default function Mascot3D({ className = '', interactive = true, prop = null, mode = 'idle' }) {
   const hostRef = useRef(null);
@@ -530,10 +591,14 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     scene.add(glowLight);
 
     const m = buildCheondong();
-    const lucky = prop === 'lotto';
+    const lucky = prop === 'lotto' || prop === 'names'; // 행운의 번호·이름 궁합: 더 크게 둥둥 + 둘레를 도는 소품
     let balls = null;
     let clover = null;
-    if (lucky) {
+    if (prop === 'names') {
+      balls = buildNameCharms();
+      m.root.add(balls);
+    }
+    if (prop === 'lotto') {
       balls = buildLottoBalls();
       m.root.add(balls);
       // 클로버는 오른손에서 바깥쪽으로 비스듬히 들어 머리·몸과 겹치지 않게 (2026-11-14 사용자 지시)
@@ -667,6 +732,10 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
           const rr = 2.0 + Math.sin(t * 2 + bp) * 0.15 * s;
           b.position.set(Math.cos(a) * rr, bh + Math.sin(t * 3 + bp) * 0.18 * s, Math.sin(a) * rr * 0.7);
           b.scale.setScalar((0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.06));
+          if (b.userData.spin) {
+            b.rotation.y = Math.sin(t * b.userData.spin + bp) * 0.6 * s;
+            b.rotation.z = Math.sin(t * 0.8 + bp) * 0.15 * s;
+          }
         });
       }
       if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;

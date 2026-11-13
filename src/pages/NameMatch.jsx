@@ -2,7 +2,7 @@
 // 흐름: 소개 → 입력(나·상대 이름, 관계) → 분석 연출(실제 계산하는 소리 오행을 글자마다 보여 줌) → 결과(점수·영역별·관계 유형·근거) → 상세 리포트 → 사주 궁합·다른 사람·공유.
 // 풀이는 두 부분을 동시에 요청(name1 점수·유형 / name2 상세, src/lib/nameTopics.js). 이름은 서버에 저장하지 않고,
 // 같은 이름·관계로 다시 보면 이 브라우저에 남긴 풀이를 그대로 보여 줌(localStorage saju:name-readings, 최근 12건).
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { streamNameMatch, END_MESSAGES } from '../lib/stream.js';
 import { RELATIONS, relationById, nameOk, cleanName, nameSound, elRelation, nameKey, EL_KO, EL_HAN } from '../lib/nameSound.js';
@@ -12,6 +12,17 @@ import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
 import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
+import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
+
+// 3D 천동이 + 둘레를 도는 이름 패(名)·하트 (행운의 번호와 같은 품질, 2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
+const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
+const Stage = ({ mode = 'idle', small = false }) => (
+  <div className={`nm-stage${small ? ' is-small' : ''}`}>
+    <Suspense fallback={<span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('namematch') }} />}>
+      <Mascot3D prop="names" mode={mode} />
+    </Suspense>
+  </div>
+);
 
 const MEMO = 'saju:name-readings';
 const loadMemo = () => {
@@ -212,17 +223,15 @@ export default function NameMatch() {
             <br />두 사람의 궁합
           </h1>
           <p className="nm-lead">우리는 얼마나 잘 맞을까? 이름 속 소리에 숨겨진 두 사람의 케미를 천둥도사가 풀어 드려요.</p>
-          <span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('namematch') }} />
-          <button
-            type="button"
-            className="btn-primary"
+          <Stage />
+          <LiquidMetalButton
+            label="우리의 궁합 확인하기"
+            width={232}
             onClick={() => {
               trackEvent('name_match_open');
               setPhase('form');
             }}
-          >
-            우리의 궁합 확인하기
-          </button>
+          />
           <ul className="nm-points">
             <li>이름 두 개만 넣으면 바로 시작해요</li>
             <li>종합 점수와 성격·대화·감정·지속력 궁합</li>
@@ -266,16 +275,16 @@ export default function NameMatch() {
               </button>
             ))}
           </div>
-          <button type="submit" className="btn-primary" disabled={!ok}>
-            궁합 분석하기
-          </button>
+          <div className="nm-submit">
+            <LiquidMetalButton type="submit" label="궁합 분석하기" width={200} disabled={!ok} />
+          </div>
           <p className="nm-privacy">이름은 궁합 풀이에만 쓰고 서버에 저장하지 않아요. 같은 이름으로 다시 볼 수 있게 이 브라우저에만 남아요.</p>
         </form>
       )}
 
       {phase === 'analyzing' && sent && (
         <section className="nm-analyze" aria-live="polite">
-          <span className="nm-art is-small" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('namematch') }} />
+          <Stage mode={step >= 3 ? 'done' : 'drawing'} small />
           <p className="nm-step">{STEPS[step]}</p>
           <div className="nm-sound-box">
             <SoundRow name={sent.me} sound={soundA} lit={step >= 1 ? 99 : 0} />

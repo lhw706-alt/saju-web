@@ -1346,3 +1346,11 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .nm-note { margin: 0; font-size: 14px; color: var(--text-2); text-align: center; word-break: keep-all; }
 @media (max-width: 400px) { .nm-bars li { grid-template-columns: 76px minmax(0, 1fr) 44px; } .nm-char { min-width: 52px; } }
 @media (prefers-reduced-motion: reduce) { .nm-dots i { animation: none; } }
+
+/* 이름 궁합 3D 무대·리퀴드 메탈 버튼 (2026-11-14) */
+.nm-stage { display: grid; place-items: center; width: min(100%, 400px); aspect-ratio: 1 / 1; margin: -8px auto -20px; }
+.nm-stage.is-small { width: min(78%, 280px); margin: -16px auto -24px; }
+.nm-stage .mascot3d { width: 100%; height: 100%; }
+.nm-stage .nm-art { width: 78%; }
+.nm-submit { display: grid; justify-items: center; margin-top: 18px; }
+.nm-intro .lmb { margin-top: 4px; }
