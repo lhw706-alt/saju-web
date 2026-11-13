@@ -1194,3 +1194,74 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
   .saved-mine { grid-template-columns: 1fr; }
   .saved-mine-go { justify-self: stretch; text-align: center; margin-top: 8px; padding: 10px 12px; }
 }
+
+/* 검색·공유용으로 미리 넣어 둔 소개 글 (scripts/prerender.mjs) — 화면이 뜨기 전 잠깐 보일 수 있어 사이트 톤으로 */
+.prerender { max-width: 720px; margin: 0 auto; padding: 48px 20px; color: var(--text-2); line-height: 1.7; }
+.prerender h1 { color: var(--text); font-family: var(--title); font-weight: 400; }
+.prerender a { color: var(--primary); }
+
+/* 신년운세 소개 페이지 /newyear (2026-11-14) */
+.ny { padding: 24px 0 8px; }
+.ny-hero { display: grid; justify-items: center; gap: 10px; padding: 12px 0 8px; text-align: center; }
+.ny-kicker { margin: 0; font-size: 15px; font-weight: 600; color: var(--primary); }
+.ny-title { margin: 0; font-family: var(--title); font-size: clamp(28px, 7vw, 36px); font-weight: 400; letter-spacing: -0.02em; }
+.ny-lead { max-width: 520px; margin: 0; font-size: 16px; line-height: 1.7; color: var(--text-2); word-break: keep-all; }
+.ny-art { display: block; width: min(64vw, 260px); aspect-ratio: 4 / 3; margin: 4px 0; }
+.ny-art svg { display: block; width: 100%; height: 100%; }
+.ny-hero .btn-primary, .ny-cta .btn-primary { width: min(100%, 360px); }
+.ny-sec { margin-top: 36px; }
+.ny-sec h2 { margin: 0 0 12px; font-family: var(--title); font-size: 22px; font-weight: 400; letter-spacing: -0.02em; }
+.ny-sec p { margin: 0 0 10px; font-size: 16px; line-height: 1.8; color: var(--text); word-break: keep-all; }
+.ny-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ny-points li { display: grid; gap: 4px; padding: 16px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); }
+.ny-points b { font-size: 16px; font-weight: 600; color: var(--primary); }
+.ny-points span { font-size: 14px; line-height: 1.6; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.ny-steps { margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.9; color: var(--text); }
+.ny-faq { margin: 0; display: grid; gap: 10px; }
+.ny-faq div { padding: 16px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); }
+.ny-faq dt { font-size: 16px; font-weight: 600; color: var(--text); }
+.ny-faq dd { margin: 6px 0 0; font-size: 15px; line-height: 1.7; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.ny-cta { display: grid; justify-items: center; gap: 10px; margin-top: 36px; text-align: center; }
+.ny-note { margin: 0; font-size: 14px; color: var(--text-2); }
+@media (max-width: 479px) { .ny-points { grid-template-columns: 1fr; } }
+
+/* 사주 용어 사전 /dict (2026-11-14) */
+.dict { padding: 24px 0 8px; }
+.dict-crumb { margin: 0 0 8px; font-size: 14px; }
+.dict-crumb a { color: var(--primary); text-decoration: none; }
+.dict-group { margin-top: 28px; }
+.dict-group h2 { margin: 0 0 12px; font-size: 17px; font-weight: 600; color: var(--text); }
+.dict-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dict-list a { display: grid; gap: 2px; height: 100%; padding: 14px 16px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
+.dict-list a:hover { border-color: var(--primary-line); }
+.dict-list b { font-size: 16px; font-weight: 600; }
+.dict-list span { font-size: 14px; line-height: 1.5; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.dict-body { margin-top: 16px; padding: 20px; }
+.dict-body p { margin: 0 0 10px; font-size: 16px; line-height: 1.8; color: var(--text); word-break: keep-all; }
+.dict-body p:last-child { margin-bottom: 0; }
+.dict-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dict-chips a { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); color: var(--text); font-size: 15px; text-decoration: none; }
+.dict-chips a:hover { border-color: var(--primary-line); color: var(--primary); }
+.dict-cta { display: grid; justify-items: center; margin-top: 32px; }
+.dict-cta .btn-primary { width: min(100%, 360px); }
+@media (max-width: 479px) { .dict-list { grid-template-columns: 1fr; } }
+
+/* 오늘의 띠별 운세 /tti (2026-11-14) */
+.tti { padding: 24px 0 8px; }
+.tti-picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 18px; }
+.tti-picker button { display: grid; justify-items: center; gap: 2px; padding: 6px 2px 8px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--bg-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.tti-picker button:disabled { cursor: default; opacity: 0.7; }
+.tti-picker button:not(:disabled):hover { border-color: var(--primary-line); }
+.tti-picker span { display: block; width: 44px; height: 47px; }
+.tti-picker svg, .tti-mini svg { display: block; width: 100%; height: 100%; }
+.tti-wait { display: grid; justify-items: center; gap: 10px; margin-top: 32px; text-align: center; color: var(--text-2); }
+.tti-sec { margin-top: 16px; padding: 20px; scroll-margin-top: 16px; }
+.tti-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.tti-mini { flex: none; width: 64px; height: 68px; }
+.tti-head h2 { margin: 0; font-family: var(--title); font-size: 22px; font-weight: 400; }
+.tti-head p { margin: 4px 0 0; font-size: 16px; line-height: 1.6; color: var(--text); word-break: keep-all; }
+.tti-sec .lucky { margin-top: 6px; }
+.tti-cta { display: grid; justify-items: center; gap: 12px; margin-top: 28px; text-align: center; }
+.tti-cta p { margin: 0; font-size: 15px; color: var(--text-2); word-break: keep-all; }
+.tti-cta .btn-primary { width: min(100%, 360px); }
+@media (max-width: 479px) { .tti-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

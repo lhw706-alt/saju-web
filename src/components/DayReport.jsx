@@ -402,7 +402,7 @@ const angleOf = (name) => {
   return d ? d[1] : null;
 };
 
-function LuckyPoints({ lucky }) {
+export function LuckyPoints({ lucky }) {
   const color = String(lucky['색'] || '').trim();
   const num = String(lucky['숫자'] || '').trim();
   const dir = String(lucky['방향'] || '').trim();

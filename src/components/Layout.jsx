@@ -206,6 +206,7 @@ export default function Layout() {
             <button type="button" className="footer-contact" aria-haspopup="dialog" onClick={openContact}>
               문의하기
             </button>
+            <Link to="/dict">사주 용어 사전</Link>
             <Link to="/terms">이용약관</Link>
             <Link to="/privacy">개인정보 처리방침</Link>
           </span>

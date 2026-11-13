@@ -17,12 +17,14 @@ export const GROUPS = [
 
 export const CONTENTS = [
   { id: 'life', group: 'saju', title: '평생 사주', desc: '타고난 성향부터 10년마다 바뀌는 대운까지', glyph: '命', el: 'earth', status: 'live', topic: 'overall' },
-  { id: 'newyear', group: 'saju', title: `${NEXT_YEAR} 신년운세`, desc: '한 해의 흐름과 계절마다 운', glyph: '新', el: 'fire', status: 'live', topic: 'newyear' },
+  { id: 'newyear', group: 'saju', title: `${NEXT_YEAR} 신년운세`, desc: '한 해의 흐름과 계절마다 운', glyph: '新', el: 'fire', status: 'live', topic: 'newyear', path: '/newyear' },
   { id: 'tojeong', group: 'saju', title: '토정비결', desc: '144괘로 보는 한 해와 달마다 운', glyph: '卦', el: 'earth', status: 'soon' },
 
   { id: 'today', group: 'fortune', title: '오늘의 운세', desc: '오늘 일진과 내 원국이 만나는 하루', glyph: '今', el: 'wood', status: 'live', topic: 'today' },
   { id: 'tomorrow', group: 'fortune', title: '내일의 운세', desc: '내일을 미리 준비하는 조언', glyph: '明', el: 'fire', status: 'live', topic: 'tomorrow' },
   { id: 'date', group: 'fortune', title: '지정일 운세', desc: '중요한 날, 그날의 기운 미리 보기', glyph: '日', el: 'metal', status: 'live', topic: 'date' },
+
+  { id: 'tti', group: 'fortune', title: '오늘의 띠별 운세', desc: '입력 없이 바로 보는 12띠 오늘 운세', glyph: '支', el: 'earth', status: 'live', path: '/tti' },
 
   { id: 'match', group: 'match', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
   { id: 'namematch', group: 'match', title: '이름 궁합', desc: '이름만으로 재미로 보는 궁합', glyph: '緣', el: 'wood', status: 'hold' },

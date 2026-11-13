@@ -1,4 +1,4 @@
-// 공유 버튼 줄: 노란 카카오톡(로그인 회원만) · 링크 복사. 오늘의 운세 · 사주 결과 하단에서 함께 씀
+// 공유 버튼 줄: 노란 카카오톡(누구나, 2026-11-14) · 링크 복사. 오늘의 운세 · 사주 결과 하단에서 함께 씀
 // kakao: sendKakao 에 넘길 카드 내용, path: 링크 복사·카드가 여는 사이트 안 경로
 import { useOutletContext } from 'react-router-dom';
 import { copyText, displayLink, sendKakao } from '../lib/share.js';
@@ -6,7 +6,7 @@ import { trackEvent } from '../lib/analytics.js';
 
 export function ShareButtons({ kakao, path = '/', loggedIn, onNeedLogin, onNotice, event = 'share', label }) {
   const shareKakao = async () => {
-    if (!loggedIn) return onNeedLogin?.('천둥도사의 풀이를 카카오톡으로 나누려면 로그인이 필요해요.');
+    // 2026-11-14: 카카오톡 공유는 비회원도 (퍼지는 통로라 막지 않음). loggedIn·onNeedLogin 은 예전 호출과 맞추려고 남겨 둠
     try {
       await sendKakao({ ...kakao, path });
       trackEvent(event, { method: 'kakao' });

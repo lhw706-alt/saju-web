@@ -13,6 +13,9 @@ import Reset from './pages/Reset.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Lucky from './pages/Lucky.jsx';
 import Terms from './pages/Terms.jsx';
+import NewYear from './pages/NewYear.jsx';
+import Dict from './pages/Dict.jsx';
+import Tti from './pages/Tti.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { loadFonts } from './lib/fonts.js';
@@ -35,6 +38,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/lucky" element={<Lucky />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/newyear" element={<NewYear />} />
+          <Route path="/dict/:slug?" element={<Dict />} />
+          <Route path="/tti" element={<Tti />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/my/:tab?" element={<My />} />
           <Route path="/reset" element={<Reset />} />

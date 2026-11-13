@@ -138,3 +138,19 @@ export const GLOSSARY = {
     related: ['대운', '십성'],
   },
 };
+
+// 사주 용어 사전 페이지(/dict/주소) 의 영문 주소 (검색용, 2026-11-14). 용어를 추가하면 여기도 추가
+export const DICT_SLUG = {
+  사주원국: 'saju-wonguk', 년주: 'nyeonju', 월주: 'wolju', 일주: 'ilju', 시주: 'siju', 천간: 'cheongan', 지지: 'jiji',
+  일간: 'ilgan', 오행: 'ohaeng', 음양: 'eumyang', 십성: 'sipseong', 비견: 'bigyeon', 겁재: 'geopjae', 식신: 'siksin',
+  상관: 'sanggwan', 편재: 'pyeonjae', 정재: 'jeongjae', 편관: 'pyeongwan', 정관: 'jeonggwan', 편인: 'pyeonin', 정인: 'jeongin',
+  지장간: 'jijanggan', 십이운성: 'sibiunseong', 대운: 'daeun', 세운: 'seun',
+};
+export const termBySlug = (slug) => Object.keys(DICT_SLUG).find((k) => DICT_SLUG[k] === slug) || null;
+// 용어 제목의 짧은 뜻: "지지 — 땅의 글자 (아랫글자)" → "땅의 글자 (아랫글자)", "사주 원국 (사주팔자)" → "사주팔자"
+export const dictShort = (term) => {
+  const t = GLOSSARY[term]?.title || '';
+  if (t.includes('—')) return t.split('—').slice(1).join('—').trim();
+  const m = /\(([^)]*)\)\s*$/.exec(t);
+  return m ? m[1] : '';
+};

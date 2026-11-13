@@ -184,6 +184,7 @@ const FACES = {
   tojeong: { eyes: 'smug', mouth: 'smirk', brows: 'firm' },
   today: { eyes: 'dot', mouth: 'open' },
   tomorrow: { eyes: 'wink', mouth: 'smile' },
+  tti: { eyes: 'happy', mouth: 'cat' },
   date: { eyes: 'dot', mouth: 'flat', brows: 'firm' },
   match: { eyes: 'heart', mouth: 'smile' },
   namematch: { eyes: 'happy', mouth: 'cat' },
