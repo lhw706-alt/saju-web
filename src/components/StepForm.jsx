@@ -22,7 +22,8 @@ const CITY_OPTIONS = CITIES.map((c) => ({ value: c.id, label: c.name }));
 const STEPS = ['성별', '생년월일', '태어난 시각', '태어난 곳'];
 const QUESTIONS = ['성별을 골라 주세요', '언제 태어났나요?', '몇 시에 태어났나요?', '어디에서 태어났나요?'];
 
-export default function StepForm({ initial, onSubmit }) {
+// showSaved=false: 저장된 정보 목록 숨김 (마이페이지 등록용), submitLabel: 마지막 버튼 글자
+export default function StepForm({ initial, onSubmit, showSaved = true, submitLabel = '사주 펼쳐 보기' }) {
   const [f, setF] = useState({ ...EMPTY, ...initial });
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
@@ -99,7 +100,7 @@ export default function StepForm({ initial, onSubmit }) {
 
       <div className="step" key={step}>
 
-        {step === 0 && presets.length > 0 && (
+        {step === 0 && showSaved && presets.length > 0 && (
           <div className="saved">
             <div className="saved-head">
               <h2 className="saved-title">입력했던 정보를 불러올 수 있어요</h2>
@@ -243,7 +244,7 @@ export default function StepForm({ initial, onSubmit }) {
         )}
         {step > 0 && (
           <button type="submit" className="btn-primary">
-            {step === 3 ? '사주 펼쳐 보기' : '다음'}
+            {step === 3 ? submitLabel : '다음'}
           </button>
         )}
       </div>

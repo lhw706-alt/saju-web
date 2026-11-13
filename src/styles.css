@@ -734,7 +734,7 @@ legend.contact-label { margin-bottom: 12px; }
 .my-empty p { margin: 0; color: var(--text-2); }
 .my-empty .btn-primary.inline { margin-top: 12px; }
 .my-hello { display: flex; align-items: center; gap: 14px; }
-.my-avatar { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--primary-soft); border: 1px solid var(--primary-line); color: var(--primary); font-family: var(--title); font-size: 22px; }
+.my-avatar { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--primary-line); }
 .my-hello b { display: block; font-size: 18px; font-weight: 600; }
 .my-hello span { font-size: 14px; color: var(--muted); }
 .my-info { margin: 18px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -754,3 +754,19 @@ legend.contact-label { margin-bottom: 12px; }
   .my-info div { padding: 10px 12px; }
   .my-info dd { font-size: 14px; }
 }
+/* 마이페이지: 천동이 프로필 · 내 사주 정보 · 약한 탈퇴 버튼 */
+.my-avatar { background: #1b1f3a; overflow: hidden; }
+.my-birth { margin-top: 4px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.my-birth .saved-text b { font-size: 17px; }
+.my-birth-actions { display: flex; align-items: center; gap: 4px; }
+.my-birth-actions .btn-primary.inline { margin: 0 6px 0 0; height: 44px; padding: 0 20px; font-size: 15px; }
+.my-birth-empty { display: grid; justify-items: start; }
+.my-birth-empty p { margin: 0; color: var(--text-2); }
+.my-birth-empty .btn-primary.inline { margin-top: 4px; height: 46px; font-size: 15px; }
+.my-link { padding: 8px 10px; border: 0; background: none; color: var(--text-2); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.my-link:hover { color: var(--text); }
+.my-edit { display: grid; gap: 6px; justify-items: center; margin-top: 4px; }
+.my-edit .steps { width: 100%; }
+.my-msg { margin: 10px 0 0; font-size: 14px; color: var(--primary); }
+.my-action.is-danger { border-color: transparent; font-weight: 400; }
+.my-action.is-danger:hover { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }

@@ -3,6 +3,7 @@
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
 // - /api/auth/logout         → 세션 쿠키 삭제
+// - /api/auth/birth          → 내 사주 정보 저장(POST)·삭제(DELETE) — 마이페이지
 // - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
 // - /api/admin/users         → 관리자용 회원 목록 (Authorization: Bearer ADMIN_PASSWORD)
 // 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
@@ -12,6 +13,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { createRateLimiter } from '../lib/guard.mjs';
+import { computeSaju, SajuInputError } from '../../src/lib/saju.js';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -113,13 +115,55 @@ export default async (req, context) => {
     }
     return json({
       enabled,
-      user: { nick: s.nick || '', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount } : {}) },
+      user: { nick: s.nick || '', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null } : {}) },
     });
   }
 
   if (path === '/api/auth/logout') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
+  }
+
+  // 내 사주 정보(생년월일시·성별·태어난 곳)를 계정에 저장(POST {input}) / 삭제(DELETE) — 마이페이지
+  if (path === '/api/auth/birth') {
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.' }, 401);
+    const store = users();
+    const rec = (await store.get(s.sub, { type: 'json' })) || { id: s.sub, nick: s.nick || '', joinedAt: new Date().toISOString(), loginCount: 1 };
+    if (req.method === 'DELETE') {
+      delete rec.birth;
+      await store.setJSON(s.sub, rec);
+      return json({ ok: true });
+    }
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: '잘못된 요청이에요.' }, 400);
+    }
+    const i = body?.input || {};
+    // 화면 입력값 그대로(문자열) 필요한 칸만 저장. 계산이 되는지로 검사
+    const birth = {
+      calendar: i.calendar === 'lunar' ? 'lunar' : 'solar',
+      leap: i.leap === true,
+      year: String(i.year ?? ''),
+      month: String(i.month ?? ''),
+      day: String(i.day ?? ''),
+      timeKnown: i.timeKnown !== false,
+      hour: i.timeKnown === false ? '' : String(i.hour ?? ''),
+      minute: i.timeKnown === false ? '' : String(i.minute ?? '0'),
+      gender: i.gender === 'female' ? 'female' : i.gender === 'male' ? 'male' : '',
+      city: String(i.city || 'seoul').slice(0, 20),
+    };
+    try {
+      computeSaju(birth);
+    } catch (e) {
+      return json({ error: e instanceof SajuInputError ? e.message : '입력값을 다시 확인해 주세요.' }, 400);
+    }
+    rec.birth = { ...birth, savedAt: new Date().toISOString() };
+    await store.setJSON(s.sub, rec);
+    return json({ ok: true, birth: rec.birth });
   }
 
   if (path === '/api/auth/delete') {
@@ -209,4 +253,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/admin/users'] };
