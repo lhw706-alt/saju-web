@@ -44,6 +44,7 @@ export function rememberPart(input, topic, partId, text, { member = false, partn
   const cur = all[key] || { input, topic, parts: {}, ...(partner ? { partner } : {}) };
   cur.parts = { ...cur.parts, [partId]: text };
   cur.at = Date.now();
+  if (!member) cur.synced = false; // 비회원으로 본 풀이 → 로그인하면 계정으로 옮김
   all[key] = cur;
   saveAll(all);
   if (member) {
@@ -52,6 +53,31 @@ export function rememberPart(input, topic, partId, text, { member = false, partn
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ key, input, topic, partId, text, ...(partner ? { partner } : {}) }),
     }).catch(() => {});
+  }
+}
+
+// 로그인했을 때: 이 브라우저에서 비회원으로 본 풀이를 계정 '풀이 내역'으로 옮김 (한 번만)
+export async function syncLocalToAccount() {
+  const all = loadAll();
+  const todo = Object.entries(all).filter(([, it]) => it.synced === false);
+  for (const [key, it] of todo) {
+    for (const [partId, text] of Object.entries(it.parts || {})) {
+      try {
+        const r = await fetch('/api/history', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ key, input: it.input, topic: it.topic, partId, text, ...(it.partner ? { partner: it.partner } : {}) }),
+        });
+        if (!r.ok) return; // 로그인 풀림 등 → 다음에 다시
+      } catch {
+        return;
+      }
+    }
+    const now = loadAll();
+    if (now[key]) {
+      now[key].synced = true;
+      saveAll(now);
+    }
   }
 }
 

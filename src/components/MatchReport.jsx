@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
 import { streamReading } from '../lib/stream.js';
 import { localParts, matchTopic, rememberPart, serverParts } from '../lib/history.js';
-import { peekFresh, clearFresh } from '../lib/storage.js';
+import { peekFresh, clearFresh, loadPartnerName } from '../lib/storage.js';
 import { presetMain } from '../lib/presetText.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
@@ -27,7 +27,7 @@ function splitMatch(text) {
   return { body: text.slice(0, fence).trim(), data };
 }
 
-function Person({ who, chart, input }) {
+function Person({ who, chart, input, hideBirth = false }) {
   const dm = chart.dayMaster;
   return (
     <div className="pair-card">
@@ -37,7 +37,7 @@ function Person({ who, chart, input }) {
         {dm.ko}
         {ELEMENT_KO[dm.element]} 일간
       </b>
-      <span className="pair-sub">{presetMain(input)}</span>
+      {!hideBirth && <span className="pair-sub">{presetMain(input)}</span>}
       <ul className="pair-el" aria-label="오행 개수">
         {ELEMENTS.map((e) => (
           <li key={e} className={`el-${e}`}>
@@ -72,6 +72,7 @@ export default function MatchReport({ me, partner, meChart, partnerChart, member
   const [status, setStatus] = useState(text ? 'done' : 'loading');
   const [error, setError] = useState('');
   const [fresh] = useState(peekFresh);
+  const [partnerName] = useState(loadPartnerName); // 궁합 초대로 만난 상대면 닉네임 (생년월일은 숨김)
   const abortRef = useRef(null);
   useEffect(() => clearFresh(), []);
 
@@ -136,7 +137,7 @@ export default function MatchReport({ me, partner, meChart, partnerChart, member
       <div className="pair-row">
         <Person who="나" chart={meChart} input={me} />
         <span className="pair-and" aria-hidden="true">合</span>
-        <Person who="상대" chart={partnerChart} input={partner} />
+        <Person who={partnerName || '상대'} chart={partnerChart} input={partner} hideBirth={!!partnerName} />
       </div>
 
       <section className="match-top card">

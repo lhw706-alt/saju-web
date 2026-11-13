@@ -6,7 +6,8 @@ import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
-import { loadPresets, removePreset, saveInput, savePartner, saveTopic } from '../lib/storage.js';
+import { loadPresets, removePreset, saveInput, savePartner, savePartnerName, saveTopic } from '../lib/storage.js';
+import { copyText, displayLink } from '../lib/share.js';
 import { seedLocal } from '../lib/history.js';
 import { TOPICS } from '../lib/topics.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
@@ -34,7 +35,7 @@ const fmtDate = (iso) => {
 
 export default function My() {
   const navigate = useNavigate();
-  const { auth, openLogin, openContact, inquiryVer, withdraw, setNick } = useOutletContext();
+  const { auth, openLogin, openContact, inquiryVer, withdraw, setNick, notify } = useOutletContext();
   const { hash } = useLocation();
   const params = useParams();
   // 예전 링크 /my#inquiries 는 고객센터 탭으로
@@ -49,6 +50,31 @@ export default function My() {
       .then((d) => setHist(d?.items || []))
       .catch(() => setHist([]));
   }, [auth.user, tab]);
+  // 보낸 궁합 초대 (서버 /api/invite): 상대가 입력하면 '궁합 보기', 기다리는 중이면 링크 복사·지우기
+  const [invites, setInvites] = useState(null);
+  useEffect(() => {
+    if (!auth.user || tab !== 'history') return;
+    fetch('/api/invite', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setInvites(d?.items || []))
+      .catch(() => setInvites([]));
+  }, [auth.user, tab]);
+  const openInvite = (it) => {
+    saveInput(it.input);
+    savePartner(it.partner);
+    savePartnerName('상대'); // 초대받은 사람의 생년월일은 화면에 보이지 않게
+    navigate('/result?v=match');
+  };
+  const copyInvite = async (it) => {
+    const ok = await copyText(displayLink(`/match/${it.token}`));
+    notify(ok ? '초대 링크를 복사했어요.' : '복사하지 못했어요.', ok ? 'positive' : 'negative');
+  };
+  const deleteInvite = async (it) => {
+    if (!window.confirm('이 궁합 초대를 지울까요? 링크도 더 이상 열리지 않아요.')) return;
+    const r = await fetch(`/api/invite?token=${encodeURIComponent(it.token)}`, { method: 'DELETE' }).catch(() => null);
+    if (r?.ok) setInvites((l) => l.filter((x) => x.token !== it.token));
+  };
+
   const openHistory = async (it) => {
     const r = await fetch(`/api/history?key=${encodeURIComponent(it.key)}`, { cache: 'no-store' }).catch(() => null);
     const d = await r?.json().catch(() => null);
@@ -464,6 +490,50 @@ export default function My() {
             ))}
           </ul>
         )}
+      </div>
+      )}
+
+      {tab === 'history' && invites && invites.length > 0 && (
+      <div className="my-sec card">
+        <h2 className="my-sec-title">
+          보낸 궁합 초대 <small>상대가 링크에서 생년월일시를 넣으면 여기서 궁합을 볼 수 있어요</small>
+        </h2>
+        <ul className="saved-list">
+          {invites.map((it) => {
+            const done = !!it.partner;
+            const expired = !done && it.exp < Date.now();
+            return (
+              <li key={it.token} className="saved-item">
+                {done ? (
+                  <button type="button" className="saved-load" onClick={() => openInvite(it)}>
+                    <span className="saved-text">
+                      <b>궁합 <span className="hist-person">{presetMain(it.input)} & 초대받은 분</span></b>
+                      <span>상대가 입력했어요 · {fmtDate(it.doneAt)}</span>
+                    </span>
+                    <span className="saved-go">궁합 보기</span>
+                  </button>
+                ) : (
+                  <div className="saved-load is-static">
+                    <span className="saved-text">
+                      <b>궁합 초대 <span className="hist-person">{presetMain(it.input)}</span></b>
+                      <span className="hist-wait">{expired ? '링크가 만료됐어요' : `상대를 기다리는 중 · ${fmtDate(new Date(it.exp).toISOString())}까지`}</span>
+                    </span>
+                    {!expired && (
+                      <button type="button" className="my-set" onClick={() => copyInvite(it)}>
+                        링크 복사
+                      </button>
+                    )}
+                  </div>
+                )}
+                <button type="button" className="saved-del" aria-label="궁합 초대 지우기" onClick={() => deleteInvite(it)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
       )}
 

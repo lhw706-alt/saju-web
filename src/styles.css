@@ -969,3 +969,21 @@ legend.contact-label { margin-bottom: 12px; }
 .fortune__book b { color: var(--primary); font-weight: 600; }
 .fortune__book em { font-style: normal; color: var(--muted); font-size: 13px; }
 .fortune__book svg { margin-left: auto; color: var(--muted); }
+/* 비회원 혜택 카드 (결과 화면 끝 · 부적 도감) */
+.member-cta { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; margin: 28px 0 0; padding: 18px 20px; border-radius: var(--r); background: linear-gradient(135deg, rgba(226, 194, 122, 0.14), rgba(226, 194, 122, 0.04)); border: 1px solid var(--primary-line); }
+.member-cta-face { position: relative; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
+.member-cta-face .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
+.member-cta-text b { display: block; font-size: 16px; font-weight: 600; }
+.member-cta-text p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.member-cta .btn-primary.inline { margin: 0; height: 44px; padding: 0 16px; font-size: 14px; white-space: nowrap; }
+@media (max-width: 559px) {
+  .member-cta { grid-template-columns: auto minmax(0, 1fr); }
+  .member-cta .btn-primary.inline { grid-column: 1 / -1; width: 100%; }
+}
+/* 궁합 초대 */
+.invite-box { display: grid; justify-items: center; gap: 8px; margin-top: 14px; padding: 18px; text-align: center; }
+.invite-box b { font-size: 15px; font-weight: 600; }
+.invite-box p { margin: 0 0 4px; font-size: 14px; line-height: 1.55; color: var(--text-2); }
+.invite-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+.hist-sub { margin: 22px 0 8px; font-size: 15px; font-weight: 600; }
+.hist-wait { font-size: 13px; color: var(--muted); }

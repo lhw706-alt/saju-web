@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
 import { ShareButtons } from './ShareRow.jsx';
-import { FORTUNES, LUCKY, EL_HANJA, collect, drawIndex, loadBook, streak } from '../lib/fortunes.js';
+import { FORTUNES, LUCKY, EL_HANJA, collect, drawIndex, loadBook, streak, syncBook } from '../lib/fortunes.js';
 
 // 오른쪽 아래 '오늘의 운세' 플로팅 부적 (다모아픽 FortuneFab 을 사주천문 다크·금박 스타일로 옮김).
 // - 금박 부적을 긁으면 오늘의 운세가 드러남. 하루 한 번: 이 브라우저(localStorage)에 날짜·운세 번호만 저장, 서버로 안 보냄
@@ -257,6 +257,7 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     setState((s) => {
       if (!s || s.revealed) return s;
       saveRevealed(s);
+      if (loggedIn) syncBook(); // 회원: 도감을 계정에도
       trackEvent('fortune_reveal', { fortune: FORTUNES[s.idx].title });
       return { ...s, revealed: true };
     });

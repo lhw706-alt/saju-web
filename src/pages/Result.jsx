@@ -11,6 +11,7 @@ import { GOD_SHORT } from '../lib/glossary.js';
 import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
 import MatchReport from '../components/MatchReport.jsx';
 import ResultShare from '../components/ShareRow.jsx';
+import MemberCta from '../components/MemberCta.jsx';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -52,6 +53,7 @@ export default function Result() {
     return (
       <GlossaryProvider>
         <MatchReport key={JSON.stringify([input, partner])} me={input} partner={partner} meChart={chart} partnerChart={partnerChart} member={member} onResult={setScore} />
+        <MemberCta place="match" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이가 풀이 내역에 저장돼 언제든 다시 볼 수 있어요." reason="로그인하면 천둥도사가 펼친 풀이를 풀이 내역에 고이 간직해 드려요." />
         <ResultShare
           title="궁합 결과를 나눠 보세요"
           path="/"
@@ -75,6 +77,7 @@ export default function Result() {
       <GlossaryProvider>
         <div className="report-top" />
         <LifeReport key={JSON.stringify(input)} chart={chart} input={input} member={member} />
+        <MemberCta place="life" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이가 풀이 내역에 저장돼 언제든 다시 볼 수 있어요." reason="로그인하면 천둥도사가 펼친 풀이를 풀이 내역에 고이 간직해 드려요." />
         <ResultShare
           title="내 평생 사주를 나눠 보세요"
           kakao={{ title: '천둥도사가 풀어 준 내 평생 사주', description: '타고난 성향부터 10년마다 바뀌는 대운까지. 나도 내 사주를 볼까요?', button: '내 사주 보기' }}
@@ -162,6 +165,7 @@ export default function Result() {
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
         <Reading input={inp} initialTopic={initialTopic} member={member} />
       </section>
+      <MemberCta place="topic" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이가 풀이 내역에 저장돼 언제든 다시 볼 수 있어요." reason="로그인하면 천둥도사가 펼친 풀이를 풀이 내역에 고이 간직해 드려요." />
       <ResultShare kakao={{ title: `나는 ${dm.ko}${ELEMENT_KO[dm.element]} 일간이래요`, description: `${DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났대요. 천둥도사에게 내 사주도 물어볼까요?`, button: '내 사주 보기' }} />
       {/* 맨 아래: 사주 다시 보기 */}
       <div className="report-bottom">

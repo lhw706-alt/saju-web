@@ -1,14 +1,26 @@
 // 부적 도감 (/charms) — 2026-11-13
 // 오늘의 운세에서 펼친 부적을 모으는 화면. 모은 부적은 이 브라우저(localStorage)에만 저장(src/lib/fortunes.js).
 // 못 모은 부적은 오행 글자만 보이는 잠긴 카드. 모은 카드를 누르면 운세 글과 처음 받은 날을 보여 줌.
-import { useState } from 'react';
-import { FORTUNES, LUCKY, EL_HANJA, loadBook, streak } from '../lib/fortunes.js';
+import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { FORTUNES, LUCKY, EL_HANJA, loadBook, streak, syncBook } from '../lib/fortunes.js';
+import MemberCta from '../components/MemberCta.jsx';
 
 const fmt = (d) => (d ? d.replace(/^(\d+)-0?(\d+)-0?(\d+)$/, '$1.$2.$3') : '');
 
 export default function CharmBook() {
-  const [book] = useState(loadBook);
-  const [days] = useState(streak);
+  const [book, setBook] = useState(loadBook);
+  const [days, setDays] = useState(streak);
+  // 회원: 계정에 저장된 도감과 합쳐서 보여 줌 (다른 기기에서 모은 부적도)
+  const { auth } = useOutletContext();
+  useEffect(() => {
+    if (!auth.user) return;
+    syncBook().then((ok) => {
+      if (!ok) return;
+      setBook(loadBook());
+      setDays(streak());
+    });
+  }, [auth.user]);
   const [open, setOpen] = useState(null);
   const got = Object.keys(book).length;
   const sel = open != null ? FORTUNES[open] : null;
@@ -78,7 +90,15 @@ export default function CharmBook() {
         </div>
       )}
 
-      <p className="hint center">오른쪽 아래 부적을 눌러 오늘의 부적을 펼쳐 보세요. 모은 기록은 이 브라우저에만 남아요.</p>
+      <MemberCta
+        place="charms"
+        title="휴대폰을 바꿔도 도감이 이어져요"
+        text="지금은 이 브라우저에만 남아 있어요. 로그인하면 모은 부적과 연속 기록을 계정에 간직해 드려요."
+        reason="로그인하면 천둥도사가 모은 부적을 계정에 고이 간직해 드려요."
+      />
+      <p className="hint center">
+        오른쪽 아래 부적을 눌러 오늘의 부적을 펼쳐 보세요.{auth.user ? ' 모은 기록은 계정에도 저장돼요.' : ''}
+      </p>
     </section>
   );
 }

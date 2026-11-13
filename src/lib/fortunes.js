@@ -87,3 +87,31 @@ export function drawIndex() {
   if (missing.length && Math.random() < 0.7) return missing[Math.floor(Math.random() * missing.length)];
   return Math.floor(Math.random() * FORTUNES.length);
 }
+
+// ── 회원: 도감을 계정에도 저장 (휴대폰을 바꿔도 이어짐) — 서버 /api/charms ──
+// 이 브라우저 기록과 계정 기록을 합침: 부적은 둘 다 모으고(횟수는 큰 쪽, 처음 날짜는 이른 쪽), 펼친 날짜는 합집합
+function mergeBooks(a = {}, b = {}) {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    const c = out[k];
+    out[k] = c
+      ? { first: c.first < v.first ? c.first : v.first, last: (c.last || '') > (v.last || '') ? c.last : v.last, count: Math.max(c.count || 1, v.count || 1) }
+      : v;
+  }
+  return out;
+}
+export async function syncBook() {
+  try {
+    const r = await fetch('/api/charms', { cache: 'no-store' });
+    if (!r.ok) return false;
+    const srv = await r.json();
+    const book = mergeBooks(loadBook(), srv.book);
+    const days = [...new Set([...loadDays(), ...(srv.days || [])])].sort().slice(-400);
+    localStorage.setItem(BOOK_KEY, JSON.stringify(book));
+    localStorage.setItem(DAYS_KEY, JSON.stringify(days));
+    await fetch('/api/charms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ book, days }) });
+    return true;
+  } catch {
+    return false;
+  }
+}

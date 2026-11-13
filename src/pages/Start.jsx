@@ -6,6 +6,7 @@ import { topicById } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import { guestCanView, markGuestView, pairKey } from '../lib/history.js';
 import { presetMain } from '../lib/presetText.js';
+import { ShareButtons } from '../components/ShareRow.jsx';
 
 // 콘텐츠를 고른 뒤 생년월일시를 넣는 화면 (메인에서는 입력 폼을 뺐다).
 // 입력은 한 항목씩 순서대로 묻는 단계형(StepForm). 궁합은 나 → 상대 두 번 입력.
@@ -14,9 +15,11 @@ export default function Start() {
   const topic = topicById(peekTopic());
   const isMatch = topic?.id === 'match';
   // 로그인 회원이 마이페이지에 등록한 내 사주 정보 → 입력 첫 화면에서 '내 정보'로 미리 선택
-  const { auth, openLogin } = useOutletContext();
+  const { auth, openLogin, notify } = useOutletContext();
   const [mine, setMine] = useState(null);
   const [me, setMe] = useState(null); // 궁합: 먼저 입력한 내 정보
+  const [invite, setInvite] = useState(null); // 궁합 초대 링크 토큰 (상대가 직접 입력)
+  const [inviting, setInviting] = useState(false);
   useEffect(() => {
     if (!auth.user) return setMine(null);
     fetch('/api/auth/me?full=1', { cache: 'no-store' })
@@ -35,6 +38,18 @@ export default function Start() {
     }
     markGuestView(key);
     return true;
+  };
+
+  // 상대 정보를 모르면: 초대 링크를 만들어 보내고, 상대가 직접 입력 (회원만)
+  const makeInvite = async () => {
+    if (!auth.user) return openLogin('궁합 초대 링크는 천둥도사가 회원에게만 만들어 드려요. 로그인해 주세요.');
+    setInviting(true);
+    const r = await fetch('/api/invite', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ input: me }) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    setInviting(false);
+    if (!r?.ok) return notify(d?.error || '링크를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.', 'negative');
+    setInvite(d.token);
+    trackEvent('invite_create');
   };
 
   const onSubmit = (input) => {
@@ -76,7 +91,31 @@ export default function Start() {
           {me ? (
             <>
               <StepForm key="partner" onSubmit={onSubmit} submitLabel="궁합 보기" />
-              <button type="button" className="my-link pair-back" onClick={() => setMe(null)}>
+              <div className="invite-box card">
+                {invite ? (
+                  <>
+                    <b>초대 링크를 만들었어요</b>
+                    <p>상대가 링크를 열어 자기 생년월일시를 넣으면 바로 궁합을 볼 수 있어요. 결과는 마이페이지 '풀이 내역'에서도 볼 수 있어요. 링크는 7일 동안 열려요.</p>
+                    <ShareButtons
+                      kakao={{ title: `${auth.user?.nick || '친구'}님이 궁합을 보자고 해요`, description: '생년월일시만 넣으면 천둥도사가 두 사람의 궁합을 풀어 드려요.', button: '궁합 보기' }}
+                      path={`/match/${invite}`}
+                      loggedIn={!!auth.user}
+                      onNeedLogin={openLogin}
+                      onNotice={notify}
+                      event="invite_share"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <b>상대의 생년월일시를 모르나요?</b>
+                    <p>링크를 보내면 상대가 직접 입력해요. 두 사람 모두 궁합 결과를 볼 수 있어요.</p>
+                    <button type="button" className="my-set" onClick={makeInvite} disabled={inviting}>
+                      {inviting ? '만드는 중…' : '상대에게 링크 보내기'}
+                    </button>
+                  </>
+                )}
+              </div>
+              <button type="button" className="my-link pair-back" onClick={() => { setMe(null); setInvite(null); }}>
                 내 정보 다시 입력하기
               </button>
             </>

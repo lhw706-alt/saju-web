@@ -16,6 +16,7 @@ export function clearInput() {
     sessionStorage.removeItem(REPORT_KEY);
     sessionStorage.removeItem(FRESH_KEY);
     sessionStorage.removeItem('saju:partner');
+    sessionStorage.removeItem('saju:partner-name');
   } catch {
     /* 무시 */
   }
@@ -58,7 +59,18 @@ export function saveReportPart(input, id, text) {
 // 궁합 상대의 생년월일시 (입력값과 똑같이 이 탭에만 잠시)
 const PARTNER_KEY = 'saju:partner';
 export function savePartner(input) {
-  try { sessionStorage.setItem(PARTNER_KEY, JSON.stringify(input)); } catch { /* 무시 */ }
+  try {
+    sessionStorage.setItem(PARTNER_KEY, JSON.stringify(input));
+    sessionStorage.removeItem(PARTNER_NAME_KEY);
+  } catch { /* 무시 */ }
+}
+// 궁합 초대로 만난 상대: 화면에 '상대' 대신 닉네임을 쓰고, 그 사람의 생년월일은 보여 주지 않음
+const PARTNER_NAME_KEY = 'saju:partner-name';
+export function savePartnerName(name) {
+  try { sessionStorage.setItem(PARTNER_NAME_KEY, name); } catch { /* 무시 */ }
+}
+export function loadPartnerName() {
+  try { return sessionStorage.getItem(PARTNER_NAME_KEY) || ''; } catch { return ''; }
 }
 export function loadPartner() {
   try { return JSON.parse(sessionStorage.getItem(PARTNER_KEY) || 'null'); } catch { return null; }

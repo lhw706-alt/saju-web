@@ -13,6 +13,8 @@
 // - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
 // - /api/inquiry             → 문의 남기기(POST)·내 문의내역(GET), 로그인 회원만
 // - /api/history             → 풀이 내역 목록·하나(GET)·저장(POST)·삭제(DELETE), 로그인 회원만
+// - /api/charms              → 부적 도감 계정 저장(GET·POST), 로그인 회원만
+// - /api/invite(/done)       → 궁합 초대 링크 만들기·목록·지우기(회원), 초대 보기·상대 정보 넣기(누구나)
 // - /api/admin/users         → 관리자용 회원 목록 + 문의 목록 (Authorization: Bearer ADMIN_PASSWORD)
 // - /api/admin/inquiry       → 관리자 문의 답변 저장
 // 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
@@ -433,6 +435,94 @@ export default async (req, context) => {
     return json({ ok: true });
   }
 
+  // 궁합 초대 (2026-11-13): 회원이 내 정보로 초대 링크(/match/토큰, 7일)를 만들고, 받은 사람이 자기 정보를 넣으면 둘 다 궁합을 봄
+  // Blobs 'invites': 't/토큰' = { from, nick, input, createdAt, exp, partner, doneAt } · 'u/회원번호/토큰' = 목록용 표시
+  // - POST /api/invite {input} (회원) → { token } / GET /api/invite (회원) → 내가 보낸 초대 목록
+  // - GET /api/invite?token= (누구나) → 초대한 사람 닉네임·정보 / POST /api/invite/done {token, partner} (누구나) → 받은 사람 정보 저장
+  // - DELETE /api/invite?token= (회원) → 초대 지우기
+  if (path === '/api/invite' || path === '/api/invite/done') {
+    const store = getStore({ name: 'invites', consistency: 'strong' });
+    const token = url.searchParams.get('token') || '';
+    const tokenOk = (t) => /^[A-Za-z0-9_-]{16}$/.test(t);
+    if (path === '/api/invite/done') {
+      if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+      if (signupLimited(ip)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
+      const body = await readJson();
+      const t = String(body?.token || '');
+      const inv = tokenOk(t) ? await store.get(`t/${t}`, { type: 'json' }) : null;
+      if (!inv || inv.exp < Date.now()) return json({ error: '만료된 초대 링크예요.', expired: true }, 410);
+      let partner;
+      try {
+        partner = normalizeInput(body?.partner);
+      } catch (e) {
+        return json({ error: e instanceof SajuInputError ? e.message : '정보를 확인해 주세요.' }, 400);
+      }
+      if (!inv.partner) {
+        inv.partner = partner;
+        inv.doneAt = new Date().toISOString();
+        await store.setJSON(`t/${t}`, inv);
+      }
+      return json({ ok: true });
+    }
+    if (req.method === 'GET' && token) {
+      const inv = tokenOk(token) ? await store.get(`t/${token}`, { type: 'json' }) : null;
+      if (!inv) return json({ error: '없는 초대 링크예요.' }, 404);
+      if (inv.exp < Date.now()) return json({ error: '만료된 초대 링크예요.', expired: true }, 410);
+      return json({ nick: inv.nick || '사주천문 회원', input: inv.input, done: !!inv.partner });
+    }
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (req.method === 'GET') {
+      const { blobs } = await store.list({ prefix: `u/${s.sub}/` });
+      const items = (await Promise.all(blobs.map((b) => store.get(`t/${b.key.split('/').pop()}`, { type: 'json' })))).filter(Boolean);
+      items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      return json({ items: items.map(({ from, ...it }) => it) });
+    }
+    if (req.method === 'DELETE') {
+      if (!tokenOk(token)) return json({ error: '잘못된 요청이에요.' }, 400);
+      const inv = await store.get(`t/${token}`, { type: 'json' });
+      if (inv && inv.from === s.sub) {
+        await store.delete(`t/${token}`);
+        await store.delete(`u/${s.sub}/${token}`);
+      }
+      return json({ ok: true });
+    }
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요.' }, 429);
+    const body = await readJson();
+    let input;
+    try {
+      input = normalizeInput(body?.input);
+    } catch {
+      return json({ error: '내 정보를 다시 확인해 주세요.' }, 400);
+    }
+    const t = randomBytes(12).toString('base64url');
+    const now = Date.now();
+    await store.setJSON(`t/${t}`, { token: t, from: s.sub, nick: s.nick || '', input, createdAt: new Date(now).toISOString(), exp: now + 7 * 86400_000, partner: null, doneAt: null });
+    await store.set(`u/${s.sub}/${t}`, '1');
+    return json({ ok: true, token: t });
+  }
+
+  // 부적 도감 (회원): GET = 계정의 도감 / POST {book, days} = 합친 도감 저장. Blobs 'charms' (키 = 회원번호)
+  if (path === '/api/charms') {
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    const store = getStore({ name: 'charms', consistency: 'strong' });
+    if (req.method === 'GET') return json((await store.get(s.sub, { type: 'json' })) || { book: {}, days: [] });
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요.' }, 429);
+    const body = await readJson();
+    const DAY = /^\d{4}-\d{2}-\d{2}$/;
+    const book = {};
+    for (const [k, v] of Object.entries(body?.book || {})) {
+      if (!/^\d{1,2}$/.test(k) || !v || !DAY.test(v.first)) continue;
+      book[k] = { first: v.first, last: DAY.test(v.last) ? v.last : v.first, count: Math.min(9999, Math.max(1, Number(v.count) || 1)) };
+    }
+    const days = (Array.isArray(body?.days) ? body.days : []).filter((d) => DAY.test(d)).slice(-400);
+    await store.setJSON(s.sub, { book, days, updatedAt: new Date().toISOString() });
+    return json({ ok: true });
+  }
+
   // 풀이 내역: GET(목록, 또는 ?key= 하나) · POST(풀이 조각 저장) · DELETE(?key= 지우기) — 로그인 회원만
   if (path === '/api/history') {
     const s = verify(cookies(req)[SESSION], secret);
@@ -647,6 +737,11 @@ export default async (req, context) => {
       }
       if (rec?.email) await emails().delete(emailKey(rec.email));
       // 이 회원이 남긴 문의·풀이 내역도 지움
+      await getStore({ name: 'charms', consistency: 'strong' }).delete(s.sub);
+      // 보낸 궁합 초대도 지움
+      const inv = getStore({ name: 'invites', consistency: 'strong' });
+      const { blobs: mine } = await inv.list({ prefix: `u/${s.sub}/` });
+      await Promise.all(mine.flatMap((b) => [inv.delete(b.key), inv.delete(`t/${b.key.split('/').pop()}`)]));
       for (const store of [inquiries(), historyStore()]) {
         const { blobs } = await store.list({ prefix: `${s.sub}/` });
         await Promise.all(blobs.map((b) => store.delete(b.key)));
@@ -744,4 +839,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/admin/users', '/api/admin/inquiry'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry'] };

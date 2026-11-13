@@ -7,6 +7,8 @@ import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
 import LoginModal from './LoginModal.jsx';
 import UserMenu from './UserMenu.jsx';
+import { syncLocalToAccount } from '../lib/history.js';
+import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -50,6 +52,18 @@ export default function Layout() {
     noticeTimer.current = setTimeout(() => setNotice(''), 4000);
   };
   useEffect(() => () => clearTimeout(noticeTimer.current), []);
+  // 로그인하면 이 브라우저에서 비회원으로 본 풀이·모은 부적을 계정으로 옮김 (로그인마다 한 번)
+  const synced = useRef(false);
+  useEffect(() => {
+    if (!auth.user) {
+      synced.current = false;
+      return;
+    }
+    if (synced.current) return;
+    synced.current = true;
+    syncLocalToAccount();
+    syncBook();
+  }, [auth.user]);
   // 문의하기는 로그인 회원만: 비로그인이면 로그인 창부터 → 로그인하면 문의 창을 이어서 엶
   // (카카오 로그인은 페이지를 떠났다 오므로 sessionStorage 로 기억)
   const [inquiryVer, setInquiryVer] = useState(0); // 문의를 보내면 +1 → 마이페이지 목록 새로 읽기
@@ -142,7 +156,7 @@ export default function Layout() {
       el.href = SITE.url + pathname;
     });
     setHeadTag('meta[name="robots"]', () => Object.assign(document.createElement('meta'), { name: 'robots' }), (el) => {
-      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') || pathname.startsWith('/my') || pathname.startsWith('/reset') ? 'noindex,nofollow' : 'index,follow';
+      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') || pathname.startsWith('/my') || pathname.startsWith('/reset') || pathname.startsWith('/match/') ? 'noindex,nofollow' : 'index,follow';
     });
   }, [pathname]);
 
