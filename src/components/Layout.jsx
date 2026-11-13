@@ -56,10 +56,11 @@ export default function Layout() {
   };
   useEffect(() => {
     if (!auth.user) return;
+    // 'fortune'(카카오 공유하려다 로그인)은 FortuneFab 이 처리
     let want = null;
     try {
       want = sessionStorage.getItem('sc:afterLogin');
-      sessionStorage.removeItem('sc:afterLogin');
+      if (want === 'contact') sessionStorage.removeItem('sc:afterLogin');
     } catch {}
     if (want === 'contact') setContact(true);
   }, [auth.user]);
@@ -173,7 +174,14 @@ export default function Layout() {
       <main className="main">
         <Outlet context={{ auth, openLogin: () => setLogin(true), openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
       </main>
-      <FortuneFab />
+      <FortuneFab
+        loggedIn={!!auth.user}
+        onNeedLogin={(msg) => {
+          setLogin(true);
+          showNotice(msg);
+        }}
+        onNotice={showNotice}
+      />
 
       <footer className="footer">
         <p className="footer-links">

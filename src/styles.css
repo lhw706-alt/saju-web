@@ -570,6 +570,12 @@ legend.contact-label { margin-bottom: 12px; }
 .fortune__scratch:active { cursor: grabbing; }
 .fortune__open { display: block; margin: 10px auto 0; border: 0; background: none; padding: 6px; font-size: 14px; color: var(--muted); text-decoration: underline; cursor: pointer; }
 .fortune__cta { margin-top: 16px; height: 52px; font-size: 15px; }
+/* 공유: 카카오톡(노란 동그라미, 로그인 회원만) · 링크 복사 */
+.fortune__share { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
+.share-btn { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 0; cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; }
+.share-btn:hover { transform: translateY(-2px); }
+.share-btn.is-kakao { background: #fee500; }
+.share-btn.is-link { background: #2c2d31; color: var(--text); border: 1px solid var(--line); }
 .fortune__note { margin: 14px 0 0; font-size: 14px; line-height: 18px; color: var(--muted); text-align: center; letter-spacing: var(--ls-caption); }
 @media (max-width: 559px) {
   .fortune-overlay { place-items: end center; padding: 0; }
