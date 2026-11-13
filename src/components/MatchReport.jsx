@@ -3,28 +3,33 @@
 // 풀이 끝의 ```json {score, keywords} 로 궁합 점수 원을 그림. 같은 두 사람이면 기억한 풀이를 그대로 씀.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
-import { streamReading } from '../lib/stream.js';
+import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, matchTopic, rememberPart, serverParts } from '../lib/history.js';
 import { peekFresh, clearFresh, loadPartnerName } from '../lib/storage.js';
 import { presetMain } from '../lib/presetText.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
+import { dosaGenderSvg } from '../brand/dosaArt.js';
+import { MATCH_PARTS } from '../lib/topics.js';
 import { FreshLoader } from './LifeReport.jsx';
 
-// 본문과 끝의 json(점수·키워드) 나누기. 받는 중이면 ``` 뒤는 숨김
+const GENDER_ART = { male: dosaGenderSvg('male'), female: dosaGenderSvg('female') };
+const PART_IDS = MATCH_PARTS.map((p) => p.id);
+
+// 본문과 json(점수·키워드) 나누기 — json 은 첫 부분 맨 앞(예전 풀이는 맨 끝). 받는 중인 열린 코드블록은 숨김
 function splitMatch(text) {
-  const fence = text.indexOf('```');
-  if (fence < 0) return { body: text, data: null };
   let data = null;
-  const m = text.slice(fence).match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (m) {
+  let body = text.replace(/```(?:json)?\s*([\s\S]*?)```/, (_, j) => {
     try {
-      data = JSON.parse(m[1]);
+      data = JSON.parse(j);
     } catch {
       data = null;
     }
-  }
-  return { body: text.slice(0, fence).trim(), data };
+    return "";
+  });
+  const open = body.indexOf("```");
+  if (open >= 0) body = body.slice(0, open);
+  return { body: body.trim(), data };
 }
 
 function Person({ who, chart, input, hideBirth = false }) {
@@ -32,6 +37,8 @@ function Person({ who, chart, input, hideBirth = false }) {
   return (
     <div className="pair-card">
       <span className="pair-who">{who}</span>
+      {/* 성별에 맞는 천둥도사 (남: 갓·파란 옷고름, 여: 꽃 비녀·붉은 옷고름) */}
+      <span className="pair-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: GENDER_ART[input.gender === 'female' ? 'female' : 'male'] }} />
       <span className={`pair-dm el-${dm.element}`}>{dm.stem}</span>
       <b>
         {dm.ko}
@@ -66,61 +73,92 @@ function ScoreRing({ score }) {
   );
 }
 
+// 풀이 한 부분: 받는 중 커서, 오류·중간에 끊김이면 안내 + 다시 받기
+// wait: 앞부분이 아직 안 왔으면 뒷부분 글은 잠시 숨김 (순서가 뒤바뀌어 보이지 않게)
+function PartBody({ part, text, onRetry, wait = false }) {
+  if (wait && part.status !== 'error') return null;
+  const cut = part.status === 'done' && part.end && part.end !== 'refusal';
+  return (
+    <>
+      {text && <Markdown text={text} />}
+      {part.status === 'loading' && text && <span className="cursor" aria-hidden="true" />}
+      {(part.status === 'error' || cut) && (
+        <div className="notice">
+          <p>{part.status === 'error' ? part.error : END_MESSAGES[part.end] || END_MESSAGES.error}</p>
+          <button type="button" className="btn-ghost" onClick={onRetry}>
+            이 부분 다시 받기
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function MatchReport({ me, partner, meChart, partnerChart, member = false, onResult }) {
   const topic = matchTopic(partner);
-  const [text, setText] = useState(() => localParts(me, topic).match || '');
-  const [status, setStatus] = useState(text ? 'done' : 'loading');
-  const [error, setError] = useState('');
+  // 두 부분(match1·match2)을 동시에 받음. 기억한 부분은 그대로 (끝까지 받은 것만 기억함)
+  const [parts, setParts] = useState(() => {
+    const saved = localParts(me, topic);
+    return Object.fromEntries(PART_IDS.filter((id) => saved[id]).map((id) => [id, { text: saved[id], status: 'done', error: '', end: null }]));
+  });
   const [fresh] = useState(peekFresh);
   const [partnerName] = useState(loadPartnerName); // 궁합 초대로 만난 상대면 닉네임 (생년월일은 숨김)
   const abortRef = useRef(null);
   useEffect(() => clearFresh(), []);
 
-  const run = async () => {
-    abortRef.current?.abort();
-    const ctrl = new AbortController();
+  const run = (ids) => {
+    const ctrl = abortRef.current || new AbortController();
     abortRef.current = ctrl;
-    setStatus('loading');
-    setError('');
-    setText('');
     trackEvent('reading_start', { topic: 'match' });
-    try {
-      const r = await streamReading({ input: me, partner, topic: 'match', signal: ctrl.signal, onText: setText });
-      setText(r.text);
-      setStatus(r.error ? 'error' : 'done');
-      setError(r.error || '');
-      if (!r.error && r.text) rememberPart(me, topic, 'match', r.text, { member, partner });
-      trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic: 'match', end: r.end || 'ok' });
-    } catch (e) {
-      if (e.name !== 'AbortError') {
-        setStatus('error');
-        setError('네트워크 연결을 확인하고 다시 시도해 주세요.');
+    ids.forEach(async (id) => {
+      const update = (patch) => setParts((p) => ({ ...p, [id]: { ...p[id], ...patch } }));
+      update({ text: '', status: 'loading', error: '', end: null });
+      try {
+        const r = await streamReading({ input: me, partner, topic: id, signal: ctrl.signal, onText: (text) => update({ text }) });
+        update({ text: r.text, status: r.error ? 'error' : 'done', error: r.error || '', end: r.end });
+        // 시간 초과 등으로 중간에 끊긴 글은 기억하지 않음 (다시 보면 새로 받음)
+        if (!r.error && r.text && !r.end) rememberPart(me, topic, id, r.text, { member, partner });
+        trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic: id, end: r.end || 'ok' });
+      } catch (e) {
+        if (e.name !== 'AbortError') update({ status: 'error', error: '네트워크 연결을 확인하고 다시 시도해 주세요.' });
       }
-    }
+    });
+  };
+  const retry = (id) => {
+    abortRef.current = null;
+    run([id]);
   };
 
   useEffect(() => {
-    if (text) return undefined; // 기억한 풀이가 있으면 그대로
     const t = setTimeout(async () => {
+      let todo = PART_IDS.filter((id) => !parts[id]);
+      if (!todo.length) return; // 기억한 풀이가 있으면 그대로
       if (member) {
-        const srv = (await serverParts(me, topic)).match;
-        if (srv) {
-          setText(srv);
-          setStatus('done');
-          rememberPart(me, topic, 'match', srv, { partner });
-          return;
+        const srv = await serverParts(me, topic);
+        const found = todo.filter((id) => srv[id]);
+        if (found.length) {
+          setParts((p) => ({ ...p, ...Object.fromEntries(found.map((id) => [id, { text: srv[id], status: 'done', error: '', end: null }])) }));
+          found.forEach((id) => rememberPart(me, topic, id, srv[id], { partner }));
+          todo = todo.filter((id) => !srv[id]);
         }
       }
-      run();
+      if (todo.length) run(todo);
     }, 0);
     return () => {
       clearTimeout(t);
       abortRef.current?.abort();
+      abortRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const { body, data } = useMemo(() => splitMatch(text), [text]);
+  const p1 = parts.match1 || { status: 'loading', text: '' };
+  const p2 = parts.match2 || { status: 'loading', text: '' };
+  const status = p1.status === 'loading' || p2.status === 'loading' ? 'loading' : 'done';
+  const first = useMemo(() => splitMatch(p1.text || ''), [p1.text]);
+  const body = first.body;
+  const data = first.data;
+
   const score = Number.isFinite(data?.score) ? Math.round(data.score) : null;
   useEffect(() => {
     if (score != null) onResult?.(score);
@@ -141,7 +179,7 @@ export default function MatchReport({ me, partner, meChart, partnerChart, member
       </div>
 
       <section className="match-top card">
-        {score != null ? <ScoreRing score={score} /> : <div className="match-score is-wait" aria-hidden="true" />}
+        {score != null ? <ScoreRing score={score} /> : p1.status === 'loading' ? <div className="match-score is-wait" aria-hidden="true" /> : null}
         <div className="match-keys">
           {data?.keywords?.length ? (
             <ul>
@@ -157,22 +195,14 @@ export default function MatchReport({ me, partner, meChart, partnerChart, member
       </section>
 
       <article className="reading-body card match-body" aria-live="polite" aria-busy={status === 'loading'}>
-        {status === 'loading' && !body && (
+        {!body && !p2.text && status === 'loading' && (
           <div className="loading">
             <span className="moon-spin" aria-hidden="true" />
             천둥도사가 두 원국을 나란히 읽고 있어요…
           </div>
         )}
-        {body && <Markdown text={body} />}
-        {status === 'loading' && body && <span className="cursor" aria-hidden="true" />}
-        {status === 'error' && (
-          <div className="notice">
-            <p>{error}</p>
-            <button className="btn-ghost" onClick={run}>
-              다시 시도
-            </button>
-          </div>
-        )}
+        <PartBody part={p1} text={body} onRetry={() => retry('match1')} />
+        <PartBody part={p2} text={p2.text} onRetry={() => retry('match2')} wait={!body && p1.status === 'loading'} />
       </article>
     </>
   );

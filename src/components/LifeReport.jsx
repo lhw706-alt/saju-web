@@ -262,7 +262,8 @@ export default function LifeReport({ chart, input, member = false }) {
       try {
         const r = await streamReading({ input, topic: id, signal: ctrl.signal, onText: (text) => update({ text }) });
         update({ text: r.text, status: r.error ? 'error' : 'done', error: r.error });
-        if (!r.error && r.text) {
+        // 시간 초과 등으로 중간에 끊긴 글은 기억하지 않음 (다시 보면 새로 받음)
+        if (!r.error && r.text && !r.end) {
           saveReportPart(input, id, r.text);
           rememberPart(input, 'life', id, r.text, { member });
         }

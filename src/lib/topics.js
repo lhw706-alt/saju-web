@@ -81,4 +81,40 @@ export const MATCH_TOPIC = {
 전체(JSON 제외) 1,600~2,000자.`,
 };
 
-export const topicById = (id) => TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : null);
+// 궁합 풀이를 두 부분으로 나눠 동시에 받음 (한 번에 쓰면 55초 한도에 걸려 끊김, 2026-11-13).
+// 점수 json 은 첫 부분 맨 앞에 → 글이 오기 전에 점수 원부터 그림
+const MATCH_COMMON = `첫 번째 사람은 나, 두 번째 사람은 상대라고 부른다. 각 ## 아래는 2~4문장, 근거(어느 글자의 합·충·생·극인지)를 밝힌다. 연인·친구·동료 등 관계의 종류를 단정하지 않고, 헤어짐·이혼·나쁜 인연 같은 예언은 하지 않는다. 좋은 점과 조심할 점을 균형 있게 쓴다. 문장을 중간에 끊지 말고 마지막 문장까지 끝맺는다.`;
+export const MATCH_PARTS = [
+  {
+    id: 'match1',
+    label: '궁합',
+    focus: MATCH_TOPIC.focus,
+    pair: true,
+    format: `맨 처음에 json 코드블록(세 개의 백틱 + json) 하나를 설명 없이 쓴다: {"score":두 사람의 조화 점수 40~95 정수,"keywords":["네 글자 이내 키워드","…","…"]}
+그다음 아래 제목을 그대로, 이 순서대로 쓴다.
+## 한눈에 보는 궁합
+(2~3문장 요약)
+## 두 사람의 타고난 기질
+## 오행으로 본 조화
+## 일간과 지지의 관계
+${MATCH_COMMON}
+전체(JSON 제외) 800~1,000자. 이 네 제목만 쓰고 다른 제목은 쓰지 않는다.`,
+  },
+  {
+    id: 'match2',
+    label: '궁합',
+    focus: MATCH_TOPIC.focus,
+    pair: true,
+    format: `아래 제목을 그대로, 이 순서대로 쓴다. 앞부분(요약·기질·오행·일간과 지지)은 다른 글에서 다루므로 여기서는 쓰지 않는다.
+## 잘 맞는 점
+## 서로 조심할 점
+## 함께하면 좋은 시기
+## 한 줄 조언
+(한 줄 조언은 한 문장)
+${MATCH_COMMON}
+전체 700~900자. json 이나 코드블록은 쓰지 않는다.`,
+  },
+];
+
+export const topicById = (id) =>
+  TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : null);

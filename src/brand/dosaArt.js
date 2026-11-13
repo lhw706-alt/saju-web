@@ -101,6 +101,23 @@ const PROPS = {
     star(30, 32, 2.6),
     `<g transform="translate(108 66)"><rect x="0" y="0" width="26" height="26" rx="4" fill="${PAPER}"/><rect x="0" y="0" width="26" height="8" rx="4" fill="${RED}"/><rect x="0" y="4" width="26" height="4" fill="${RED}"/><path d="M7 16 l4 4 8 -8" fill="none" stroke="#3f8f5a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>`,
   ],
+  // 궁합 화면 남자 천둥도사: 반투명 검은 갓 + 구슬 갓끈 + 파란 옷고름
+  male: () => [
+    `<path d="M28 34 l2 4 4 1 -4 1 -2 4 -2 -4 -4 -1 4 -1z" fill="${GOLD}" opacity=".7"/>`,
+    `<rect x="70" y="30.5" width="20" height="12" rx="4.5" fill="#3b3560" opacity=".82" stroke="#9a90c8" stroke-width=".7"/>
+     <ellipse cx="80" cy="42.6" rx="27" ry="4.4" fill="#3b3560" opacity=".92" stroke="#9a90c8" stroke-width=".8"/>
+     <ellipse cx="80" cy="41.8" rx="25" ry="2.4" fill="#4a4270" opacity=".55"/>
+     <path d="M58 45 Q60 62 66 77M102 45 Q100 62 94 77" fill="none" stroke="#b08a3a" stroke-dasharray="0.1 3.2" stroke-linecap="round" stroke-width="2.4"/>
+     <path d="M74 93 l6 -3 6 3 -6 3z" fill="#6b8fd6"/><path d="M80 96 l-3 9M80 96 l3 9" stroke="#6b8fd6" stroke-width="2.2" stroke-linecap="round"/>`,
+  ],
+  // 궁합 화면 여자 천둥도사: 꽃 비녀 + 속눈썹 + 붉은 옷고름
+  female: () => [
+    `<path d="M132 34 l2 4 4 1 -4 1 -2 4 -2 -4 -4 -1 4 -1z" fill="${GOLD}" opacity=".7"/>`,
+    `<path d="M88 52 L110 40" stroke="${GOLD_D}" stroke-width="2.2" stroke-linecap="round"/>
+     <g transform="translate(97 46)">${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="0" cy="-4.2" rx="3" ry="4.2" transform="rotate(${a})" fill="#ff8fb1"/>`).join("")}<circle r="2.4" fill="#ffd36b"/></g>
+     <path d="M67.6 60.6 l-1.8 -1.6M76.6 60.6 l1.8 -1.6M83.4 60.6 l-1.8 -1.6M92.4 60.6 l1.8 -1.6" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>
+     <path d="M74 93 l6 -3 6 3 -6 3z" fill="${RED}"/><path d="M80 96 l-3 9M80 96 l3 9" stroke="${RED}" stroke-width="2.2" stroke-linecap="round"/>`,
+  ],
   match: () => [
     `<path d="M20 84 C40 70 50 96 60 86" fill="none" stroke="${RED}" stroke-width="2"/><path d="M100 86 C112 96 122 70 140 84" fill="none" stroke="${RED}" stroke-width="2"/>`,
     `<path d="M80 98 C66 88 66 78 74 77 C78 76.5 80 80 80 82 C80 80 82 76.5 86 77 C94 78 94 88 80 98Z" fill="${RED}"/><path d="M60 86 C66 90 70 92 74 92M100 86 C94 90 90 92 86 92" fill="none" stroke="${RED}" stroke-width="2"/>`,
@@ -192,6 +209,11 @@ export function dosaArtSvg(kind) {
 }
 
 // 표정을 직접 고른 천둥도사 (평생 사주 로딩 등). face: { eyes, mouth, brows }, propKind: PROPS 의 소품
+// 궁합 화면: 성별에 맞는 천둥도사 (male | female)
+export function dosaGenderSvg(gender) {
+  return dosaFaceSvg(gender === 'female' ? { eyes: 'happy', mouth: 'cat' } : { eyes: 'dot', mouth: 'smile', brows: 'firm' }, gender === 'female' ? 'female' : 'male');
+}
+
 export function dosaFaceSvg(face, propKind = '') {
   const id = `df-${face.eyes || 'closed'}-${face.mouth || 'none'}-${propKind || 'x'}`;
   const b = base(id, face);

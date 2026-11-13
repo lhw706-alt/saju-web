@@ -237,6 +237,13 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
   const [state, setState] = useState(null); // { date, idx, num, revealed }
   const panel = useRef(null);
   const close = useCallback(() => setOpen(false), []);
+  // 처음 모은 부적: 운세 창 위에 한 겹 더 뜨는 '새 부적 획득' 연출 (배경은 반투명, 상자 없이)
+  const [celebrate, setCelebrate] = useState(false);
+  const celebrateRef = useRef(false);
+  celebrateRef.current = celebrate;
+  useEffect(() => {
+    if (!open) setCelebrate(false);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -246,7 +253,8 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     trackEvent('fortune_open');
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e) => e.key === 'Escape' && close();
+    // Esc: 획득 연출이 떠 있으면 그것만 닫음
+    const onKey = (e) => e.key === 'Escape' && (celebrateRef.current ? setCelebrate(false) : close());
     document.addEventListener('keydown', onKey);
     setTimeout(() => panel.current?.focus(), 0);
     return () => {
@@ -263,6 +271,7 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     if (loggedIn) syncBook(); // 회원: 도감을 계정에도
     trackEvent('fortune_reveal', { fortune: FORTUNES[s.idx].title, new_charm: isNew ? 1 : 0 });
     setState({ ...s, revealed: true, isNew });
+    if (isNew) setTimeout(() => setCelebrate(true), 650); // 운세가 드러난 걸 잠깐 본 뒤에
   };
 
   // 부적 도감: 회원은 마이페이지 탭, 비회원은 /charms (로그인 안내 카드 포함)
@@ -389,25 +398,36 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
                 </div>
               )}
 
-              {f && state.revealed && state.isNew && (
-                <div className="fortune__new" role="status">
-                  <span className={`fortune__new-seal el-${f.el}`} aria-hidden="true">
-                    {EL_HANJA[f.el]}
-                  </span>
-                  <span className="fortune__new-text">
-                    <b>새로운 부적을 얻었어요!</b>
-                    <span>
-                      도감에 {Object.keys(loadBook()).length}번째 부적이 모였어요. 보러 갈까요?
-                    </span>
-                  </span>
-                  <button type="button" className="fortune__new-go" onClick={goBook}>
-                    보러 가기
-                  </button>
-                </div>
-              )}
-
               <p className="fortune__note">재미로 보는 운세예요. 사주와 상관없이 하루 한 장씩 뽑혀요.</p>
             </div>
+            {celebrate && f && (
+              <div className="charm-get" role="dialog" aria-modal="true" aria-labelledby="charm-get-title" onMouseDown={(e) => e.target === e.currentTarget && setCelebrate(false)}>
+                <div className="charm-get__stage" aria-hidden="true">
+                  <span className="charm-get__rays" />
+                  <span className="charm-get__glow" />
+                  {Array.from({ length: 14 }, (_, i) => (
+                    <i key={i} className="charm-get__spark" style={{ "--a": `${(360 / 14) * i}deg`, "--d": `${0.05 * (i % 5)}s` }} />
+                  ))}
+                  <span className={`charm-get__card el-${f.el}`}>
+                    <span className="charm-get__seal">{EL_HANJA[f.el]}</span>
+                    <b>{f.title}</b>
+                  </span>
+                </div>
+                <p className="charm-get__kicker">NEW · 부적 도감 {Object.keys(loadBook()).length}/{FORTUNES.length}</p>
+                <h3 id="charm-get-title" className="charm-get__title">
+                  새로운 부적을 얻었어요!
+                </h3>
+                <p className="charm-get__text">천둥도사의 &lsquo;{f.title}&rsquo; 부적이 도감에 모였어요.</p>
+                <div className="charm-get__actions">
+                  <button type="button" className="btn-primary" onClick={goBook} autoFocus>
+                    도감 보러 가기
+                  </button>
+                  <button type="button" className="charm-get__later" onClick={() => setCelebrate(false)}>
+                    나중에 볼게요
+                  </button>
+                </div>
+              </div>
+            )}
           </div>,
           document.body
         )}

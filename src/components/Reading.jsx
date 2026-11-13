@@ -81,7 +81,7 @@ export default function Reading({ input, initialTopic = null, member = false }) 
       if (m && !clean.trim()) update({ status: 'error', error: END_MESSAGES[m[1]] || END_MESSAGES.error, text: '' });
       else {
         update({ status: 'done', text: clean, end: m ? m[1] : null });
-        if (!m || m[1] === 'truncated') rememberPart(input, id, id, clean, { member });
+        if (!m) rememberPart(input, id, id, clean, { member }); // 중간에 끊긴 글은 기억하지 않음
       }
       trackEvent(m && !clean.trim() ? 'reading_fail' : 'reading_done', { topic: id, end: m ? m[1] : 'ok' });
     } catch (e) {
