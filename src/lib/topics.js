@@ -13,22 +13,24 @@ export const TOPICS = [
 
 // 하루 운세 (오늘·내일·지정일, 2026-11-13): day 가 있으면 화면이 보는 날짜(YYYY-MM-DD)를 함께 보내고,
 // 서버가 그날의 일진·월건·세운을 계산해 붙임. 기억하기 키는 '주제@날짜' (날이 바뀌면 새로 풀이)
-const DAY_FORMAT = `아래 제목을 그대로, 이 순서대로 쓴다.
-## 하루의 흐름
-(2~3문장. 그날의 일진이 내 일간·원국과 어떻게 만나는지 근거(어느 글자의 합·충·생·극, 어떤 십성)를 들어 설명)
-## 일과 공부
-## 사람과 관계
-## 돈과 생활
-## 한 줄 조언
-(한 문장)
-각 ## 아래는 2~3문장. 그 하루에 대한 이야기만 쓰고, 사고·질병·불운 같은 겁주는 예언은 하지 않는다. 오전·오후처럼 때를 나눠 짚어도 좋다. 전체 700~1,000자.`;
+// 오늘의 운세 화면(DayReport.jsx): 맨 앞 json(점수·한 줄 요약·분야별 점수) → 총운·오전·오후·밤 (2026-11-13 사용자 레퍼런스)
+const DAY_FORMAT = `맨 처음에 json 코드블록(세 개의 백틱 + json) 하나를 설명 없이 쓴다:
+{"score":그날의 운 점수 40~95 정수,"summary":"그날을 한 문장으로(25자 안팎, ~하루예요 꼴)","scores":{"총운":0~100,"재물운":0~100,"연애운":0~100,"사업운":0~100,"건강운":0~100,"학업운":0~100}}
+점수는 그날의 일진이 원국·일간과 맺는 관계(합·충·생·극, 십성)로 정하고, 분야마다 높낮이가 드러나게 한다.
+그다음 아래 제목을 그대로, 이 순서대로 쓴다.
+## 총운
+(4~6문장. 그날의 일진이 내 일간·원국과 어떻게 만나는지 근거를 들어 하루 전체 흐름을 풀고, 힘을 쓰면 좋은 일과 조심할 일을 담는다)
+## 오전
+## 오후
+## 밤
+(오전·오후·밤은 각 2~3문장, 그때 하면 좋은 일 위주)
+그 하루에 대한 이야기만 쓰고, 사고·질병·불운 같은 겁주는 예언은 하지 않는다. 건강은 컨디션·생활 습관 정도로만. 전체(JSON 제외) 700~1,000자.`;
 export const DAY_TOPICS = [
   { id: 'today', label: '오늘의 운세', desc: '오늘 일진과 내 원국이 만나는 하루', day: 'today', focus: '오늘 하루의 흐름, 일·관계·돈에서 힘을 쓰면 좋은 일과 조심할 일', format: DAY_FORMAT },
   { id: 'tomorrow', label: '내일의 운세', desc: '내일을 미리 준비하는 조언', day: 'tomorrow', focus: '내일 하루의 흐름, 미리 준비하면 좋은 일과 조심할 일', format: DAY_FORMAT },
   { id: 'date', label: '지정일 운세', desc: '중요한 날, 그날의 기운 미리 보기', day: 'pick', focus: '고른 날 하루의 흐름, 그날 중요한 일을 잘 치르기 위해 힘을 쓰면 좋은 점과 조심할 점', format: DAY_FORMAT },
 ];
-// 화면 주제 칩에도 나오도록 TOPICS 에 합침
-TOPICS.push(...DAY_TOPICS);
+// 하루 운세는 전용 화면(/result?v=day&t=주제)에서만 — 일반 결과 화면의 주제 칩에는 넣지 않음 (2026-11-13 사용자 지시)
 const DAY_IDS = new Set(DAY_TOPICS.map((t) => t.id));
 export const isDayTopic = (id) => DAY_IDS.has(id);
 // 날짜 문자열 (브라우저 지역 날짜 기준)
@@ -149,4 +151,4 @@ ${MATCH_COMMON}
 ];
 
 export const topicById = (id) =>
-  TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : null);
+  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : null);

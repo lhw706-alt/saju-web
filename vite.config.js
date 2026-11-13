@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
 // 이 컴퓨터의 미리보기(npm run dev) 전용 가짜 로그인 — 실제 사이트(빌드)에는 들어가지 않음.
 // 로그인 서버(netlify/functions/auth.mjs)와 카카오 키가 Netlify 에만 있어서, 미리보기에서도 로그인한 화면을
-// 확인할 수 있도록 /api/auth/* 를 흉내 냄. 상태는 미리보기 서버 메모리에만 (재시작하면 사라짐).
+// 확인할 수 있도록 /api/auth/* 를 흉내 냄. 로그인 상태는 node_modules/.cache/dev-login.json 에 남겨
+// 미리보기 서버를 다시 켜도 풀리지 않음 (2026-11-13 — 재시작마다 로그인이 풀리던 문제).
 function devFakeLogin() {
   let loggedIn = false;
   let provider = 'kakao';
@@ -12,6 +14,21 @@ function devFakeLogin() {
   const devHist = {};
   let birth = null;
   let nick = '천동이(테스트)';
+  const STATE_FILE = 'node_modules/.cache/dev-login.json';
+  try {
+    const st = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+    ({ loggedIn = false, provider = 'kakao', nick = nick, birth = null, devPw = devPw } = st);
+  } catch {
+    /* 처음 켬 */
+  }
+  const saveState = () => {
+    try {
+      mkdirSync('node_modules/.cache', { recursive: true });
+      writeFileSync(STATE_FILE, JSON.stringify({ loggedIn, provider, nick, birth, devPw }));
+    } catch {
+      /* 무시 */
+    }
+  };
   const now = new Date().toISOString();
   const send = (res, status, body) => {
     res.statusCode = status;
@@ -37,6 +54,7 @@ function devFakeLogin() {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
         const path = url.pathname;
+        if (path.startsWith('/api/auth')) res.on('finish', saveState);
         if (path === '/api/auth/me') {
           return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, provider, ...(provider === 'email' ? { email: 'test@example.com' } : {}), joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
         }

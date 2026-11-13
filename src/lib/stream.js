@@ -9,11 +9,12 @@ export const END_MESSAGES = {
 const END_RE = /\n*\[\[END:(\w+)\]\]\s*$/;
 
 // partner: 궁합일 때 상대 생년월일시
-export async function streamReading({ input, topic, signal, onText, partner = null }) {
+// date: 하루 운세의 보는 날 (YYYY-MM-DD)
+export async function streamReading({ input, topic, signal, onText, partner = null, date = null }) {
   const res = await fetch('/api/reading', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(partner ? { input, partner, topic } : { input, topic }),
+    body: JSON.stringify({ input, topic, ...(partner ? { partner } : {}), ...(date ? { date } : {}) }),
     signal,
   });
   if (!res.ok || !res.body) {

@@ -10,6 +10,7 @@ import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
 import { GOD_SHORT } from '../lib/glossary.js';
 import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
 import MatchReport from '../components/MatchReport.jsx';
+import DayReport from '../components/DayReport.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import MemberCta from '../components/MemberCta.jsx';
 
@@ -69,6 +70,22 @@ export default function Result() {
           </Link>
         </div>
       </GlossaryProvider>
+    );
+  }
+
+  // 오늘·내일·지정일 운세: 하루 운세 화면만 (원국표·다른 주제 없이)
+  if (params.get('v') === 'day') {
+    return (
+      <>
+        <DayReport key={JSON.stringify(input)} input={input} member={member} initial={params.get('t') || 'today'} />
+        <MemberCta place="day" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
+        <ResultShare kakao={{ title: '천둥도사가 본 나의 하루 운세', description: '오늘 일진과 내 사주로 본 하루 운세예요. 나도 볼까요?', button: '내 운세 보기' }} />
+        <div className="report-bottom">
+          <Link to="/start" className="btn-primary inline" onClick={() => saveTopic(params.get('t') || 'today')}>
+            다른 사람 운세 보기
+          </Link>
+        </div>
+      </>
     );
   }
 

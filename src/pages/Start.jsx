@@ -5,6 +5,7 @@ import { saveInput, savePartner, peekTopic, markFresh } from '../lib/storage.js'
 import { topicById } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import { guestCanView, markGuestView, pairKey } from '../lib/history.js';
+import { isDayTopic } from '../lib/topics.js';
 import { presetMain } from '../lib/presetText.js';
 import { ShareButtons } from '../components/ShareRow.jsx';
 
@@ -71,7 +72,9 @@ export default function Start() {
     trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
     markFresh(); // 결과 화면에서 천둥도사 로딩을 한 번 보여 줌
-    navigate(peekTopic() === 'overall' ? '/result?v=life' : '/result'); // 평생 사주는 리포트 화면
+    const t = peekTopic();
+    // 평생 사주는 리포트 화면, 오늘·내일·지정일 운세는 하루 운세 화면
+    navigate(t === 'overall' ? '/result?v=life' : isDayTopic(t) ? `/result?v=day&t=${t}` : '/result');
   };
 
   return (

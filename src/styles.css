@@ -1043,3 +1043,26 @@ legend.contact-label { margin-bottom: 12px; }
 .day-pick-row .btn-primary.inline { margin: 0; height: 48px; }
 .day-head { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--primary); }
 @media (max-width: 479px) { .day-pick-row { grid-template-columns: 1fr; } }
+
+/* 하루 운세 화면 (DayReport, 2026-11-13 레퍼런스: 큰 점수 → 때별 탭 → 육각형 그래프 → 글) */
+.day-tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 20px; border-bottom: 1px solid var(--line-soft); }
+.day-tabs button { height: 48px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-2); font-size: 16px; font-weight: 500; cursor: pointer; }
+.day-tabs button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--primary); }
+.day-top { display: grid; justify-items: center; padding: 34px 0 10px; text-align: center; }
+.day-date { margin: 0; font-size: 15px; color: var(--text-2); }
+.day-score { min-height: 108px; display: grid; place-items: center; }
+.day-score b { position: relative; font-size: 96px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
+.day-score b i { position: absolute; z-index: -1; top: -6px; right: -18px; width: 48px; height: 48px; border-radius: 50%; background: var(--primary); opacity: 0.9; }
+.day-score b { isolation: isolate; }
+.day-score-wait { display: grid; place-items: center; width: 108px; height: 96px; }
+.day-summary { min-height: 26px; margin: 8px 0 0; font-size: 18px; color: var(--text); word-break: keep-all; }
+.day-body { margin-top: 18px; }
+.day-times { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line-soft); }
+.day-times button { height: 48px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-2); font-size: 16px; cursor: pointer; }
+.day-times button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
+.day-times button:disabled { color: rgba(194, 196, 200, 0.4); cursor: default; }
+.day-radar { display: block; width: 100%; max-width: 360px; margin: 18px auto 0; overflow: visible; }
+.day-radar-shape { transition: all 0.4s ease; }
+.day-text { margin-top: 18px; padding: 22px 22px 24px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); }
+.day-text h2 { margin: 0 0 10px; font-family: var(--title); font-size: 22px; font-weight: 400; }
+.day-text p { font-size: 16px; line-height: 1.8; color: var(--text); }
