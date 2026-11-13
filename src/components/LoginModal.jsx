@@ -273,15 +273,6 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
           </div>
         )}
 
-        {view === 'signup' && (
-          <p className="login-note">
-            가입 전에{' '}
-            <Link to="/privacy" onClick={onClose}>
-              개인정보 처리방침
-            </Link>
-            을 확인해 주세요. 이메일은 가입·로그인에만 써요.
-          </p>
-        )}
       </div>
     </div>,
     document.body
