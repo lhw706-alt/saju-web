@@ -17,6 +17,10 @@ export default function Dict() {
   const { slug } = useParams();
   const fromUrl = slug ? termBySlug(slug) : null;
   const [open, setOpen] = useState(fromUrl);
+  const [q, setQ] = useState(''); // 검색어 (2026-11-14 사용자 지시)
+  const needle = q.trim().replace(/\s+/g, '');
+  const match = (t) => !needle || [t, dictShort(t), ...GLOSSARY[t].body].join(' ').replace(/\s+/g, '').includes(needle);
+  const shown = GROUPS.map((g) => ({ ...g, terms: g.terms.filter((t) => GLOSSARY[t] && match(t)) })).filter((g) => g.terms.length);
 
   // 검색으로 /dict/일간 에 들어오면 그 용어를 펼치고 그 자리로
   useEffect(() => {
@@ -44,13 +48,33 @@ export default function Dict() {
     <article className="dict">
       <h1 className="start-title">사주 용어 사전</h1>
       <p className="start-lead">사주 풀이에 나오는 말을 처음 보는 사람도 알기 쉽게 풀었어요. 궁금한 말을 누르면 바로 아래에 뜻이 펼쳐져요.</p>
-      {GROUPS.map((g) => (
+      <div className="dict-search" role="search">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="궁금한 말을 찾아보세요 (예: 대운, 재물)"
+          aria-label="사주 용어 검색"
+          enterKeyHint="search"
+        />
+        {q && (
+          <button type="button" className="dict-search-clear" aria-label="검색어 지우기" onClick={() => setQ('')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {needle && <p className="dict-count" aria-live="polite">{shown.reduce((n, g) => n + g.terms.length, 0) ? `'${q.trim()}' 검색 결과 ${shown.reduce((n, g) => n + g.terms.length, 0)}개` : `'${q.trim()}'에 맞는 말이 없어요. 다른 말로 찾아보세요.`}</p>}
+      {shown.map((g) => (
         <section key={g.label} className="dict-group">
           <h2>{g.label}</h2>
           <ul className="dict-acc">
-            {g.terms
-              .filter((t) => GLOSSARY[t])
-              .map((t) => {
+            {g.terms.map((t) => {
                 const on = open === t;
                 const id = `dict-${DICT_SLUG[t]}`;
                 const item = GLOSSARY[t];

@@ -1262,3 +1262,18 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .tti-cta p { margin: 0; font-size: 15px; color: var(--text-2); word-break: keep-all; }
 .tti-cta .btn-primary { width: min(100%, 360px); }
 @media (max-width: 479px) { .tti-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* 용어 사전 검색 (2026-11-14) */
+.dict-search { position: relative; display: flex; align-items: center; gap: 10px; height: 52px; margin-top: 20px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-2); color: var(--text-2); }
+.dict-search:focus-within { border-color: var(--primary); }
+.dict-search svg { flex: none; }
+.dict-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 16px; }
+.dict-search input::placeholder { color: rgba(194, 196, 200, 0.6); }
+.dict-search input::-webkit-search-cancel-button { display: none; }
+.dict-search-clear { display: grid; place-items: center; width: 32px; height: 32px; margin-right: -6px; border: 0; border-radius: 8px; background: none; color: var(--text-2); cursor: pointer; }
+.dict-count { margin: 12px 0 0; font-size: 14px; color: var(--text-2); }
+/* 푸터: 링크가 늘어도 휴대폰에서 글자가 꺾이지 않게 (2026-11-14) */
+.footer-links { flex-wrap: wrap; gap: 10px 16px; }
+.footer-menu { flex-wrap: wrap; gap: 8px 14px; }
+.footer-menu > * { white-space: nowrap; }
+@media (max-width: 559px) { .footer-links { flex-direction: column; align-items: flex-start; } }
