@@ -1051,8 +1051,8 @@ legend.contact-label { margin-bottom: 12px; }
 .day-top { display: grid; justify-items: center; padding: 34px 0 10px; text-align: center; }
 .day-date { margin: 0; font-size: 15px; color: var(--text-2); }
 .day-score { min-height: 108px; display: grid; place-items: center; }
-.day-score b { position: relative; font-size: 96px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
-.day-score b i { position: absolute; z-index: -1; top: -6px; right: -18px; width: 48px; height: 48px; border-radius: 50%; background: var(--primary); opacity: 0.9; }
+.day-score b { position: relative; font-family: var(--title); font-size: 64px; line-height: 1.1; font-weight: 400; letter-spacing: -0.02em; color: var(--text); }
+.day-score b i { position: absolute; z-index: -1; top: -8px; right: -20px; width: 44px; height: 44px; border-radius: 50%; background: var(--primary); opacity: 0.9; }
 .day-score b { isolation: isolate; }
 .day-score-wait { display: grid; place-items: center; width: 108px; height: 96px; }
 .day-summary { min-height: 26px; margin: 8px 0 0; font-size: 18px; color: var(--text); word-break: keep-all; }

@@ -38,6 +38,9 @@ function parseDay(text) {
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(n) || 0)));
 
+// 점수 대신 보여 줄 말 (2026-11-13 사용자 지시: 숫자보다 '좋음·보통' 같은 말로)
+const gradeOf = (s) => (s >= 85 ? '대길' : s >= 70 ? '좋음' : s >= 55 ? '보통' : '조심');
+
 // 분야별 점수 육각형 그래프 (0~100)
 function Radar({ scores }) {
   const cx = 160;
@@ -58,7 +61,7 @@ function Radar({ scores }) {
         const [x, y] = pt(i, R);
         return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(194,196,200,0.18)" strokeDasharray="3 4" />;
       })}
-      {scores && <polygon className="day-radar-shape" points={shape} fill="rgba(226,194,122,0.32)" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" />}
+      {scores && <polygon className="day-radar-shape" points={shape} fill="rgba(226,194,122,0.28)" stroke="var(--primary)" strokeOpacity="0.75" strokeWidth="1.25" strokeLinejoin="round" />}
       {AXES.map((a, i) => {
         const [x, y] = pt(i, R + 26);
         return (
@@ -191,8 +194,8 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
           <p className="day-date">{dateTitle(date)}</p>
           <div className="day-score" aria-live="polite">
             {score != null ? (
-              <b>
-                {score}
+              <b aria-label={`오늘의 기운 ${gradeOf(score)}`}>
+                {gradeOf(score)}
                 <i aria-hidden="true" />
               </b>
             ) : (
@@ -214,7 +217,8 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
               </button>
             ))}
           </div>
-          <Radar scores={data?.scores} />
+          {/* 오전·오후·밤은 그 시간대 그래프 (예전에 기억한 풀이처럼 없으면 하루 전체 그래프) */}
+          <Radar scores={(shownTime !== '총운' && data?.times?.[shownTime]) || data?.scores} />
           <article className="day-text" aria-busy={cur?.status === 'loading'}>
             <h2>{shownTime}</h2>
             {sections[shownTime] ? <Markdown text={sections[shownTime]} /> : cur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
