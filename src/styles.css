@@ -24,6 +24,7 @@
   --primary-soft: rgba(226, 194, 122, 0.12);
   --primary-line: rgba(226, 194, 122, 0.43);
   --danger: #ff6363;        /* red 60 */
+  --positive: #00bf40;      /* green (Montage status.positive) — 입력 확인 성공 */
   /* 천동이·제목 강조용 금색 (사주천문 고유) */
   --gold: #d9b56c;
   --gold-2: #f0d595;
@@ -795,13 +796,13 @@ legend.contact-label { margin-bottom: 12px; }
 .pw-meter span { display: block; height: 100%; width: 0; border-radius: inherit; transition: width 0.25s ease, background 0.25s ease; }
 .pw-meter.is-1 span { width: 33%; background: var(--danger); }
 .pw-meter.is-2 span { width: 66%; background: #f5a623; }
-.pw-meter.is-3 span { width: 100%; background: var(--primary); }
+.pw-meter.is-3 span { width: 100%; background: var(--positive); }
 .pw-rules ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .pw-rules li { display: flex; align-items: baseline; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); transition: color 0.15s ease; }
 .pw-rules li > span[aria-hidden] { width: 12px; flex: none; text-align: center; }
 .pw-rules li.is-bad { color: var(--danger); }
-.pw-rules li.is-ok { color: var(--primary); }
-.field-ok { margin: 0; font-size: 14px; color: var(--primary); letter-spacing: var(--ls-label); }
+.pw-rules li.is-ok { color: var(--positive); }
+.field-ok { margin: 0; font-size: 14px; color: var(--positive); letter-spacing: var(--ls-label); }
 
 /* 비밀번호 아래: 왼쪽 자동 로그인 · 오른쪽 아이디 및 비밀번호 찾기 */
 .login-options { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: -2px; }
