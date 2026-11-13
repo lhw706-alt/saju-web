@@ -241,7 +241,7 @@ export default async (req, context) => {
     return json({
       enabled,
       emailEnabled: mailOn,
-      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null } : {}) },
+      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null, ...(profile.email ? { email: profile.email } : {}) } : {}) },
     });
   }
 

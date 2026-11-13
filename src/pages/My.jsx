@@ -1,4 +1,5 @@
-// 마이페이지 (/my): 상단 닉네임을 누르면 이동. 내 정보 · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 계정
+// 마이페이지 (/my): 상단 닉네임을 누르면 이동. 카드형(항목 이름 · 값 · 버튼 줄) —
+// 내 프로필 · 기본 정보(가입 방법·이메일·비밀번호 변경) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { CITIES } from '../lib/saju.js';
@@ -118,7 +119,7 @@ export default function My() {
     return (
       <section className="my">
         <h1 className="start-title">마이페이지</h1>
-        <div className="my-card card my-empty">
+        <div className="my-sec card my-empty">
           <p>로그인하면 내 정보를 볼 수 있어요.</p>
           <button type="button" className="btn-primary inline" onClick={openLogin}>
             로그인
@@ -134,14 +135,21 @@ export default function My() {
     <section className="my">
       <h1 className="start-title">마이페이지</h1>
 
-      <div className="my-card card">
-        <div className="my-hello">
-          {/* 기본 프로필 사진: 천둥도사(천동이) */}
-          <span className="my-avatar" aria-hidden="true">
-            <LogoSymbol size={44} />
+      {/* 내 프로필: 이미지(천동이) · 닉네임 */}
+      <div className="my-sec card">
+        <h2 className="my-sec-title">내 프로필</h2>
+        <div className="my-row">
+          <span className="my-row-label">이미지</span>
+          <span className="my-row-value">
+            <span className="my-avatar" aria-hidden="true">
+              <LogoSymbol size={64} />
+            </span>
           </span>
+        </div>
+        <div className="my-row">
+          <span className="my-row-label">닉네임</span>
           {nickEdit ? (
-            <form className="my-nick-form" onSubmit={saveNick}>
+            <form className="my-row-value my-nick-form" onSubmit={saveNick}>
               <label className="visually-hidden" htmlFor="my-nick">
                 닉네임
               </label>
@@ -171,137 +179,161 @@ export default function My() {
               )}
             </form>
           ) : (
-            <div>
-              <b>
-                {auth.user.nick || '사주천문 회원'}님
-                <button type="button" className="my-link my-nick-edit" onClick={startNick}>
-                  변경
-                </button>
-              </b>
-              <span>{isEmail ? '이메일로 로그인했어요' : '카카오로 로그인했어요'}</span>
-            </div>
-          )}
-        </div>
-        {/* 가입일·방문 횟수 대신 내 사주 정보 (계정에 저장 — 다른 기기에서도 그대로) */}
-        <div className="my-birth">
-          {editing ? (
-            <div className="my-birth-info">
-              <span className="my-birth-label">내 사주 정보</span>
-              <span>아래에서 입력하고 저장해 주세요.</span>
-            </div>
-          ) : p.birth ? (
             <>
-              <div className="my-birth-info">
-                <span className="my-birth-label">내 사주 정보</span>
-                <b>{presetMain(p.birth)}</b>
-                <span>{presetSub(p.birth)}</span>
-              </div>
-              <div className="my-birth-actions">
-                <button type="button" className="my-link" onClick={() => setEditing(true)}>
-                  수정
-                </button>
-                <button type="button" className="my-link" onClick={deleteBirth}>
-                  삭제
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="my-birth-info">
-                <span className="my-birth-label">내 사주 정보</span>
-                <span>생년월일과 태어난 시각을 등록하면 다른 기기에서도 바로 내 사주를 볼 수 있어요.</span>
-              </div>
-              <div className="my-birth-actions">
-                <button type="button" className="btn-primary inline" onClick={() => setEditing(true)}>
-                  내 정보 등록하기
-                </button>
-              </div>
+              <b className="my-row-value">{auth.user.nick || '사주천문 회원'}</b>
+              <button type="button" className="my-set" onClick={startNick}>
+                변경
+              </button>
             </>
           )}
         </div>
       </div>
 
-      {editing && (
-        <div className="my-edit">
-          <StepForm initial={p.birth || undefined} showSaved={false} submitLabel="저장하기" onSubmit={saveBirth} />
-          <button type="button" className="my-link" onClick={() => setEditing(false)}>
-            취소
-          </button>
+      {/* 기본 정보: 가입 방법 · 이메일 · 비밀번호(이메일 회원만) */}
+      <div className="my-sec card">
+        <h2 className="my-sec-title">기본 정보</h2>
+        <div className="my-row">
+          <span className="my-row-label">가입 방법</span>
+          <span className="my-row-value">{isEmail ? '이메일' : '카카오'}</span>
         </div>
-      )}
-      {birthMsg && (
-        <p className="my-msg" role="status">
-          {birthMsg}
-        </p>
-      )}
-
-      <h2 className="section-title my-title">
-        저장된 사주 정보 <small>이 브라우저에 최근 5명까지 기억해요</small>
-      </h2>
-      {presets.length === 0 ? (
-        <p className="my-none">아직 저장된 정보가 없어요. 사주를 보면 자동으로 기억해요.</p>
-      ) : (
-        <ul className="saved-list">
-          {presets.map((x) => (
-            <li key={presetMain(x) + presetSub(x)} className="saved-item">
-              {/* 마이페이지에선 보기만 (사주 보기 버튼 없음) — 지우기만 가능 */}
-              <div className="saved-load is-static">
-                <span className="saved-text">
-                  <b>{presetMain(x)}</b>
-                  <span>{presetSub(x)}</span>
-                </span>
-              </div>
-              <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => setPresets(removePreset(x))}>
-                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+        {isEmail && (
+          <div className="my-row">
+            <span className="my-row-label">이메일</span>
+            <span className="my-row-value my-break">{p.email || '-'}</span>
+          </div>
+        )}
+        {isEmail && (
+          <div className="my-row">
+            <span className="my-row-label">비밀번호</span>
+            <span className="my-row-value my-dots" aria-label="저장된 비밀번호">
+              ●●●●●●●●
+            </span>
+            {!pwOpen && (
+              <button type="button" className="my-set" onClick={openPw}>
+                변경
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </div>
+        )}
+        {isEmail && pwOpen && (
+          <form className="my-pw" onSubmit={savePw} noValidate>
+            <PasswordInput id="my-pw-cur" label="지금 비밀번호" value={pwCur} onChange={(e) => setPwCur(e.target.value)} error={pwMsg('current')} placeholder="지금 비밀번호 입력" autoComplete="current-password" />
+            <PasswordInput id="my-pw-new" label="새 비밀번호" rules value={pwNew} onChange={(e) => setPwNew(e.target.value)} error={pwMsg('password')} placeholder="새 비밀번호 입력" />
+            <PasswordInput
+              id="my-pw-new2"
+              label="새 비밀번호 확인"
+              value={pwNew2}
+              onChange={(e) => setPwNew2(e.target.value)}
+              error={pwMsg('password2') || (pwNew2 && pwNew !== pwNew2 ? '비밀번호가 서로 달라요.' : '')}
+              placeholder="한 번 더 입력"
+              okText={pwNew2 && pwNew === pwNew2 && passwordOk(pwNew) ? '비밀번호가 같아요.' : ''}
+            />
+            {pwErr.text && !['current', 'password', 'password2'].includes(pwErr.field) && <p className="field-msg">{pwErr.text}</p>}
+            <div className="my-pw-actions">
+              <button type="submit" className="btn-primary inline" disabled={pwBusy}>
+                {pwBusy ? '저장 중…' : '비밀번호 바꾸기'}
+              </button>
+              <button type="button" className="my-link" onClick={() => setPwOpen(false)}>
+                취소
+              </button>
+            </div>
+          </form>
+        )}
+        {pwDone && (
+          <p className="my-msg" role="status">
+            {pwDone}
+          </p>
+        )}
+      </div>
 
-      <h2 className="section-title my-title">계정</h2>
-      {isEmail && pwOpen && (
-        <form className="my-pw card" onSubmit={savePw} noValidate>
-          <PasswordInput id="my-pw-cur" label="지금 비밀번호" value={pwCur} onChange={(e) => setPwCur(e.target.value)} error={pwMsg('current')} placeholder="지금 비밀번호 입력" autoComplete="current-password" />
-          <PasswordInput id="my-pw-new" label="새 비밀번호" rules value={pwNew} onChange={(e) => setPwNew(e.target.value)} error={pwMsg('password')} placeholder="새 비밀번호 입력" />
-          <PasswordInput
-            id="my-pw-new2"
-            label="새 비밀번호 확인"
-            value={pwNew2}
-            onChange={(e) => setPwNew2(e.target.value)}
-            error={pwMsg('password2') || (pwNew2 && pwNew !== pwNew2 ? '비밀번호가 서로 달라요.' : '')}
-            placeholder="한 번 더 입력"
-            okText={pwNew2 && pwNew === pwNew2 && passwordOk(pwNew) ? '비밀번호가 같아요.' : ''}
-          />
-          {pwErr.text && !['current', 'password', 'password2'].includes(pwErr.field) && <p className="field-msg">{pwErr.text}</p>}
-          <div className="my-pw-actions">
-            <button type="submit" className="btn-primary inline" disabled={pwBusy}>
-              {pwBusy ? '저장 중…' : '비밀번호 바꾸기'}
-            </button>
-            <button type="button" className="my-link" onClick={() => setPwOpen(false)}>
+      {/* 내 사주 정보 (계정에 저장 — 다른 기기에서도 그대로) */}
+      <div className="my-sec card">
+        <div className="my-sec-head">
+          <h2 className="my-sec-title">내 사주 정보</h2>
+          {!editing &&
+            (p.birth ? (
+              <div className="my-sec-btns">
+                <button type="button" className="my-set" onClick={() => setEditing(true)}>
+                  수정
+                </button>
+                <button type="button" className="my-set" onClick={deleteBirth}>
+                  삭제
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="my-set" onClick={() => setEditing(true)}>
+                등록
+              </button>
+            ))}
+        </div>
+        {editing ? (
+          <p className="my-sec-note">아래에서 입력하고 저장해 주세요.</p>
+        ) : p.birth ? (
+          <>
+            <div className="my-row">
+              <span className="my-row-label">생년월일</span>
+              <span className="my-row-value">{presetMain(p.birth)}</span>
+            </div>
+            <div className="my-row">
+              <span className="my-row-label">태어난 때·곳</span>
+              <span className="my-row-value">{presetSub(p.birth)}</span>
+            </div>
+          </>
+        ) : (
+          <p className="my-sec-note">생년월일과 태어난 시각을 등록하면 다른 기기에서도 바로 내 사주를 볼 수 있어요.</p>
+        )}
+        {editing && (
+          <div className="my-edit">
+            <StepForm initial={p.birth || undefined} showSaved={false} submitLabel="저장하기" onSubmit={saveBirth} />
+            <button type="button" className="my-link" onClick={() => setEditing(false)}>
               취소
             </button>
           </div>
-        </form>
-      )}
-      {pwDone && (
-        <p className="my-msg my-pw-done" role="status">
-          {pwDone}
-        </p>
-      )}
-      <div className="my-actions">
-        {isEmail && !pwOpen && (
-          <button type="button" className="my-action" onClick={openPw}>
-            비밀번호 변경
-          </button>
         )}
-        <button type="button" className="my-action" onClick={() => logout().then(() => navigate('/'))}>
+        {birthMsg && (
+          <p className="my-msg" role="status">
+            {birthMsg}
+          </p>
+        )}
+      </div>
+
+      {/* 이 브라우저에만 기억한 사주 정보 */}
+      <div className="my-sec card">
+        <h2 className="my-sec-title">
+          저장된 사주 정보 <small>이 브라우저에 최근 5명까지 기억해요</small>
+        </h2>
+        {presets.length === 0 ? (
+          <p className="my-sec-note">아직 저장된 정보가 없어요. 사주를 보면 자동으로 기억해요.</p>
+        ) : (
+          <ul className="saved-list">
+            {presets.map((x) => (
+              <li key={presetMain(x) + presetSub(x)} className="saved-item">
+                <div className="saved-load is-static">
+                  <span className="saved-text">
+                    <b>{presetMain(x)}</b>
+                    <span>{presetSub(x)}</span>
+                  </span>
+                </div>
+                <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => setPresets(removePreset(x))}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="my-foot">
+        <button type="button" className="my-set" onClick={() => logout().then(() => navigate('/'))}>
           로그아웃
         </button>
-        <button type="button" className="my-action is-danger" onClick={() => withdraw().then((ok) => ok && navigate('/'))}>
+        <button type="button" className="my-withdraw" onClick={() => withdraw().then((ok) => ok && navigate('/'))}>
           회원 탈퇴
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
     </section>

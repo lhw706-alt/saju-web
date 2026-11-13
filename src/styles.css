@@ -730,56 +730,55 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-table tbody tr:last-child td { border-bottom: 0; }
 /* 상단 닉네임(마이페이지 링크) */
 .header-contact.user-link { display: inline-flex; align-items: center; text-decoration: none; }
-/* 마이페이지 */
+/* 마이페이지 — 카드마다 제목 + "항목 이름 · 값 · 버튼" 줄 (2026-11-13) */
 .my { padding: 28px 0 0; }
-.my-card { margin-top: 18px; padding: 22px 20px; }
+.my-sec { margin-top: 16px; padding: 26px 24px; }
+.my-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.my-sec-title { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.my-sec-head .my-sec-title { margin: 0; }
+.my-sec-title small { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.my-sec-btns { display: flex; gap: 8px; }
+.my-sec-note { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.my-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; }
+.my-row-label { color: var(--text-2); font-size: 15px; }
+.my-row-value { min-width: 0; font-size: 16px; font-weight: 500; }
+.my-row > .my-row-value:last-child { grid-column: 2 / -1; }
+.my-break { overflow-wrap: anywhere; }
+.my-dots { letter-spacing: 2px; font-size: 12px; color: var(--text-2); }
+.my-set { height: 40px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.my-set:hover { border-color: var(--text-2); }
+.my-avatar { position: relative; display: block; flex: none; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
+/* 천동이를 조금 키우고 아래로 내려 몸이 동그라미 아래 끝까지 차게 (잘린 밑부분이 안 보이게) */
+.my-avatar .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
 .my-empty { display: grid; justify-items: start; gap: 4px; }
 .my-empty p { margin: 0; color: var(--text-2); }
 .my-empty .btn-primary.inline { margin-top: 12px; }
-.my-hello { display: flex; align-items: center; gap: 14px; }
-.my-avatar { position: relative; display: block; flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
-.my-hello b { display: block; font-size: 18px; font-weight: 600; }
-.my-hello span { font-size: 14px; color: var(--muted); }
-.my-title { margin-top: 36px; }
-.my-none { margin: 0; padding: 16px; border-radius: var(--r-md); background: var(--bg-2); color: var(--muted); font-size: 14px; }
-.my-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.my-pw { display: grid; gap: 12px; max-width: 420px; margin-bottom: 12px; padding: 20px; }
+.my-pw { display: grid; gap: 12px; max-width: 420px; margin: 8px 0 4px; padding: 18px; border-radius: var(--r-md); background: var(--bg-2); }
 .my-pw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.my-pw-done { margin: 0 0 12px; }
-.my-action { height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 15px; font-weight: 500; cursor: pointer; }
-.my-action:hover { border-color: var(--text-2); }
-.my-action.is-danger { color: var(--danger); }
-.my-action.is-danger:hover { border-color: rgba(255, 99, 99, 0.5); }
+.my-pw-actions .btn-primary.inline { margin: 0; height: 44px; padding: 0 18px; font-size: 15px; }
+.my .saved-list { margin-top: 14px; }
 .my .saved-item { background: var(--bg-2); border: 1px solid var(--line-soft); }
-.my .saved-item:hover { background: #26272b; }
-/* 마이페이지: 천동이 프로필 · 내 사주 정보 · 약한 탈퇴 버튼 */
-/* 천동이를 조금 키우고 아래로 내려 몸이 동그라미 아래 끝까지 차게 (잘린 밑부분이 안 보이게) */
-.my-avatar .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
-.my-birth { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.my-birth-info { display: grid; gap: 3px; min-width: 0; }
-.my-birth-label { font-size: 14px; color: var(--primary); font-weight: 500; }
-.my-birth-info b { font-size: 17px; font-weight: 500; }
-.my-birth-info > span:last-child:not(.my-birth-label) { font-size: 14px; color: var(--muted); }
-.my-birth-actions { display: flex; align-items: center; gap: 4px; }
-.my-birth-actions .btn-primary.inline { margin: 0 6px 0 0; height: 44px; padding: 0 20px; font-size: 15px; }
+.saved-load.is-static { cursor: default; }
+.my .saved-item:has(.is-static):hover { background: var(--bg-2); }
 .my-link { padding: 8px 10px; border: 0; background: none; color: var(--text-2); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .my-link:hover { color: var(--text); }
 .my-edit { display: grid; gap: 6px; justify-items: center; margin-top: 12px; }
 .my-edit .steps { width: 100%; }
 .my-msg { margin: 10px 0 0; font-size: 14px; color: var(--primary); }
-.my-action.is-danger { border-color: transparent; font-weight: 400; }
-.my-action.is-danger:hover { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
-.saved-load.is-static { cursor: default; }
-.my .saved-item:has(.is-static):hover { background: var(--bg-2); }
-/* 마이페이지 닉네임 변경 */
-.my-hello b { display: flex; align-items: center; gap: 2px; }
-.my-nick-edit { padding: 4px 8px; font-size: 14px; font-weight: 400; }
-.my-nick-form { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.my-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.my-withdraw { display: inline-flex; align-items: center; gap: 2px; padding: 8px 4px; border: 0; background: none; color: var(--muted); font-size: 14px; cursor: pointer; }
+.my-withdraw:hover { color: var(--danger); }
+/* 닉네임 변경 */
+.my-nick-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .my-nick-form .contact-input { height: 44px; }
 .my-nick-actions { display: flex; align-items: center; gap: 2px; }
 .my-nick-actions .btn-primary.inline { margin: 0; height: 44px; padding: 0 18px; font-size: 15px; }
 .my-nick-form .field-msg { grid-column: 1 / -1; }
 @media (max-width: 480px) {
+  .my-sec { padding: 22px 18px; }
+  .my-row { grid-template-columns: 84px minmax(0, 1fr) auto; gap: 10px; }
+  .my-row-label { font-size: 14px; }
+  .my-row-value { font-size: 15px; }
   .my-nick-form { grid-template-columns: 1fr; }
   .my-nick-actions { justify-content: flex-start; }
 }

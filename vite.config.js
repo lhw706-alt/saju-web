@@ -36,7 +36,7 @@ function devFakeLogin() {
         const url = new URL(req.url, 'http://localhost');
         const path = url.pathname;
         if (path === '/api/auth/me') {
-          return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, provider, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
+          return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, provider, ...(provider === 'email' ? { email: 'test@example.com' } : {}), joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
         }
         // 이메일 가입·로그인 흉내: 가입하면 미리보기 서버 터미널에 인증 링크를 찍음 (메일은 안 보냄)
         if (path === '/api/auth/email/signup') {
