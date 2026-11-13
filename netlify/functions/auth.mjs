@@ -53,24 +53,26 @@ function passwordError(pw) {
   return passwordOk(pw) ? '' : '비밀번호 조건을 모두 맞춰 주세요.';
 }
 // 메일 보내기 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
-async function sendMail(to, { title, lines, button, link, ignore }) {
-  const html = `<!doctype html><html><body style="margin:0;background:#1b1c1e;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:40px 24px;color:#f7f7f8">
-<p style="margin:0 0 6px;color:#e2c27a;font-size:14px">사주천문</p>
-<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">${title}</h1>
-<p style="margin:0 0 24px;color:#c2c4c8;font-size:15px;line-height:1.7">${lines.join('<br>')}</p>
+// 메일은 라이트 모드(흰 배경). 받은편지함이 다크로 바꾸지 않게 color-scheme 을 light 로 고정
+async function sendMail(to, { subject, title, lines, button, link, ignore }) {
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head><body style="margin:0;background:#ffffff;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+<div style="max-width:480px;margin:0 auto;padding:40px 24px;color:#171719;background:#ffffff">
+<p style="margin:0 0 6px;color:#a8862f;font-size:14px">사주천문</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600;color:#171719">${title}</h1>
+<p style="margin:0 0 24px;color:#46474c;font-size:15px;line-height:1.7">${lines.join('<br>')}</p>
 <a href="${link}" style="display:inline-block;padding:14px 28px;border-radius:12px;background:#e2c27a;color:#1b1c1e;font-size:16px;font-weight:600;text-decoration:none">${button}</a>
 <p style="margin:28px 0 0;color:#878a93;font-size:13px;line-height:1.6">${ignore}</p>
 </div></body></html>`;
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject: `[사주천문] ${title}`, html }),
+    body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}`);
 }
 const sendVerifyMail = (to, link) =>
   sendMail(to, {
+    subject: '[사주천문] 회원가입 이메일 인증',
     title: '이메일 인증을 마쳐 주세요',
     lines: ['아래 버튼을 누르면 인증이 끝나고 바로 가입돼요.', '이 링크는 24시간 동안만 쓸 수 있어요.'],
     button: '이메일 인증하기',
@@ -79,6 +81,7 @@ const sendVerifyMail = (to, link) =>
   });
 const sendResetMail = (to, link) =>
   sendMail(to, {
+    subject: '[사주천문] 비밀번호 재설정',
     title: '비밀번호를 새로 정해 주세요',
     lines: ['아래 버튼을 눌러 새 비밀번호를 정하면 바로 로그인돼요.', '이 링크는 1시간 동안 한 번만 쓸 수 있어요.'],
     button: '비밀번호 새로 정하기',
