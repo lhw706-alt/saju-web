@@ -167,7 +167,7 @@ export default function MatchReport({ me, partner, meChart, partnerChart, member
 
   return (
     <>
-      {fresh && <FreshLoader />}
+      {fresh && <FreshLoader ready={score != null || p1.status !== 'loading'} />}
       <section className="result-head">
         <p className="eyebrow">두 사람의 궁합</p>
         <h1 className="result-title">천둥도사가 본 우리 궁합</h1>

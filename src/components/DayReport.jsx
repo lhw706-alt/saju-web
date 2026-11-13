@@ -260,7 +260,15 @@ export default function DayReport({ input, member = false, initial = 'today', pi
 
   return (
     <>
-      <FreshLoader />
+      {/* 로딩은 보고 있는 탭의 점수·요약이 나오면 끝 (날짜를 아직 안 골랐으면 바로) */}
+      <FreshLoader
+        ready={
+          !date ||
+          (view === 'tti'
+            ? !!tti.data?.summary || (!!ttiCur && ttiCur.status !== 'loading')
+            : !!data?.summary || data?.score != null || (!!cur && cur.status !== 'loading'))
+        }
+      />
       <nav className="day-tabs" role="tablist" aria-label="운세 종류">
         {[
           ['day', label],

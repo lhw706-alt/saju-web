@@ -65,31 +65,48 @@ function splitPart(text) {
 }
 
 // ── 로딩: 눈 감고 사주를 보다가 번쩍 뜨며 "나왔다!" ──
+// 2026-11-14 사용자 요청: 정해진 2.8초가 아니라 실제로 풀이가 보이기 시작할 때(ready)까지 돌다가 끝남.
+// 최소 1.5초(그림이 깜빡이지 않게), 최대 25초(늦어도 화면은 보여 줌). 기다리는 동안 말이 바뀜.
 const LOADER_STEPS = [
-  { at: 0, face: { eyes: 'closed', mouth: 'none' }, line: '흠… 네 여덟 글자를 펼쳐 보자꾸나' },
-  { at: 900, face: { eyes: 'sleep', mouth: 'o' }, line: '하늘의 기운이 모여드는구나…' },
-  { at: 1800, face: { eyes: 'star', mouth: 'open', brows: 'raise' }, line: '보인다… 나왔다!' },
+  { face: { eyes: 'closed', mouth: 'none' }, line: '흠… 네 여덟 글자를 펼쳐 보자꾸나' },
+  { face: { eyes: 'sleep', mouth: 'o' }, line: '하늘의 기운이 모여드는구나…' },
+  { face: { eyes: 'star', mouth: 'open', brows: 'raise' }, line: '보인다… 나왔다!' },
 ];
+const WAIT_LINES = ['하늘의 기운이 모여드는구나…', '여덟 글자를 하나씩 짚어 보는 중이란다…', '기운의 흐름을 따라가 보자꾸나…', '거의 다 보이는구나…'];
 const LOADER_ART = LOADER_STEPS.map((s) => dosaFaceSvg(s.face, 'life'));
-export function DosaLoader({ onDone }) {
+export function DosaLoader({ onDone, ready = true }) {
   const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const k = reduce ? 0.4 : 1;
   const [step, setStep] = useState(0);
+  const [wait, setWait] = useState(0); // 기다리는 동안 바뀌는 말
   const [out, setOut] = useState(false);
+  const [minDone, setMinDone] = useState(false);
+  const [capped, setCapped] = useState(false);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
   useEffect(() => {
-    const k = reduce ? 0.4 : 1;
-    const timers = [
-      setTimeout(() => setStep(1), 900 * k),
-      setTimeout(() => setStep(2), 1800 * k),
-      setTimeout(() => setOut(true), 2500 * k),
-      setTimeout(onDone, 2800 * k),
-    ];
+    const timers = [setTimeout(() => setStep((s) => Math.max(s, 1)), 900 * k), setTimeout(() => setMinDone(true), 1500 * k), setTimeout(() => setCapped(true), 25000)];
+    const iv = setInterval(() => setWait((w) => Math.min(w + 1, WAIT_LINES.length - 1)), 2600);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(iv);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const finish = (ready && minDone) || capped;
+  useEffect(() => {
+    if (!finish) return undefined;
+    setStep(2);
+    const timers = [setTimeout(() => setOut(true), 700 * k), setTimeout(() => doneRef.current?.(), 1000 * k)];
     return () => timers.forEach(clearTimeout);
-  }, [onDone, reduce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finish]);
+  const line = step === 1 ? WAIT_LINES[wait] : LOADER_STEPS[step].line;
   return (
     <div className={`dosa-loader${out ? ' is-out' : ''}`} role="status" aria-live="polite">
       <div className={`dosa-loader-art step-${step}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: LOADER_ART[step] }} />
-      <p key={step} className="dosa-loader-line">
-        {LOADER_STEPS[step].line}
+      <p key={line} className="dosa-loader-line">
+        {line}
       </p>
       <span className="dosa-loader-dots" aria-hidden="true">
         <i />
@@ -305,6 +322,10 @@ export default function LifeReport({ chart, input, member = false }) {
   }, []);
 
   const split = useMemo(() => Object.fromEntries(REPORT_PARTS.map((p) => [p.id, splitPart(parts[p.id]?.text || '')])), [parts]);
+  // 로딩을 끝낼 때: 맨 위 요약 첫 단락이 나오기 시작했거나, 한 부분이라도 끝났거나(기억한 풀이·오류 포함)
+  const firstPart = REPORT_PARTS[0].id;
+  const firstReady =
+    (split[firstPart]?.chunks[0] || '').length > 20 || REPORT_PARTS.some((p) => parts[p.id] && parts[p.id].status !== 'loading');
   const slot = (key) => {
     const [pid, idx] = SLOTS[key];
     const st = parts[pid] || { status: 'loading' };
@@ -348,7 +369,7 @@ export default function LifeReport({ chart, input, member = false }) {
 
   return (
     <>
-      {loading && <DosaLoader onDone={() => setLoading(false)} />}
+      {loading && <DosaLoader ready={firstReady} onDone={() => setLoading(false)} />}
 
       {/* 맨 위: 내 사주 요약 */}
       <section className="report-summary card">
@@ -430,8 +451,9 @@ export default function LifeReport({ chart, input, member = false }) {
 }
 
 // 주제별 결과 화면용: 입력을 막 마치고 들어왔을 때만 천둥도사 로딩을 한 번 보여 줌 (새로고침이면 안 나옴)
-export function FreshLoader() {
+// ready: 그 화면의 첫 내용이 보일 준비가 됐는지 (없으면 바로 준비된 것으로 봄)
+export function FreshLoader({ ready = true }) {
   const [show, setShow] = useState(peekFresh);
   useEffect(() => clearFresh(), []);
-  return show ? <DosaLoader onDone={() => setShow(false)} /> : null;
+  return show ? <DosaLoader ready={ready} onDone={() => setShow(false)} /> : null;
 }
