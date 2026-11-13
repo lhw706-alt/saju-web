@@ -5,6 +5,7 @@ import Layout from './components/Layout.jsx';
 import Home from './pages/Home.jsx';
 import Result from './pages/Result.jsx';
 import Start from './pages/Start.jsx';
+import CharmBook from './pages/CharmBook.jsx';
 import Admin from './pages/Admin.jsx';
 import My from './pages/My.jsx';
 import Reset from './pages/Reset.jsx';
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/fortune" element={<Home />} />
+          <Route path="/charms" element={<CharmBook />} />
           <Route path="/start" element={<Start />} />
           <Route path="/result" element={<Result />} />
           <Route path="/privacy" element={<Privacy />} />
