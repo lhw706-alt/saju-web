@@ -1158,3 +1158,39 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-lucky-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 16px; border-radius: 14px; background: var(--surface, #212225); }
 .admin-lucky-nums { font-size: 16px; font-weight: 600; color: var(--primary); font-variant-numeric: tabular-nums; }
 .admin-lucky-list .btn-ghost { margin-left: auto; }
+
+/* ── 모바일 모달 정리 (2026-11-14 사용자 지시: 휴대폰에서 창이 화면을 넘거나 안 닫히는 문제) ──
+   1) 창이 열리면 뒤 화면은 스크롤되지 않게 고정 (창 안만 스크롤)
+   2) 휴대폰 아래쪽 시트에서는 제목·닫기 줄을 위에 고정 → 내용을 내려도 언제든 닫을 수 있음
+   3) 내용이 한 화면에 들어가도록 큰 요소(운세 부적 카드, 문의 입력칸, 로그인 간격)를 줄임 */
+html:has(.contact-overlay), html:has(.fortune-overlay), html:has(.charm-get),
+body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { overflow: hidden; }
+.contact-overlay, .fortune-overlay, .login, .contact, .fortune, .gloss { overscroll-behavior: contain; }
+@media (max-width: 559px) {
+  .login, .contact, .gloss, .fortune { max-height: calc(100dvh - 24px); padding-top: 0; }
+  .login > .contact-head, .contact > .contact-head, .gloss > .contact-head {
+    position: sticky; top: 0; z-index: 5; margin: 0 -20px; padding: 16px 20px 10px; background: var(--bg-2);
+  }
+  .fortune > .fortune__close { position: sticky; top: 8px; z-index: 5; display: grid; margin: 8px -10px -40px auto; background: var(--bg-2); border-radius: 999px; }
+  .fortune__title { padding-top: 16px; padding-right: 40px; }
+  /* 부적 카드: 화면 높이에 맞춰 (긁기·결과가 한 화면에) */
+  .fortune__card { width: min(100%, calc((100dvh - 300px) * 0.75)); min-width: 220px; margin-inline: auto; }
+  .contact .contact-textarea { min-height: 96px; height: 96px; }
+  .login-reason { margin-top: 8px; padding: 10px 12px; }
+  .login-form { gap: 10px; }
+}
+/* 모바일 화면 정리 (2026-11-14) */
+@media (max-width: 559px) {
+  /* 마이페이지 위쪽 가로 탭: 글자가 두 줄로 꺾이지 않게 (좁으면 옆으로 밀어서) */
+  .my-side { grid-auto-columns: max-content; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .my-side::-webkit-scrollbar { display: none; }
+  .my-side a { white-space: nowrap; padding: 0 14px; font-size: 15px; }
+  .my-age { white-space: nowrap; }
+  /* 오른쪽 아래 떠 있는 부적이 맨 끝 내용(버튼·글)을 가리지 않게 아래 여백 */
+  .main { padding-bottom: 96px; }
+}
+@media (max-width: 400px) {
+  /* /start '내 정보' 카드: 좁은 휴대폰에선 버튼을 아래로 (생년월일이 두 줄로 꺾이지 않게) */
+  .saved-mine { grid-template-columns: 1fr; }
+  .saved-mine-go { justify-self: stretch; text-align: center; margin-top: 8px; padding: 10px 12px; }
+}

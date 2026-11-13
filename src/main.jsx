@@ -12,6 +12,7 @@ import My from './pages/My.jsx';
 import Reset from './pages/Reset.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Lucky from './pages/Lucky.jsx';
+import Terms from './pages/Terms.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { loadFonts } from './lib/fonts.js';
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/result" element={<Result />} />
           <Route path="/lucky" element={<Lucky />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/my/:tab?" element={<My />} />
           <Route path="/reset" element={<Reset />} />
