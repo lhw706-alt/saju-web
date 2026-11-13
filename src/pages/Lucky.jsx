@@ -1,5 +1,5 @@
 // 행운의 번호 (/lucky, 2026-11-14 사용자 요청)
-// 처음엔 네잎클로버를 든 천둥도사가 크게 둥둥 떠 있음 → 누르면 번호 공들이 천둥도사 둘레를 돌며 고르는 연출 → 번호 6개.
+// 처음엔 3D 천둥도사가 크게 둥둥 떠 있음 → 누르면 번호 공들이 천둥도사 둘레를 돌며 고르는 연출 → 번호 6개.
 // 회원만 하루 1번 (비회원은 누르면 로그인 창 — 2026-11-14 사용자 지시): 서버(/api/lucky, Netlify Blobs 'lucky')가 회원번호로 오늘 뽑은 번호를 기억하고,
 // 다시 누르면 같은 번호와 함께 '하루 1회만' 안내. 번호는 서버가 뽑아 저장함.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
@@ -8,15 +8,15 @@ import { dosaFaceSvg } from '../brand/dosaArt.js';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
-// 3D 천동이 (메인과 같은 모델 + 네잎클로버·로또 공, 2026-11-14 사용자 요청). 불러오는 동안·WebGL 이 없으면 2D 그림
+// 3D 천동이 (메인과 같은 모델 + 로또 공, 2026-11-14 사용자 요청). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 
 const SPIN_MS = 2800; // 고르는 연출 최소 시간
 const ballColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 const ART = {
-  idle: dosaFaceSvg({ eyes: 'happy', mouth: 'smile' }, 'clover'),
-  drawing: dosaFaceSvg({ eyes: 'closed', mouth: 'o', brows: 'soft' }, 'clover'),
-  done: dosaFaceSvg({ eyes: 'star', mouth: 'open', brows: 'raise' }, 'clover'),
+  idle: dosaFaceSvg({ eyes: 'happy', mouth: 'smile' }, 'number'),
+  drawing: dosaFaceSvg({ eyes: 'closed', mouth: 'o', brows: 'soft' }, 'number'),
+  done: dosaFaceSvg({ eyes: 'star', mouth: 'open', brows: 'raise' }, 'number'),
 };
 const DRAW_LINES = ['오늘의 기운을 모으는 중이에요…', '번호 공들이 천둥도사 둘레를 돌고 있어요…', '행운이 깃든 번호를 고르는 중이에요…'];
 const dateText = (ymd) => {
@@ -118,7 +118,7 @@ export default function Lucky() {
       <div className={`lucky-stage is-${phase}`}>
         <button type="button" className="lucky-dosa" onClick={draw} aria-label={phase === 'done' ? '오늘의 행운 번호 다시 보기' : '천둥도사를 눌러 행운의 번호 뽑기'} disabled={phase === 'loading'}>
           <Suspense fallback={<span className="lucky-dosa-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: art }} />}>
-            <Mascot3D prop="clover" mode={phase === 'drawing' ? 'drawing' : phase === 'done' ? 'done' : 'idle'} />
+            <Mascot3D prop="lotto" mode={phase === 'drawing' ? 'drawing' : phase === 'done' ? 'done' : 'idle'} />
           </Suspense>
         </button>
       </div>
@@ -126,10 +126,10 @@ export default function Lucky() {
       <div className="lucky-panel" aria-live="polite">
         {phase === 'idle' && (
           <>
-            <p className="lucky-hint">{member ? '천둥도사를 눌러 보세요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
-            <button type="button" className="btn-primary inline" onClick={draw}>
+            <button type="button" className="btn-glass" onClick={draw}>
               {member ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'}
             </button>
+            <p className="lucky-hint">{member ? '천둥도사를 눌러도 뽑을 수 있어요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
           </>
         )}
         {phase === 'drawing' && <p className="lucky-hint is-busy">{DRAW_LINES[line]}</p>}

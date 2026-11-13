@@ -93,15 +93,6 @@ const PROPS = {
     `<circle cx="126" cy="34" r="12" fill="#ffcf6b"/><g stroke="#ffcf6b" stroke-width="2" stroke-linecap="round">${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<path d="M0 -16 V-21" transform="translate(126 34) rotate(${a})"/>`).join('')}</g>`,
     '',
   ],
-  // 행운의 번호 화면: 네잎클로버를 든 천둥도사 (2026-11-14)
-  clover: () => [
-    star(30, 30, 2.6) + star(136, 26, 2.2) + star(40, 52, 1.8),
-    `<path d="M101 98 q4 -14 6 -30" stroke="#3f8f4a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-     <g transform="translate(107 60)">${[0, 90, 180, 270]
-       .map((a) => `<path transform="rotate(${a + 45})" d="M0 0 C-9 -4 -10 -15 -4.6 -16.4 C-1.6 -17.2 0 -14.4 0 -12.6 C0 -14.4 1.6 -17.2 4.6 -16.4 C10 -15 9 -4 0 0Z" fill="#5cbf68" stroke="#3f8f4a" stroke-width="1"/>`)
-       .join('')}<circle r="2.4" fill="#3f8f4a"/></g>
-     <ellipse cx="101" cy="96" rx="6" ry="4.6" fill="#f2e8d6" stroke="#cbbbe4" stroke-width=".8"/>`,
-  ],
   tomorrow: () => [
     `<path d="M128 20 a12 12 0 1 0 8 21 a9.5 9.5 0 1 1 -8 -21z" fill="${GOLD}"/>` + star(32, 32, 3) + star(44, 18, 2) + star(116, 52, 2),
     '',

@@ -1138,3 +1138,11 @@ legend.contact-label { margin-bottom: 12px; }
 @media (prefers-reduced-motion: reduce) {
   .lucky-dosa-art, .lucky-balls .lotto-ball { animation: none; }
 }
+
+/* 글래스모피즘 버튼 (행운의 번호, 2026-11-14 사용자 지시) — 3D 장면 아래쪽에 살짝 겹쳐 뒤가 비쳐 보이게 */
+.btn-glass { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 54px; padding: 0 30px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.22); background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)); -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%); color: #fff; font: inherit; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 28px rgba(226, 194, 122, 0.16); transition: background 0.2s, border-color 0.2s, transform 0.15s; }
+.btn-glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 55%); opacity: 0.5; pointer-events: none; }
+.btn-glass:hover { background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(226, 194, 122, 0.1)); border-color: rgba(226, 194, 122, 0.55); }
+.btn-glass:active { transform: scale(0.98); }
+.btn-glass:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.lucky-stage.is-idle + .lucky-panel { position: relative; z-index: 2; margin-top: -64px; }

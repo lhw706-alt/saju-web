@@ -297,34 +297,6 @@ export function buildCheondong() {
 }
 
 // ── 행운의 번호 화면 소품 (2026-11-14) ──
-// 네잎클로버: 오른손에 쥔 줄기 + 하트 잎 네 장
-export function buildClover() {
-  const g = new THREE.Group();
-  const leafMat = new THREE.MeshPhysicalMaterial({ color: '#3fa651', roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35, sheen: 0.15, sheenColor: new THREE.Color('#b8f0a0'), emissive: '#0d3314', emissiveIntensity: 0.12 });
-  const stemMat = new THREE.MeshStandardMaterial({ color: '#3f8f4a', roughness: 0.6 });
-  const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.06, 0.45, 0.02), new THREE.Vector3(0.02, 0.95, 0.06)]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 24, 0.035, 10, false), stemMat));
-  const heart = new THREE.Shape();
-  heart.moveTo(0, 0);
-  heart.bezierCurveTo(-0.28, 0.12, -0.32, 0.46, -0.15, 0.5);
-  heart.bezierCurveTo(-0.05, 0.52, 0, 0.44, 0, 0.38);
-  heart.bezierCurveTo(0, 0.44, 0.05, 0.52, 0.15, 0.5);
-  heart.bezierCurveTo(0.32, 0.46, 0.28, 0.12, 0, 0);
-  const leafGeo = new THREE.ExtrudeGeometry(heart, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 24 });
-  const head = new THREE.Group();
-  [0, 1, 2, 3].forEach((i) => {
-    const leaf = new THREE.Mesh(leafGeo, leafMat);
-    leaf.rotation.z = (i * Math.PI) / 2 + Math.PI / 4;
-    head.add(leaf);
-  });
-  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), stemMat));
-  head.position.set(0.02, 0.97, 0.07);
-  head.rotation.x = -0.35; // 얼굴 쪽으로 살짝 눕힘
-  g.add(head);
-  g.userData.head = head;
-  return g;
-}
-
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -472,7 +444,7 @@ function createFace() {
   return { texture, draw };
 }
 
-// prop: 'clover' 면 네잎클로버를 들고 로또 공을 준비함 (행운의 번호 화면).
+// prop: 'lotto' 면 로또 공을 준비하고 더 크게 둥둥 (행운의 번호 화면. 네잎클로버는 머리에 겹쳐 보여 2026-11-14 사용자 지시로 뺌).
 // mode: 'idle' | 'drawing'(번호 고르는 중: 눈 뜨고 들썩이며 로또 공이 둘레를 빙글빙글) | 'done'(폴짝)
 export default function Mascot3D({ className = '', interactive = true, prop = null, mode = 'idle' }) {
   const hostRef = useRef(null);
@@ -522,14 +494,9 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     scene.add(glowLight);
 
     const m = buildCheondong();
-    let clover = null;
+    const lucky = prop === 'lotto';
     let balls = null;
-    if (prop === 'clover') {
-      clover = buildClover();
-      clover.position.set(1.02, -0.5, 0.42);
-      clover.rotation.set(0.05, -0.3, -0.18);
-      clover.scale.setScalar(0.85);
-      m.char.add(clover);
+    if (lucky) {
       balls = buildLottoBalls();
       m.root.add(balls);
     }
@@ -606,7 +573,7 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
       lastMode = md;
       const drawing = md === 'drawing';
       // 공중에 떠서 천천히 숨쉬기 (행운의 번호 화면에선 더 크게 둥둥)
-      const lift = Math.sin(t * 1.1) * (clover ? 0.16 : 0.08) * s + (clover ? 0.14 : 0.08);
+      const lift = Math.sin(t * 1.1) * (lucky ? 0.16 : 0.08) * s + (lucky ? 0.14 : 0.08);
       m.root.position.y = lift;
       const breath = 1 + Math.sin(t * 1.6) * 0.018 * s;
       m.body.scale.set(1 / Math.sqrt(breath), breath, 1 / Math.sqrt(breath));
@@ -616,7 +583,6 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
       m.char.rotation.y += ((pointer.x * 0.25) - m.char.rotation.y) * 0.04;
       m.char.rotation.x += ((pointer.y * 0.1) - m.char.rotation.x) * 0.04;
       m.char.rotation.z = drawing && s ? Math.sin(t * 18) * 0.05 : m.char.rotation.z * 0.85;
-      if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;
 
       // 표정: 평소엔 감은 눈(자는 중), 눌리면 눈을 번쩍 뜨고 깜짝 놀람(눈동자는 포인터 쪽)
       const since = t - surpriseAt;
