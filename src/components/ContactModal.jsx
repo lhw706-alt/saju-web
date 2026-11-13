@@ -82,7 +82,6 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
     if (!valid || status === 'sending') return;
     setStatus('sending');
     setErrText('');
-    if (bot) return setStatus('done'); // 봇이면 저장하지 않고 끝난 척
     const page = `${SITE.url}${pathname}${search}`;
     // 1) 계정에 저장 (마이페이지 내 문의내역)
     const r = await fetch('/api/inquiry', {

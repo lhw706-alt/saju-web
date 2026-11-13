@@ -50,9 +50,12 @@ function adminAuth(req, ip) {
 // ── 문의 (2026-11-13, 로그인 회원만) ──
 // Netlify Blobs 'inquiries': 키 = 회원번호/문의번호, 값 = { id, userId, nick, type, company, email, message, page, createdAt, answer, answeredAt }
 // 알림 메일은 화면이 Netlify Forms(contact)에도 같이 보내서 받음. 탈퇴하면 그 회원의 문의도 지움.
-const inquiries = () => getStore('inquiries');
+// 강한 일관성: 문의를 저장하자마자 내 문의내역·관리자 목록에 바로 보이게 (기본값은 최대 60초 늦게 반영)
+const inquiries = () => getStore({ name: 'inquiries', consistency: 'strong' });
 const INQUIRY_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분 5건
+// 메일 HTML 에 넣을 사용자 글자 이스케이프
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 async function listInquiries(prefix) {
   const store = inquiries();
   const { blobs } = await store.list(prefix ? { prefix } : undefined);
@@ -450,6 +453,21 @@ export default async (req, context) => {
       answeredAt: null,
     };
     await inquiries().setJSON(`${s.sub}/${id}`, q);
+    // 운영자 알림 메일 (Resend). 받는 주소는 Netlify 환경 변수 CONTACT_TO — 없으면 Netlify Forms 알림만
+    if (process.env.CONTACT_TO && emailEnabled) {
+      try {
+        await sendMail(process.env.CONTACT_TO, {
+          subject: `[사주천문] 새 문의 · ${INQUIRY_TYPES[type]}`,
+          title: '새 문의가 들어왔어요',
+          lines: [`보낸 회원: ${esc(q.nick || '-')}`, `유형: ${INQUIRY_TYPES[type]}${q.company ? ` · ${esc(q.company)}` : ''}`, '', esc(message).replace(/\n/g, '<br>')],
+          button: '관리자 화면에서 답변하기',
+          link: `${url.origin}/admin`,
+          ignore: '사주천문 문의 알림이에요.',
+        });
+      } catch (e) {
+        console.error('inquiry notify failed:', e?.message);
+      }
+    }
     return json({ ok: true, id });
   }
 
