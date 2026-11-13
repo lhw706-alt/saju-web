@@ -11,6 +11,7 @@ import Admin from './pages/Admin.jsx';
 import My from './pages/My.jsx';
 import Reset from './pages/Reset.jsx';
 import Privacy from './pages/Privacy.jsx';
+import Lucky from './pages/Lucky.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { loadFonts } from './lib/fonts.js';
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/match/:token" element={<MatchInvite />} />
           <Route path="/start" element={<Start />} />
           <Route path="/result" element={<Result />} />
+          <Route path="/lucky" element={<Lucky />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/my/:tab?" element={<My />} />

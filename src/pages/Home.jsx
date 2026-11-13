@@ -52,6 +52,7 @@ export default function Home() {
   // 쓸 수 있는 카드: 항상 입력 화면(/start)부터 → 다 입력한 뒤에 결과·로딩
   const openContent = (c) => {
     trackEvent('content_click', { content: c.id });
+    if (c.path) return navigate(c.path); // 입력 없이 바로 쓰는 콘텐츠 (행운의 번호)
     if (c.topic) saveTopic(c.topic);
     navigate('/start');
   };
