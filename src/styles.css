@@ -1379,7 +1379,7 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 
 /* 글래스모피즘 아이콘 (이름 궁합, 2026-11-14): 뒤 색 번짐 + 앞 반투명 유리판 + 흰 선 아이콘 */
 .glass-ic { position: relative; flex: none; display: grid; place-items: center; width: 46px; height: 46px; isolation: isolate; }
-.glass-ic::before { content: ''; position: absolute; z-index: -2; width: 64%; height: 64%; right: -4%; top: -4%; border-radius: 40%; background: linear-gradient(135deg, var(--g1), var(--g2)); filter: blur(0.5px); transform: rotate(12deg); box-shadow: 0 6px 18px color-mix(in srgb, var(--g1) 45%, transparent); }
+.glass-ic::before { content: ''; position: absolute; z-index: -2; inset: 14%; border-radius: 50%; background: linear-gradient(135deg, var(--g1), var(--g2)); filter: blur(9px); opacity: 0.85; } /* 뒤 색은 도형이 보이지 않게 크게 흐려 유리 안으로 은은히 번지게 (사용자 지시) */
 .glass-ic::after { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: 14px; background: linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06)); -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 20px rgba(0, 0, 0, 0.25); }
 .glass-ic svg { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)); }
 .glass-ic.is-sm { width: 32px; height: 32px; }
