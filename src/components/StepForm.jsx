@@ -4,16 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
 import { loadPresets, savePreset, removePreset } from '../lib/storage.js';
+import { presetMain, presetSub } from '../lib/presetText.js';
 
-// 저장된 정보 한 줄: 큰 글씨(생년월일·성별) / 작은 글씨(양음력·시각·지역)
-function presetMain(p) {
-  return `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
-}
-function presetSub(p) {
-  const city = CITIES.find((c) => c.id === p.city)?.name || '';
-  const time = p.timeKnown ? `${String(p.hour).padStart(2, '0')}:${String(p.minute || 0).padStart(2, '0')}` : '시각 모름';
-  return [p.calendar === 'lunar' ? `음력${p.leap ? '(윤달)' : ''}` : '양력', time, city].join(' · ');
-}
+// 저장된 정보 한 줄: 큰 글씨(생년월일·성별) / 작은 글씨(양음력·시각·지역) — src/lib/presetText.js
 
 const EMPTY = { calendar: 'solar', leap: false, year: '', month: '', day: '', timeKnown: true, hour: '', minute: '', gender: '', city: 'seoul' };
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({ value: String(i), label: `${String(i).padStart(2, '0')}시` }));

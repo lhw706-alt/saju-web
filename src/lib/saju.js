@@ -146,6 +146,18 @@ export function normalizeInput(raw) {
   return { calendar, year, month, day, leap, timeKnown, hour, minute, gender, city };
 }
 
+// 만 나이 (음력 입력은 양력 생일로 바꿔 계산). 날짜가 잘못됐으면 null
+export function manAge(input, now = new Date()) {
+  try {
+    const [y, m, d] = toSolarDate(normalizeInput(input));
+    const passed = now.getMonth() + 1 > m || (now.getMonth() + 1 === m && now.getDate() >= d);
+    const age = now.getFullYear() - y - (passed ? 0 : 1);
+    return age >= 0 ? age : null;
+  } catch {
+    return null;
+  }
+}
+
 // 양력 날짜로 변환 (음력 입력이면 변환, 윤달 확인)
 function toSolarDate(inp) {
   if (inp.calendar === 'solar') return [inp.year, inp.month, inp.day];

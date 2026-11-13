@@ -2,19 +2,12 @@
 // 내 프로필 · 기본 정보(이메일·비밀번호 변경·휴대폰 본인인증 자리(준비중)) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { CITIES } from '../lib/saju.js';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset } from '../lib/storage.js';
-
-const presetMain = (p) => `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
-const presetSub = (p) => {
-  const city = CITIES.find((c) => c.id === p.city)?.name || '';
-  const time = p.timeKnown ? `${String(p.hour).padStart(2, '0')}:${String(p.minute || 0).padStart(2, '0')}` : '시각 모름';
-  return [p.calendar === 'lunar' ? `음력${p.leap ? '(윤달)' : ''}` : '양력', time, city].join(' · ');
-};
+import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
 
 export default function My() {
   const navigate = useNavigate();
@@ -282,7 +275,10 @@ export default function My() {
           <>
             <div className="my-row my-row-tight">
               <span className="my-row-label">생년월일</span>
-              <span className="my-row-value">{presetMain(p.birth)}</span>
+              <span className="my-row-value">
+                {birthDateText(p.birth)} · {genderText(p.birth)}
+                {ageText(p.birth) && <span className="my-age">({ageText(p.birth)})</span>}
+              </span>
             </div>
             <div className="my-row my-row-tight">
               <span className="my-row-label">출생</span>
