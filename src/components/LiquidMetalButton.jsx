@@ -1,6 +1,6 @@
 // 리퀴드 메탈 버튼 (2026-11-14 사용자 요청: 21st.dev LiquidMetalButton 을 사이트 톤으로 옮김)
 // 원본은 Tailwind·TypeScript·shadcn 기준이지만 이 사이트는 일반 CSS·JSX 라 같은 구조를 인라인 스타일로 옮겼다.
-// 테두리에 흐르는 금속 셰이더(@paper-design/shaders liquidMetal)를 금빛(--primary #E2C27A)으로 물들이고,
+// 테두리에 흐르는 금속 셰이더(@paper-design/shaders liquidMetal)는 흰 금속(사용자 지시), 글자는 금색,
 // 안쪽은 사이트 배경색 계열, 글자는 금색. WebGL 이 안 되면 금색 테두리만 보이는 일반 버튼처럼 보임.
 import { liquidMetalFragmentShader, ShaderMount, getShaderColorFromString } from '@paper-design/shaders';
 import { useEffect, useRef, useState } from 'react';
@@ -39,7 +39,7 @@ export default function LiquidMetalButton({ label = '시작하기', onClick, vie
         liquidMetalFragmentShader,
         {
           u_colorBack: getShaderColorFromString('rgba(0,0,0,0)'),
-          u_colorTint: getShaderColorFromString(GOLD),
+          u_colorTint: getShaderColorFromString('#ffffff'), // 테두리는 흰 금속 (2026-11-14 사용자 지시)
           u_repetition: 4,
           u_softness: 0.5,
           u_shiftRed: 0.12,
