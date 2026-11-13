@@ -4,13 +4,13 @@
 // 풀이는 주제 today·tomorrow·date (topics.js DAY_TOPICS), 맨 앞 json 에 점수·요약·분야별 점수.
 // 같은 사람·같은 날이면 기억한 풀이를 그대로 (키 '주제@날짜').
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import { DAY_TOPICS, dayTopicDate, ymdOf } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { FreshLoader } from './LifeReport.jsx';
+import { dosaFaceSvg } from '../brand/dosaArt.js';
 
 const AXES = ['총운', '재물운', '연애운', '사업운', '건강운', '학업운'];
 const TIMES = ['총운', '오전', '오후', '밤'];
@@ -38,8 +38,14 @@ function parseDay(text) {
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(n) || 0)));
 
-// 점수 대신 보여 줄 말 (2026-11-13 사용자 지시: 숫자보다 '좋음·보통' 같은 말로)
-const gradeOf = (s) => (s >= 85 ? '대길' : s >= 70 ? '좋음' : s >= 55 ? '보통' : '조심');
+// 점수 옆 천둥도사 표정 (2026-11-13 사용자 지시: 등급 글자·금색 원 대신 캐릭터 + 점수). 낮아도 겁주지 않는 차분한 얼굴
+const faceOf = (s) =>
+  s >= 85 ? { eyes: 'happy', mouth: 'open' }
+  : s >= 70 ? { eyes: 'dot', mouth: 'smile', brows: 'soft' }
+  : s >= 55 ? { eyes: 'closed', mouth: 'smile' }
+  : { eyes: 'dot', mouth: 'flat', brows: 'soft' };
+// 시간대 점수(times)가 없는 예전 풀이는 기억에서 꺼내지 않고 새로 받음
+const hasTimes = (t) => typeof t === 'string' && t.includes('"times"');
 
 // 분야별 점수 육각형 그래프 (0~100)
 function Radar({ scores }) {
@@ -75,8 +81,8 @@ function Radar({ scores }) {
 }
 
 export default function DayReport({ input, member = false, initial = 'today' }) {
-  const navigate = useNavigate();
-  const [topic, setTopic] = useState(DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today');
+  const topic = DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today';
+  const label = DAY_TOPICS.find((t) => t.id === topic).label;
   const [picked, setPicked] = useState('');
   const [pickedFor, setPickedFor] = useState(null);
   const [time, setTime] = useState('총운');
@@ -93,7 +99,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
     if (!key || parts[key]) return undefined;
     const update = (patch) => setParts((p) => ({ ...p, [key]: { ...p[key], ...patch } }));
     const memo = localParts(input, key)[topic];
-    if (memo) {
+    if (hasTimes(memo)) {
       update({ text: memo, status: 'done', error: '', end: null });
       return undefined;
     }
@@ -103,7 +109,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
       update({ text: '', status: 'loading', error: '', end: null });
       if (member) {
         const srv = (await serverParts(input, key))[topic];
-        if (srv) {
+        if (hasTimes(srv)) {
           rememberPart(input, key, topic, srv);
           return update({ text: srv, status: 'done' });
         }
@@ -131,12 +137,6 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
   const times = TIMES.filter((t) => sections[t]);
   const shownTime = sections[time] ? time : times[0] || '총운';
 
-  const switchTopic = (id) => {
-    if (id === topic) return;
-    setTopic(id);
-    setTime('총운');
-    navigate(`/result?v=day&t=${id}`, { replace: true });
-  };
   const retry = () => {
     setParts(({ [key]: _drop, ...rest }) => rest);
     setTries((n) => n + 1);
@@ -157,13 +157,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
   return (
     <>
       <FreshLoader />
-      <nav className="day-tabs" aria-label="하루 운세 종류">
-        {DAY_TOPICS.map((t) => (
-          <button key={t.id} type="button" className={topic === t.id ? 'on' : ''} aria-current={topic === t.id ? 'page' : undefined} onClick={() => switchTopic(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <h1 className="day-title">{label}</h1>
 
       {topic === 'date' && (
         <form
@@ -194,10 +188,13 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
           <p className="day-date">{dateTitle(date)}</p>
           <div className="day-score" aria-live="polite">
             {score != null ? (
-              <b aria-label={`오늘의 기운 ${gradeOf(score)}`}>
-                {gradeOf(score)}
-                <i aria-hidden="true" />
-              </b>
+              <>
+                <span className="day-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaFaceSvg(faceOf(score), topic) }} />
+                <b>
+                  {score}
+                  <small>점</small>
+                </b>
+              </>
             ) : (
               <span className="day-score-wait" aria-label="점수를 계산하는 중">
                 <span className="moon-spin" aria-hidden="true" />
