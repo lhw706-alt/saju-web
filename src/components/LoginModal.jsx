@@ -2,7 +2,7 @@
 // 서버: netlify/functions/auth.mjs. 카카오 버튼은 카카오 디자인 가이드 색(#FEE500)과 말풍선 심볼
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import PasswordInput from './PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 
