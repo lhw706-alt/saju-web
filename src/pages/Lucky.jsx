@@ -1,6 +1,6 @@
 // 행운의 번호 (/lucky, 2026-11-14 사용자 요청)
 // 처음엔 네잎클로버를 든 천둥도사가 크게 둥둥 떠 있음 → 누르면 번호 공들이 천둥도사 둘레를 돌며 고르는 연출 → 번호 6개.
-// 한 사람 하루 1번: 서버(/api/lucky, Netlify Blobs 'lucky')가 회원번호 또는 브라우저 식별값으로 오늘 뽑은 번호를 기억하고,
+// 회원만 하루 1번 (비회원은 누르면 로그인 창 — 2026-11-14 사용자 지시): 서버(/api/lucky, Netlify Blobs 'lucky')가 회원번호로 오늘 뽑은 번호를 기억하고,
 // 다시 누르면 같은 번호와 함께 '하루 1회만' 안내. 번호는 서버가 뽑아 저장함.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
@@ -30,7 +30,8 @@ function Ball({ n, delay = 0, size = 'lg' }) {
 }
 
 export default function Lucky() {
-  const { notify } = useOutletContext();
+  const { auth, openLogin, notify } = useOutletContext();
+  const member = !!auth?.user;
   const [phase, setPhase] = useState('loading'); // loading | idle | drawing | done
   const [numbers, setNumbers] = useState(null);
   const [date, setDate] = useState('');
@@ -38,9 +39,15 @@ export default function Lucky() {
   const [line, setLine] = useState(0);
   const busy = useRef(false);
 
-  // 들어오면 오늘 이미 뽑았는지 확인
+  // 들어오면 (회원이면) 오늘 이미 뽑았는지 확인. 로그인하면 다시 확인
   useEffect(() => {
     let alive = true;
+    if (!member) {
+      setNumbers(null);
+      setPhase('idle');
+      return undefined;
+    }
+    setPhase('loading');
     fetch('/api/lucky', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -55,7 +62,7 @@ export default function Lucky() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [member]);
 
   useEffect(() => {
     if (phase !== 'drawing') return undefined;
@@ -73,6 +80,11 @@ export default function Lucky() {
       notify('행운의 번호는 하루 1회만 뽑을 수 있어요. 내일 다시 뽑아 보세요.');
       return;
     }
+    if (!member) {
+      trackEvent('lucky_login');
+      openLogin('행운의 번호는 천둥도사가 회원에게만 하루 한 번 뽑아 드려요. 로그인해 주세요.');
+      return;
+    }
     busy.current = true;
     setPhase('drawing');
     setLine(0);
@@ -83,6 +95,7 @@ export default function Lucky() {
     busy.current = false;
     if (!res?.ok || !Array.isArray(d?.numbers)) {
       setPhase('idle');
+      if (d?.login) return openLogin('로그인이 풀렸어요. 다시 로그인하면 행운의 번호를 뽑을 수 있어요.');
       notify(d?.error || '번호를 뽑지 못했어요. 잠시 뒤 다시 시도해 주세요.', 'negative');
       return;
     }
@@ -120,9 +133,9 @@ export default function Lucky() {
       <div className="lucky-panel" aria-live="polite">
         {phase === 'idle' && (
           <>
-            <p className="lucky-hint">천둥도사를 눌러 보세요</p>
+            <p className="lucky-hint">{member ? '천둥도사를 눌러 보세요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
             <button type="button" className="btn-primary inline" onClick={draw}>
-              행운의 번호 뽑기
+              {member ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'}
             </button>
           </>
         )}

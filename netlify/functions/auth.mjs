@@ -32,8 +32,7 @@ import { passwordOk } from '../../src/lib/password.js';
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
 const SESSION_DAYS = 30;
-// 비회원 행운의 번호 하루 1회용 브라우저 식별값 (무작위, 개인 정보 아님) — /api/lucky
-const ANON = 'sc_anon';
+// 행운의 번호 /api/lucky 호출 제한
 const luckyLimited = createRateLimiter(30, 10 * 60_000);
 const users = () => getStore('users');
 // 관리자 비밀번호 대입 막기: 같은 IP 는 10분에 5번까지만 시도
@@ -656,33 +655,25 @@ export default async (req, context) => {
     return json({ ok: true, answeredAt: q.answeredAt, mailed });
   }
 
-  // 행운의 번호 (2026-11-14): 한 사람 하루 1번. GET = 오늘 뽑은 번호(없으면 null) / POST = 뽑기(이미 뽑았으면 같은 번호)
-  // Netlify Blobs 'lucky' — 회원: 'u/회원번호/날짜', 비회원: 'g/브라우저 무작위 식별값(sc_anon 쿠키)/날짜'. 값 = { numbers, date, createdAt }
-  // 날짜는 한국 시각(KST) 기준. 비회원으로 뽑고 로그인하면 그 번호를 계정에도 이어 씀. 탈퇴하면 회원 기록 삭제.
+  // 행운의 번호 (2026-11-14): 회원만, 하루 1번 (비회원은 화면에서 로그인 유도 — 사용자 지시).
+  // GET = 오늘 뽑은 번호(없거나 비회원이면 null) / POST = 뽑기(이미 뽑았으면 같은 번호)
+  // Netlify Blobs 'lucky' — 키 'u/회원번호/날짜(KST)', 값 = { numbers, date, createdAt }. 탈퇴하면 삭제.
   if (path === '/api/lucky') {
     if (req.method !== 'GET' && req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     if (luckyLimited(ip)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
-    const store = getStore({ name: 'lucky', consistency: 'strong' });
     const date = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
-    let anon = cookies(req)[ANON];
-    const setAnon = [];
-    if (!/^[A-Za-z0-9_-]{22}$/.test(anon || '')) {
-      anon = randomBytes(16).toString('base64url');
-      setAnon.push(setCookie(ANON, anon, 400 * 86400));
-    }
-    const guestKey = `g/${anon}/${date}`;
-    const memberKey = s ? `u/${s.sub}/${date}` : null;
-    let rec = (memberKey && (await store.get(memberKey, { type: 'json' }))) || (await store.get(guestKey, { type: 'json' }));
-    if (rec && memberKey && !(await store.get(memberKey))) await store.setJSON(memberKey, rec); // 비회원 때 뽑은 번호를 계정에도
-    if (req.method === 'GET') return json({ date, numbers: rec?.numbers || null }, 200, setAnon);
-    if (rec) return json({ date, numbers: rec.numbers, already: true }, 200, setAnon);
+    if (!s) return req.method === 'GET' ? json({ date, numbers: null, login: true }) : json({ error: '로그인이 필요해요.', login: true }, 401);
+    const store = getStore({ name: 'lucky', consistency: 'strong' });
+    const key = `u/${s.sub}/${date}`;
+    let rec = await store.get(key, { type: 'json' });
+    if (req.method === 'GET') return json({ date, numbers: rec?.numbers || null });
+    if (rec) return json({ date, numbers: rec.numbers, already: true });
     const pool = new Set();
     while (pool.size < 6) pool.add(randomInt(1, 46));
     rec = { numbers: [...pool].sort((a, b) => a - b), date, createdAt: new Date().toISOString() };
-    await store.setJSON(memberKey || guestKey, rec);
-    if (memberKey) await store.setJSON(guestKey, rec); // 같은 브라우저로 로그아웃해도 오늘은 같은 번호
-    return json({ date, numbers: rec.numbers, already: false }, 200, setAnon);
+    await store.setJSON(key, rec);
+    return json({ date, numbers: rec.numbers, already: false });
   }
 
   if (path === '/api/auth/logout') {
