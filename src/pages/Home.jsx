@@ -63,11 +63,11 @@ export default function Home() {
           <span className="visually-hidden">{WORDS.join(', ')}까지 </span>
           <Rotator />
           <br />
-          천둥도사가 다정히 풀어 드려요
+          궁금한 건 천둥도사에게 물어봐요
         </h1>
         <p className="lead">
-          생년월일시를 넣으면 여덟 글자(사주 원국)와 오행·대운을 바로 계산하고,
-          <br className="pc" /> 영험한 천둥도사가 원국의 어느 글자에서 그렇게 읽었는지 근거와 함께 풀어 드려요.
+          생년월일시만 넣으면 사주 여덟 글자를 바로 계산하고,
+          <br /> 천둥도사가 근거와 함께 쉽게 풀어 드려요.
         </p>
         <div className="hero-mascot">
           <Suspense fallback={<MascotStill />}>
