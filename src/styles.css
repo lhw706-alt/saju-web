@@ -707,7 +707,8 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 /* 마이페이지에 등록한 내 정보: 목록 맨 위, 선택된 상태로 */
 .saved-mine { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; width: 100%; margin-bottom: 8px; padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--primary); background: rgba(226, 194, 122, 0.08); color: var(--text); text-align: left; cursor: pointer; }
-.saved-mine-badge { grid-column: 1 / -1; justify-self: start; padding: 2px 8px; border-radius: 6px; background: var(--primary); color: #1b1c1e; font-size: 12px; font-weight: 600; }
+/* 배지는 꾸밈(옅은 금색 바탕·금색 글자), 버튼만 꽉 찬 금색 — 누를 곳이 한눈에 보이게 */
+.saved-mine-badge { grid-column: 1 / -1; justify-self: start; padding: 2px 8px; border-radius: 6px; background: rgba(226, 194, 122, 0.14); color: var(--primary); font-size: 12px; font-weight: 500; }
 .saved-mine .saved-text { min-width: 0; }
 .saved-mine-go { padding: 8px 12px; border-radius: 10px; background: var(--primary); color: #1b1c1e; font-size: 14px; font-weight: 600; white-space: nowrap; }
 .saved-mine:hover .saved-mine-go { filter: brightness(1.05); }
@@ -965,10 +966,17 @@ legend.contact-label { margin-bottom: 12px; }
 .book-tip { color: var(--text-2); }
 .book-lucky { display: flex; align-items: center; gap: 6px; font-size: 14px !important; color: var(--muted); }
 .book-lucky i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-.fortune__book { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 14px; cursor: pointer; }
-.fortune__book b { color: var(--primary); font-weight: 600; }
-.fortune__book em { font-style: normal; color: var(--muted); font-size: 13px; }
-.fortune__book svg { margin-left: auto; color: var(--muted); }
+/* 처음 모은 부적 안내 (오늘의 운세 창) */
+.fortune__new { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-top: 12px; padding: 14px 14px 14px 16px; border-radius: var(--r-md); border: 1px solid rgba(226, 194, 122, 0.45); background: linear-gradient(135deg, rgba(226, 194, 122, 0.14), rgba(226, 194, 122, 0.04)); animation: fortune-new-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.fortune__new-seal { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #c8352b; color: #e8705f; font-family: var(--serif); font-size: 22px; background: rgba(200, 53, 43, 0.1); animation: fortune-new-seal 0.7s ease-out 0.15s both; }
+.fortune__new-text { display: grid; gap: 2px; min-width: 0; }
+.fortune__new-text b { font-size: 15px; font-weight: 600; color: var(--primary); }
+.fortune__new-text span { font-size: 13px; color: var(--text-2); line-height: 1.5; word-break: keep-all; }
+.fortune__new-go { height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--primary); color: #1b1c1e; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.fortune__new-go:hover { filter: brightness(1.05); }
+@keyframes fortune-new-pop { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes fortune-new-seal { 0% { transform: scale(0.4) rotate(-20deg); opacity: 0; } 70% { transform: scale(1.12) rotate(4deg); opacity: 1; } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fortune__new, .fortune__new-seal { animation: none; } }
 /* 비회원 혜택 카드 (결과 화면 끝 · 부적 도감) */
 .member-cta { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; margin: 28px 0 0; padding: 18px 20px; border-radius: var(--r); background: linear-gradient(135deg, rgba(226, 194, 122, 0.14), rgba(226, 194, 122, 0.04)); border: 1px solid var(--primary-line); }
 .member-cta-face { position: relative; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
@@ -987,3 +995,5 @@ legend.contact-label { margin-bottom: 12px; }
 .invite-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 .hist-sub { margin: 22px 0 8px; font-size: 15px; font-weight: 600; }
 .hist-wait { font-size: 13px; color: var(--muted); }
+.book.is-embedded { padding: 0; }
+.book.is-embedded .book-stats { margin-top: 14px; background: var(--bg); border-color: var(--line-soft); }

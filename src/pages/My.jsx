@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
+import CharmBook from './CharmBook.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset, saveInput, savePartner, savePartnerName, saveTopic } from '../lib/storage.js';
@@ -17,6 +18,7 @@ const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
   { id: 'history', label: '풀이 내역', to: '/my/history' },
+  { id: 'charms', label: '부적 도감', to: '/my/charms' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
 const HISTORY_LABEL = (topic) => (topic === 'life' ? '평생 사주' : String(topic).startsWith('match@') ? '궁합' : TOPICS.find((t) => t.id === topic)?.label || '사주 풀이');
@@ -455,6 +457,12 @@ export default function My() {
         )}
       </div>
         </>
+      )}
+
+      {tab === 'charms' && (
+      <div className="my-sec card">
+        <CharmBook embedded />
+      </div>
       )}
 
       {tab === 'history' && (

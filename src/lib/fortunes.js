@@ -54,18 +54,20 @@ function loadDays() {
     return [];
   }
 }
-// 오늘 펼친 부적을 도감에 넣기 (같은 날 두 번 세지 않음)
+// 오늘 펼친 부적을 도감에 넣기 (같은 날 두 번 세지 않음). 처음 모은 부적이면 true
 export function collect(idx, date = dayKey()) {
   try {
     const days = loadDays();
-    if (days.includes(date)) return;
+    if (days.includes(date)) return false;
     const book = loadBook();
+    const isNew = !book[idx];
     const cur = book[idx] || { first: date, count: 0 };
     book[idx] = { ...cur, count: cur.count + 1, last: date };
     localStorage.setItem(BOOK_KEY, JSON.stringify(book));
     localStorage.setItem(DAYS_KEY, JSON.stringify([...days, date].slice(-400)));
+    return isNew;
   } catch {
-    /* 무시 */
+    return false;
   }
 }
 // 오늘(또는 어제)까지 이어진 연속 일수

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
 import { ShareButtons } from './ShareRow.jsx';
-import { FORTUNES, LUCKY, EL_HANJA, collect, drawIndex, loadBook, streak, syncBook } from '../lib/fortunes.js';
+import { FORTUNES, LUCKY, EL_HANJA, collect, drawIndex, loadBook, syncBook } from '../lib/fortunes.js';
 
 // 오른쪽 아래 '오늘의 운세' 플로팅 부적 (다모아픽 FortuneFab 을 사주천문 다크·금박 스타일로 옮김).
 // - 금박 부적을 긁으면 오늘의 운세가 드러남. 하루 한 번: 이 브라우저(localStorage)에 날짜·운세 번호만 저장, 서버로 안 보냄
@@ -36,13 +36,15 @@ function loadToday() {
   return v;
 }
 
+// 펼친 부적을 도감에 넣고, 처음 모은 부적이면 true
 function saveRevealed(v) {
-  collect(v.idx, v.date); // 부적 도감에 넣기
+  const isNew = collect(v.idx, v.date);
   try {
     localStorage.setItem(KEY, JSON.stringify({ ...v, revealed: true }));
   } catch {
     /* 무시 */
   }
+  return isNew;
 }
 
 // 긁는 층: 금박 부적 — 금속 그라데이션 + 미세 입자 + 사선 광택 + 반복 무늬, 가운데 붉은 福 도장, 안내 띠
@@ -253,14 +255,21 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     };
   }, [open, close]);
 
+  // 펼치기: 도감에 넣고, 처음 모은 부적이면 '새 부적' 안내(isNew)를 띄움
   const reveal = () => {
-    setState((s) => {
-      if (!s || s.revealed) return s;
-      saveRevealed(s);
-      if (loggedIn) syncBook(); // 회원: 도감을 계정에도
-      trackEvent('fortune_reveal', { fortune: FORTUNES[s.idx].title });
-      return { ...s, revealed: true };
-    });
+    const s = state;
+    if (!s || s.revealed) return;
+    const isNew = saveRevealed(s);
+    if (loggedIn) syncBook(); // 회원: 도감을 계정에도
+    trackEvent('fortune_reveal', { fortune: FORTUNES[s.idx].title, new_charm: isNew ? 1 : 0 });
+    setState({ ...s, revealed: true, isNew });
+  };
+
+  // 부적 도감: 회원은 마이페이지 탭, 비회원은 /charms (로그인 안내 카드 포함)
+  const goBook = () => {
+    trackEvent('charm_book_open', { from: 'fortune_new' });
+    close();
+    navigate(loggedIn ? '/my/charms' : '/charms');
   };
 
   // 내 사주로 자세히: 평생 사주 입력 화면으로 (다 입력한 뒤 리포트)
@@ -380,25 +389,21 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
                 </div>
               )}
 
-              {f && state.revealed && (
-                <button
-                  type="button"
-                  className="fortune__book"
-                  onClick={() => {
-                    trackEvent('charm_book_open', { from: 'fortune' });
-                    close();
-                    navigate('/charms');
-                  }}
-                >
-                  <span>부적 도감</span>
-                  <b>
-                    {Object.keys(loadBook()).length}/{FORTUNES.length}
-                  </b>
-                  {streak() > 1 && <em>연속 {streak()}일째</em>}
-                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
+              {f && state.revealed && state.isNew && (
+                <div className="fortune__new" role="status">
+                  <span className={`fortune__new-seal el-${f.el}`} aria-hidden="true">
+                    {EL_HANJA[f.el]}
+                  </span>
+                  <span className="fortune__new-text">
+                    <b>새로운 부적을 얻었어요!</b>
+                    <span>
+                      도감에 {Object.keys(loadBook()).length}번째 부적이 모였어요. 보러 갈까요?
+                    </span>
+                  </span>
+                  <button type="button" className="fortune__new-go" onClick={goBook}>
+                    보러 가기
+                  </button>
+                </div>
               )}
 
               <p className="fortune__note">재미로 보는 운세예요. 사주와 상관없이 하루 한 장씩 뽑혀요.</p>
