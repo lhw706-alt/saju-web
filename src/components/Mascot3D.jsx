@@ -296,6 +296,69 @@ export function buildCheondong() {
   return { root, char, body, spirits, crescent, mark, aura, sparks, floor, disc, shadow, face, blushMat, zzz };
 }
 
+// ── 행운의 번호 화면 소품 (2026-11-14) ──
+// 네잎클로버: 오른손에 쥔 줄기 + 하트 잎 네 장
+export function buildClover() {
+  const g = new THREE.Group();
+  const leafMat = new THREE.MeshPhysicalMaterial({ color: '#3fa651', roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35, sheen: 0.15, sheenColor: new THREE.Color('#b8f0a0'), emissive: '#0d3314', emissiveIntensity: 0.12 });
+  const stemMat = new THREE.MeshStandardMaterial({ color: '#3f8f4a', roughness: 0.6 });
+  const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.06, 0.45, 0.02), new THREE.Vector3(0.02, 0.95, 0.06)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 24, 0.035, 10, false), stemMat));
+  const heart = new THREE.Shape();
+  heart.moveTo(0, 0);
+  heart.bezierCurveTo(-0.28, 0.12, -0.32, 0.46, -0.15, 0.5);
+  heart.bezierCurveTo(-0.05, 0.52, 0, 0.44, 0, 0.38);
+  heart.bezierCurveTo(0, 0.44, 0.05, 0.52, 0.15, 0.5);
+  heart.bezierCurveTo(0.32, 0.46, 0.28, 0.12, 0, 0);
+  const leafGeo = new THREE.ExtrudeGeometry(heart, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 24 });
+  const head = new THREE.Group();
+  [0, 1, 2, 3].forEach((i) => {
+    const leaf = new THREE.Mesh(leafGeo, leafMat);
+    leaf.rotation.z = (i * Math.PI) / 2 + Math.PI / 4;
+    head.add(leaf);
+  });
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), stemMat));
+  head.position.set(0.02, 0.97, 0.07);
+  head.rotation.x = -0.35; // 얼굴 쪽으로 살짝 눕힘
+  g.add(head);
+  g.userData.head = head;
+  return g;
+}
+
+// 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
+const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
+export function buildLottoBalls(count = 8) {
+  const g = new THREE.Group();
+  const nums = Array.from({ length: count }, (_, i) => ((i * 17 + 7) % 45) + 1);
+  nums.forEach((n, i) => {
+    const tex = canvasTexture(128, (c, size) => {
+      const r = size / 2;
+      const grd = c.createRadialGradient(r * 0.7, r * 0.6, r * 0.05, r, r, r);
+      grd.addColorStop(0, '#ffffff');
+      grd.addColorStop(0.25, lottoColor(n));
+      grd.addColorStop(1, lottoColor(n));
+      c.fillStyle = grd;
+      c.beginPath();
+      c.arc(r, r, r - 2, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.92)';
+      c.beginPath();
+      c.arc(r, r, r * 0.46, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#1b1c1e';
+      c.font = `600 ${n < 10 ? 52 : 46}px Pretendard, sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(String(n), r, r + 3);
+    });
+    document.fonts?.ready.then(() => tex.userData.redraw()).catch(() => {});
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 }));
+    sp.userData = { angle: (i / count) * Math.PI * 2, height: [0.9, 0.2, -0.4, 0.6, -0.1, 1.1, 0.35, -0.55][i % 8], phase: i * 0.9 };
+    g.add(sp);
+  });
+  return g;
+}
+
 // ── 얼굴 캔버스 ──
 // 껍질은 몸 앞쪽 ±FACE_PHI 라디안, 높이 FACE_Y0~FACE_Y1. 캔버스 가로 = 각도, 세로 = 높이.
 const FACE_PHI = 0.8;
@@ -409,9 +472,13 @@ function createFace() {
   return { texture, draw };
 }
 
-export default function Mascot3D({ className = '', interactive = true }) {
+// prop: 'clover' 면 네잎클로버를 들고 로또 공을 준비함 (행운의 번호 화면).
+// mode: 'idle' | 'drawing'(번호 고르는 중: 눈 뜨고 들썩이며 로또 공이 둘레를 빙글빙글) | 'done'(폴짝)
+export default function Mascot3D({ className = '', interactive = true, prop = null, mode = 'idle' }) {
   const hostRef = useRef(null);
   const [failed, setFailed] = useState(false);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -455,6 +522,17 @@ export default function Mascot3D({ className = '', interactive = true }) {
     scene.add(glowLight);
 
     const m = buildCheondong();
+    let clover = null;
+    let balls = null;
+    if (prop === 'clover') {
+      clover = buildClover();
+      clover.position.set(1.02, -0.5, 0.42);
+      clover.rotation.set(0.05, -0.3, -0.18);
+      clover.scale.setScalar(0.85);
+      m.char.add(clover);
+      balls = buildLottoBalls();
+      m.root.add(balls);
+    }
     scene.add(m.root);
     scene.add(m.floor);
 
@@ -509,6 +587,9 @@ export default function Mascot3D({ className = '', interactive = true }) {
     const sparkSpeed = m.sparks.userData.speed;
     let raf = 0;
     let last = 0;
+    let lastMode = modeRef.current;
+    let spinAngle = 0;
+    let ballShow = 0;
 
     const tick = () => {
       raf = requestAnimationFrame(tick);
@@ -518,8 +599,14 @@ export default function Mascot3D({ className = '', interactive = true }) {
       last = t;
       const s = reduce ? 0 : 1;
 
-      // 공중에 살짝 떠서 천천히 숨쉬기
-      const lift = Math.sin(t * 1.1) * 0.08 * s + 0.08;
+      // 번호 고르는 중이면 계속 눈을 뜨고 있고, 다 고르면 폴짝
+      const md = modeRef.current;
+      if (md === 'drawing') surpriseAt = t - 0.6;
+      if (md === 'done' && lastMode !== 'done') surpriseAt = t;
+      lastMode = md;
+      const drawing = md === 'drawing';
+      // 공중에 떠서 천천히 숨쉬기 (행운의 번호 화면에선 더 크게 둥둥)
+      const lift = Math.sin(t * 1.1) * (clover ? 0.16 : 0.08) * s + (clover ? 0.14 : 0.08);
       m.root.position.y = lift;
       const breath = 1 + Math.sin(t * 1.6) * 0.018 * s;
       m.body.scale.set(1 / Math.sqrt(breath), breath, 1 / Math.sqrt(breath));
@@ -528,6 +615,8 @@ export default function Mascot3D({ className = '', interactive = true }) {
       // 포인터 쪽으로 아주 살짝 몸을 기울임
       m.char.rotation.y += ((pointer.x * 0.25) - m.char.rotation.y) * 0.04;
       m.char.rotation.x += ((pointer.y * 0.1) - m.char.rotation.x) * 0.04;
+      m.char.rotation.z = drawing && s ? Math.sin(t * 18) * 0.05 : m.char.rotation.z * 0.85;
+      if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;
 
       // 표정: 평소엔 감은 눈(자는 중), 눌리면 눈을 번쩍 뜨고 깜짝 놀람(눈동자는 포인터 쪽)
       const since = t - surpriseAt;
@@ -557,13 +646,27 @@ export default function Mascot3D({ className = '', interactive = true }) {
       m.mark.userData.glow.scale.setScalar(0.28 + pulse * 0.12 * s);
       m.aura.material.opacity = 0.75 + pulse * 0.25 * s;
       m.aura.scale.setScalar(5.0 + pulse * 0.4 * s);
+      spinAngle += dt * 0.28 * s;
+      // 로또 공: 번호 고르는 동안 나타나 빠르게 돌고, 끝나면 사라짐
+      if (balls) {
+        ballShow += ((drawing ? 1 : 0) - ballShow) * (drawing ? 0.12 : 0.06);
+        balls.visible = ballShow > 0.01;
+        balls.children.forEach((b) => {
+          const { angle: ba, height: bh, phase: bp } = b.userData;
+          const a = ba + t * 3.2 * s;
+          const rr = 2.0 + Math.sin(t * 2 + bp) * 0.15 * s;
+          b.position.set(Math.cos(a) * rr, bh + Math.sin(t * 3 + bp) * 0.18 * s, Math.sin(a) * rr * 0.7);
+          b.material.opacity = ballShow;
+          b.scale.setScalar(0.62 * (0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.08)); // 앞쪽 공은 조금 크게
+        });
+      }
       const n = m.spirits.children.length;
       m.spirits.children.forEach((sp, k) => {
         const { angle, height, phase } = sp.userData;
-        const a = angle + t * 0.28 * s;
+        const a = angle + spinAngle;
         sp.position.set(Math.cos(a) * 1.9, height + Math.sin(t * 1.2 + phase) * 0.12 * s, Math.sin(a) * 1.25);
         const wave = Math.max(0, Math.cos(t * 1.4 - (k / n) * Math.PI * 2));
-        sp.material.opacity = 0.7 + wave * 0.3;
+        sp.material.opacity = (0.7 + wave * 0.3) * (1 - ballShow); // 로또 공이 돌 땐 빛글자는 숨김
         sp.scale.setScalar(0.64 + wave * 0.16 * s);
       });
       m.crescent.rotation.z = -0.55 + Math.sin(t * 1.0) * 0.06 * s;
@@ -601,7 +704,7 @@ export default function Mascot3D({ className = '', interactive = true }) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [interactive]);
+  }, [interactive, prop]);
 
   if (failed) return <LogoSymbol size={170} className="mascot-still" />;
   return <div ref={hostRef} className={`mascot3d ${className}`} role="img" aria-label="사주천문 캐릭터 천동이" />;

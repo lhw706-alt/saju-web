@@ -2,11 +2,14 @@
 // 처음엔 네잎클로버를 든 천둥도사가 크게 둥둥 떠 있음 → 누르면 번호 공들이 천둥도사 둘레를 돌며 고르는 연출 → 번호 6개.
 // 회원만 하루 1번 (비회원은 누르면 로그인 창 — 2026-11-14 사용자 지시): 서버(/api/lucky, Netlify Blobs 'lucky')가 회원번호로 오늘 뽑은 번호를 기억하고,
 // 다시 누르면 같은 번호와 함께 '하루 1회만' 안내. 번호는 서버가 뽑아 저장함.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
+
+// 3D 천동이 (메인과 같은 모델 + 네잎클로버·로또 공, 2026-11-14 사용자 요청). 불러오는 동안·WebGL 이 없으면 2D 그림
+const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 
 const SPIN_MS = 2800; // 고르는 연출 최소 시간
 const ballColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
@@ -70,8 +73,6 @@ export default function Lucky() {
     return () => clearInterval(iv);
   }, [phase]);
 
-  // 고르는 동안 둘레를 도는 공 (보여 주기용 숫자)
-  const orbit = useMemo(() => Array.from({ length: 8 }, (_, i) => ((i * 17 + 7) % 45) + 1), []);
 
   const draw = async () => {
     if (busy.current || phase === 'loading' || phase === 'drawing') return;
@@ -116,18 +117,10 @@ export default function Lucky() {
 
       <div className={`lucky-stage is-${phase}`}>
         <button type="button" className="lucky-dosa" onClick={draw} aria-label={phase === 'done' ? '오늘의 행운 번호 다시 보기' : '천둥도사를 눌러 행운의 번호 뽑기'} disabled={phase === 'loading'}>
-          <span className="lucky-glow" aria-hidden="true" />
-          <span className="lucky-dosa-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: art }} />
+          <Suspense fallback={<span className="lucky-dosa-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: art }} />}>
+            <Mascot3D prop="clover" mode={phase === 'drawing' ? 'drawing' : phase === 'done' ? 'done' : 'idle'} />
+          </Suspense>
         </button>
-        {phase === 'drawing' && (
-          <div className="lucky-orbit" aria-hidden="true">
-            {orbit.map((n, i) => (
-              <span key={i} className="lucky-orbit-slot" style={{ '--a': `${(360 / orbit.length) * i}deg` }}>
-                <Ball n={n} size="sm" />
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="lucky-panel" aria-live="polite">
