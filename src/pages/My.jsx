@@ -282,6 +282,13 @@ export default function My() {
             )}
           </div>
         )}
+        {/* 카카오 회원: 사이트 비밀번호가 없음 — 카카오 계정 비밀번호로 로그인 */}
+        {!isEmail && (
+          <div className="my-row">
+            <span className="my-row-label">비밀번호</span>
+            <span className="my-row-value my-row-help">카카오로 로그인해서 따로 비밀번호가 없어요. 비밀번호는 카카오 계정에서 바꿀 수 있어요.</span>
+          </div>
+        )}
         {isEmail && pwOpen && (
           <form className="my-pw" onSubmit={savePw} noValidate>
             <PasswordInput id="my-pw-cur" label="지금 비밀번호" value={pwCur} onChange={(e) => setPwCur(e.target.value)} error={pwMsg('current')} placeholder="지금 비밀번호 입력" autoComplete="current-password" />
