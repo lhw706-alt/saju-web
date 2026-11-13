@@ -742,7 +742,10 @@ legend.contact-label { margin-bottom: 12px; }
 .my-hello span { font-size: 14px; color: var(--muted); }
 .my-title { margin-top: 36px; }
 .my-none { margin: 0; padding: 16px; border-radius: var(--r-md); background: var(--bg-2); color: var(--muted); font-size: 14px; }
-.my-actions { display: flex; gap: 8px; }
+.my-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.my-pw { display: grid; gap: 12px; max-width: 420px; margin-bottom: 12px; padding: 20px; }
+.my-pw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.my-pw-done { margin: 0 0 12px; }
 .my-action { height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 15px; font-weight: 500; cursor: pointer; }
 .my-action:hover { border-color: var(--text-2); }
 .my-action.is-danger { color: var(--danger); }

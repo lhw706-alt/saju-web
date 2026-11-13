@@ -169,7 +169,7 @@ export default function Layout() {
         onClose={closeLogin}
         onLoggedIn={(nick) => {
           trackEvent('login', { method: 'email' });
-          setAuth((a) => ({ ...a, user: { nick } }));
+          setAuth((a) => ({ ...a, user: { nick, provider: 'email' } }));
           setLogin(false);
           showNotice('로그인했어요.');
         }}

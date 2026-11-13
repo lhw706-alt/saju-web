@@ -3,6 +3,7 @@
 // - /api/auth/email/verify   → 메일 링크: 인증 + 가입 완료 + 로그인 → /?login=new&via=email
 // - /api/auth/email/login    → 이메일·비밀번호 로그인 (비밀번호는 scrypt 해시로만 저장, keep=false 면 자동 로그인 안 함)
 // - /api/auth/email/reset-request → 비밀번호 찾기: 재설정 메일(1시간) / email/reset → 새 비밀번호 저장 + 로그인 (화면 /reset)
+// - /api/auth/email/password → 마이페이지 비밀번호 변경 (지금 비밀번호 확인 후 저장, 이메일 회원만)
 // - /api/auth/kakao/login    → 카카오 인가 화면으로 보냄 (state 쿠키로 위조 요청 방지)
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
@@ -368,6 +369,25 @@ export default async (req, context) => {
     return json({ ok: true, nick }, 200, [sessionCookie(p.id, nick)]);
   }
 
+  // 비밀번호 변경 (마이페이지, 이메일 회원만): POST {current, password} — 지금 비밀번호를 확인한 뒤 새 비밀번호 저장
+  if (path === '/api/auth/email/password') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.' }, 401);
+    if (!String(s.sub).startsWith('e_')) return json({ error: '카카오 회원은 비밀번호가 없어요.' }, 400);
+    if (loginLimited(ip)) return json({ error: '시도가 너무 많아요. 10분 뒤 다시 시도해 주세요.' }, 429);
+    const body = await readJson();
+    const rec = await users().get(s.sub, { type: 'json' });
+    if (!rec) return json({ error: '탈퇴한 계정이에요.' }, 400);
+    if (!checkPassword(body?.current, rec.passHash)) return json({ error: '지금 비밀번호가 맞지 않아요.', field: 'current' }, 400);
+    const pwErr = passwordError(body?.password);
+    if (pwErr) return json({ error: pwErr, field: 'password' }, 400);
+    if (body.password === body.current) return json({ error: '지금 비밀번호와 다른 비밀번호를 정해 주세요.', field: 'password' }, 400);
+    rec.passHash = hashPassword(body.password);
+    await users().setJSON(s.sub, rec);
+    return json({ ok: true });
+  }
+
   if (path === '/api/auth/logout') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
@@ -474,6 +494,9 @@ export default async (req, context) => {
     const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }))))
       .filter(Boolean)
       .map(({ passHash, ...u }) => u); // 비밀번호 해시는 절대 내보내지 않음
+    // 몇 번째 회원인지: 가입일 순 1, 2, 3… (탈퇴한 회원은 목록에 없어서 빠진 채로 다시 매김)
+    list.sort((a, b) => String(a.joinedAt).localeCompare(String(b.joinedAt)));
+    list.forEach((u, i) => (u.no = i + 1));
     list.sort((a, b) => String(b.lastLoginAt).localeCompare(String(a.lastLoginAt)));
     return json({ total: list.length, users: list });
   }
@@ -542,4 +565,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/admin/users'] };

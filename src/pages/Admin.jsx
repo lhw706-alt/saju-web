@@ -84,6 +84,7 @@ export default function Admin() {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th>No.</th>
                     <th>닉네임</th>
                     <th>가입 방법</th>
                     <th>카카오 이름 / 이메일</th>
@@ -96,6 +97,7 @@ export default function Admin() {
                 <tbody>
                   {data.users.map((u) => (
                     <tr key={u.id}>
+                      <td className="num">{u.no}</td>
                       <td>{u.displayNick || '-'}</td>
                       <td>{u.provider === 'email' ? '이메일' : '카카오'}</td>
                       <td>{(u.provider === 'email' ? u.email : u.nick) || '-'}</td>

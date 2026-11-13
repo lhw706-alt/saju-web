@@ -6,6 +6,8 @@ import react from '@vitejs/plugin-react';
 // 확인할 수 있도록 /api/auth/* 를 흉내 냄. 상태는 미리보기 서버 메모리에만 (재시작하면 사라짐).
 function devFakeLogin() {
   let loggedIn = false;
+  let provider = 'kakao';
+  let devPw = 'test1234';
   let birth = null;
   let nick = '천동이(테스트)';
   const now = new Date().toISOString();
@@ -34,7 +36,7 @@ function devFakeLogin() {
         const url = new URL(req.url, 'http://localhost');
         const path = url.pathname;
         if (path === '/api/auth/me') {
-          return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
+          return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, provider, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
         }
         // 이메일 가입·로그인 흉내: 가입하면 미리보기 서버 터미널에 인증 링크를 찍음 (메일은 안 보냄)
         if (path === '/api/auth/email/signup') {
@@ -46,15 +48,24 @@ function devFakeLogin() {
         }
         if (path === '/api/auth/email/verify') {
           loggedIn = true;
+          provider = 'email';
           res.statusCode = 302;
           res.setHeader('location', '/?login=new&via=email');
           return res.end();
         }
         if (path === '/api/auth/email/login') {
           const body = await readBody(req);
-          if (body.password !== 'test1234') return send(res, 401, { error: '이메일 또는 비밀번호가 맞지 않아요.' });
+          if (body.password !== devPw) return send(res, 401, { error: '이메일 또는 비밀번호가 맞지 않아요.' });
           loggedIn = true;
+          provider = 'email';
           return send(res, 200, { ok: true, nick });
+        }
+        if (path === '/api/auth/email/password') {
+          const body = await readBody(req);
+          if (body.current !== devPw) return send(res, 400, { error: '지금 비밀번호가 맞지 않아요.', field: 'current' });
+          if (body.password === body.current) return send(res, 400, { error: '지금 비밀번호와 다른 비밀번호를 정해 주세요.', field: 'password' });
+          devPw = body.password;
+          return send(res, 200, { ok: true });
         }
         if (path === '/api/auth/email/reset-request') {
           console.log('[미리보기] 비밀번호 재설정 링크: http://localhost:5179/reset?token=' + 'a'.repeat(64));
@@ -68,6 +79,7 @@ function devFakeLogin() {
         }
         if (path === '/api/auth/kakao/login') {
           loggedIn = true;
+          provider = 'kakao';
           const next = url.searchParams.get('next') || '/';
           res.statusCode = 302;
           res.setHeader('location', `${next}${next.includes('?') ? '&' : '?'}login=ok`);

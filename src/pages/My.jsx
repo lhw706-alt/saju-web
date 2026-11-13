@@ -4,6 +4,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { CITIES } from '../lib/saju.js';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
+import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset } from '../lib/storage.js';
 
 const presetMain = (p) => `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
@@ -77,6 +79,39 @@ export default function My() {
     setNickEdit(false);
   };
 
+  // 비밀번호 변경 (이메일 회원만): 지금 비밀번호 확인 → 새 비밀번호(규칙은 src/lib/password.js) → 서버 /api/auth/email/password
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwCur, setPwCur] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwNew2, setPwNew2] = useState('');
+  const [pwErr, setPwErr] = useState({ field: '', text: '' });
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwDone, setPwDone] = useState('');
+  const openPw = () => {
+    setPwCur('');
+    setPwNew('');
+    setPwNew2('');
+    setPwErr({ field: '', text: '' });
+    setPwDone('');
+    setPwOpen(true);
+  };
+  const savePw = async (e) => {
+    e.preventDefault();
+    if (!pwCur) return setPwErr({ field: 'current', text: '지금 비밀번호를 입력해 주세요.' });
+    if (!passwordOk(pwNew)) return setPwErr({ field: 'password', text: '비밀번호 조건을 모두 맞춰 주세요.' });
+    if (pwNew === pwCur) return setPwErr({ field: 'password', text: '지금 비밀번호와 다른 비밀번호를 정해 주세요.' });
+    if (pwNew !== pwNew2) return setPwErr({ field: 'password2', text: '비밀번호가 서로 달라요.' });
+    setPwBusy(true);
+    setPwErr({ field: '', text: '' });
+    const r = await fetch('/api/auth/email/password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ current: pwCur, password: pwNew }) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    setPwBusy(false);
+    if (!r?.ok) return setPwErr({ field: d?.field || '', text: d?.error || '바꾸지 못했어요. 잠시 뒤 다시 시도해 주세요.' });
+    setPwOpen(false);
+    setPwDone('비밀번호를 바꿨어요.');
+  };
+  const pwMsg = (f) => (pwErr.field === f ? pwErr.text : '');
+
   if (!auth.ready) return <section className="my" />;
 
   if (!auth.user) {
@@ -94,6 +129,7 @@ export default function My() {
   }
 
   const p = profile || auth.user;
+  const isEmail = (profile?.provider || auth.user.provider) === 'email';
   return (
     <section className="my">
       <h1 className="start-title">마이페이지</h1>
@@ -142,7 +178,7 @@ export default function My() {
                   변경
                 </button>
               </b>
-              <span>카카오로 로그인했어요</span>
+              <span>{isEmail ? '이메일로 로그인했어요' : '카카오로 로그인했어요'}</span>
             </div>
           )}
         </div>
@@ -226,7 +262,41 @@ export default function My() {
       )}
 
       <h2 className="section-title my-title">계정</h2>
+      {isEmail && pwOpen && (
+        <form className="my-pw card" onSubmit={savePw} noValidate>
+          <PasswordInput id="my-pw-cur" label="지금 비밀번호" value={pwCur} onChange={(e) => setPwCur(e.target.value)} error={pwMsg('current')} placeholder="지금 비밀번호 입력" autoComplete="current-password" />
+          <PasswordInput id="my-pw-new" label="새 비밀번호" rules value={pwNew} onChange={(e) => setPwNew(e.target.value)} error={pwMsg('password')} placeholder="새 비밀번호 입력" />
+          <PasswordInput
+            id="my-pw-new2"
+            label="새 비밀번호 확인"
+            value={pwNew2}
+            onChange={(e) => setPwNew2(e.target.value)}
+            error={pwMsg('password2') || (pwNew2 && pwNew !== pwNew2 ? '비밀번호가 서로 달라요.' : '')}
+            placeholder="한 번 더 입력"
+            okText={pwNew2 && pwNew === pwNew2 && passwordOk(pwNew) ? '비밀번호가 같아요.' : ''}
+          />
+          {pwErr.text && !['current', 'password', 'password2'].includes(pwErr.field) && <p className="field-msg">{pwErr.text}</p>}
+          <div className="my-pw-actions">
+            <button type="submit" className="btn-primary inline" disabled={pwBusy}>
+              {pwBusy ? '저장 중…' : '비밀번호 바꾸기'}
+            </button>
+            <button type="button" className="my-link" onClick={() => setPwOpen(false)}>
+              취소
+            </button>
+          </div>
+        </form>
+      )}
+      {pwDone && (
+        <p className="my-msg my-pw-done" role="status">
+          {pwDone}
+        </p>
+      )}
       <div className="my-actions">
+        {isEmail && !pwOpen && (
+          <button type="button" className="my-action" onClick={openPw}>
+            비밀번호 변경
+          </button>
+        )}
         <button type="button" className="my-action" onClick={() => logout().then(() => navigate('/'))}>
           로그아웃
         </button>
