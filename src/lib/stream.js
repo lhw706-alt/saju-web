@@ -8,11 +8,12 @@ export const END_MESSAGES = {
 };
 const END_RE = /\n*\[\[END:(\w+)\]\]\s*$/;
 
-export async function streamReading({ input, topic, signal, onText }) {
+// partner: 궁합일 때 상대 생년월일시
+export async function streamReading({ input, topic, signal, onText, partner = null }) {
   const res = await fetch('/api/reading', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ input, topic }),
+    body: JSON.stringify(partner ? { input, partner, topic } : { input, topic }),
     signal,
   });
   if (!res.ok || !res.body) {

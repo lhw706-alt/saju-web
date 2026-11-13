@@ -6,7 +6,7 @@ import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
-import { loadPresets, removePreset, saveInput, saveTopic } from '../lib/storage.js';
+import { loadPresets, removePreset, saveInput, savePartner, saveTopic } from '../lib/storage.js';
 import { seedLocal } from '../lib/history.js';
 import { TOPICS } from '../lib/topics.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
@@ -18,7 +18,7 @@ const MY_TABS = [
   { id: 'history', label: '풀이 내역', to: '/my/history' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
-const HISTORY_LABEL = (topic) => (topic === 'life' ? '평생 사주' : TOPICS.find((t) => t.id === topic)?.label || '사주 풀이');
+const HISTORY_LABEL = (topic) => (topic === 'life' ? '평생 사주' : String(topic).startsWith('match@') ? '궁합' : TOPICS.find((t) => t.id === topic)?.label || '사주 풀이');
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmtDateTime = (iso) => {
   if (!iso) return '';
@@ -56,6 +56,10 @@ export default function My() {
     seedLocal(d.item);
     saveInput(d.item.input);
     if (d.item.topic === 'life') navigate('/result?v=life');
+    else if (String(d.item.topic).startsWith('match@') && d.item.partner) {
+      savePartner(d.item.partner);
+      navigate('/result?v=match');
+    }
     else {
       saveTopic(d.item.topic);
       navigate('/result');
@@ -443,7 +447,7 @@ export default function My() {
                 <button type="button" className="saved-load" onClick={() => openHistory(it)}>
                   <span className="saved-text">
                     <b>
-                      {HISTORY_LABEL(it.topic)} <span className="hist-person">{presetMain(it.input)}</span>
+                      {HISTORY_LABEL(it.topic)} <span className="hist-person">{presetMain(it.input)}{it.partner ? ` & ${presetMain(it.partner)}` : ''}</span>
                     </b>
                     <span>
                       {presetSub(it.input)} · {fmtDate(it.updatedAt)}

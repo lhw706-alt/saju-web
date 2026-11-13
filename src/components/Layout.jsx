@@ -178,7 +178,7 @@ export default function Layout() {
       </header>
 
       <main className="main">
-        <Outlet context={{ auth, openLogin: (reason) => askLogin(typeof reason === 'string' ? reason : ''), openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
+        <Outlet context={{ auth, openLogin: (reason) => askLogin(typeof reason === 'string' ? reason : ''), notify: showNotice, openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
       </main>
       <FortuneFab
         loggedIn={!!auth.user}

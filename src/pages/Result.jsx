@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { computeSaju, ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
-import { loadInput, peekTopic, clearTopic, saveTopic } from '../lib/storage.js';
+import { loadInput, loadPartner, peekTopic, clearTopic, saveTopic } from '../lib/storage.js';
 import ChartTable from '../components/ChartTable.jsx';
 import ElementChart from '../components/ElementChart.jsx';
 import DaeunList from '../components/DaeunList.jsx';
@@ -9,6 +9,8 @@ import Reading from '../components/Reading.jsx';
 import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
 import { GOD_SHORT } from '../lib/glossary.js';
 import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
+import MatchReport from '../components/MatchReport.jsx';
+import ResultShare from '../components/ShareRow.jsx';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -21,6 +23,9 @@ export default function Result() {
   const member = !!auth.user;
   const [params] = useSearchParams();
   const life = params.get("v") === "life"; // 평생 사주 리포트 화면
+  const match = params.get('v') === 'match'; // 궁합 화면
+  const partner = match ? loadPartner() : null;
+  const [score, setScore] = useState(null);
   const [initialTopic] = useState(peekTopic); // 메인 카드에서 고른 주제
   useEffect(() => clearTopic(), []);
   const chart = useMemo(() => {
@@ -32,13 +37,48 @@ export default function Result() {
     }
   }, [input && JSON.stringify(input)]);
 
-  if (!chart) return <Navigate to="/start" replace />;
+  const partnerChart = useMemo(() => {
+    if (!partner) return null;
+    try {
+      return computeSaju(partner);
+    } catch {
+      return null;
+    }
+  }, [partner && JSON.stringify(partner)]);
+
+  if (!chart || (match && !partnerChart)) return <Navigate to="/start" replace />;
+
+  if (match) {
+    return (
+      <GlossaryProvider>
+        <MatchReport key={JSON.stringify([input, partner])} me={input} partner={partner} meChart={chart} partnerChart={partnerChart} member={member} onResult={setScore} />
+        <ResultShare
+          title="궁합 결과를 나눠 보세요"
+          path="/"
+          kakao={{
+            title: score != null ? `우리 궁합은 ${score}점이래요` : '천둥도사가 본 우리 궁합',
+            description: '사주천문에서 두 사람의 사주로 궁합을 봤어요. 우리 궁합도 볼까요?',
+            button: '궁합 보러 가기',
+          }}
+        />
+        <div className="report-bottom">
+          <Link to="/start" className="btn-primary inline" onClick={() => saveTopic('match')}>
+            다른 사람과 궁합 보기
+          </Link>
+        </div>
+      </GlossaryProvider>
+    );
+  }
 
   if (life) {
     return (
       <GlossaryProvider>
         <div className="report-top" />
         <LifeReport key={JSON.stringify(input)} chart={chart} input={input} member={member} />
+        <ResultShare
+          title="내 평생 사주를 나눠 보세요"
+          kakao={{ title: '천둥도사가 풀어 준 내 평생 사주', description: '타고난 성향부터 10년마다 바뀌는 대운까지. 나도 내 사주를 볼까요?', button: '내 사주 보기' }}
+        />
         {/* 맨 아래: 다시 보기 (새로 입력한 뒤에도 평생 사주 리포트로) */}
         <div className="report-bottom">
           <Link to="/start" className="btn-primary inline" onClick={() => saveTopic('overall')}>
@@ -122,6 +162,7 @@ export default function Result() {
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
         <Reading input={inp} initialTopic={initialTopic} member={member} />
       </section>
+      <ResultShare kakao={{ title: `나는 ${dm.ko}${ELEMENT_KO[dm.element]} 일간이래요`, description: `${DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났대요. 천둥도사에게 내 사주도 물어볼까요?`, button: '내 사주 보기' }} />
       {/* 맨 아래: 사주 다시 보기 */}
       <div className="report-bottom">
         <Link to="/start" className="btn-primary inline">

@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import StepForm from '../components/StepForm.jsx';
-import { saveInput, peekTopic, markFresh } from '../lib/storage.js';
+import { saveInput, savePartner, peekTopic, markFresh } from '../lib/storage.js';
 import { topicById } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
-import { guestCanView, markGuestView } from '../lib/history.js';
+import { guestCanView, markGuestView, pairKey } from '../lib/history.js';
+import { presetMain } from '../lib/presetText.js';
 
 // 콘텐츠를 고른 뒤 생년월일시를 넣는 화면 (메인에서는 입력 폼을 뺐다).
-// 입력은 한 항목씩 순서대로 묻는 단계형(StepForm)
+// 입력은 한 항목씩 순서대로 묻는 단계형(StepForm). 궁합은 나 → 상대 두 번 입력.
 export default function Start() {
   const navigate = useNavigate();
   const topic = topicById(peekTopic());
+  const isMatch = topic?.id === 'match';
   // 로그인 회원이 마이페이지에 등록한 내 사주 정보 → 입력 첫 화면에서 '내 정보'로 미리 선택
   const { auth, openLogin } = useOutletContext();
   const [mine, setMine] = useState(null);
+  const [me, setMe] = useState(null); // 궁합: 먼저 입력한 내 정보
   useEffect(() => {
     if (!auth.user) return setMine(null);
     fetch('/api/auth/me?full=1', { cache: 'no-store' })
@@ -22,16 +25,34 @@ export default function Start() {
       .catch(() => {});
   }, [auth.user]);
 
-  const onSubmit = (input) => {
-    // 비회원은 서로 다른 사람 2명까지 (이미 본 사람은 다시 볼 수 있음). 3번째부터 로그인
-    if (!auth.user) {
-      if (!guestCanView(input)) {
-        trackEvent('guest_limit');
-        openLogin('천둥도사가 기운을 아끼는 중이에요. 로그인하면 계속 사주를 볼 수 있어요.');
-        return;
-      }
-      markGuestView(input);
+  // 비회원은 2번까지 (같은 사람·같은 궁합은 다시 볼 수 있음). 3번째부터 천둥도사가 로그인을 권함
+  const guestOk = (key) => {
+    if (auth.user) return true;
+    if (!guestCanView(key)) {
+      trackEvent('guest_limit');
+      openLogin('천둥도사가 기운을 아끼는 중이에요. 로그인하면 계속 사주를 볼 수 있어요.');
+      return false;
     }
+    markGuestView(key);
+    return true;
+  };
+
+  const onSubmit = (input) => {
+    if (isMatch && !me) {
+      setMe(input); // 다음은 상대 정보
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (isMatch) {
+      if (!guestOk(pairKey(me, input))) return;
+      trackEvent('saju_submit', { time_known: me.timeKnown && input.timeKnown ? 'yes' : 'no', topic: 'match' });
+      saveInput(me);
+      savePartner(input);
+      markFresh();
+      navigate('/result?v=match');
+      return;
+    }
+    if (!guestOk(input)) return;
     trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
     markFresh(); // 결과 화면에서 천둥도사 로딩을 한 번 보여 줌
@@ -41,8 +62,34 @@ export default function Start() {
   return (
     <section className="start">
       <h1 className="start-title">{topic ? (topic.id === 'overall' ? '평생 사주' : topic.label) : '내 사주 보기'}</h1>
-      <p className="start-lead">생년월일시를 알려 주면 천둥도사가 여덟 글자를 펼쳐 풀어 드려요.</p>
-      <StepForm mine={mine} onSubmit={onSubmit} />
+      {isMatch ? (
+        <>
+          <ol className="pair-steps" aria-label="궁합 입력 순서">
+            <li className={me ? 'is-done' : 'is-on'}>
+              <b>1</b> 내 정보{me && <span>{presetMain(me)}</span>}
+            </li>
+            <li className={me ? 'is-on' : ''}>
+              <b>2</b> 상대 정보
+            </li>
+          </ol>
+          <p className="start-lead">{me ? '이제 궁합을 볼 상대의 생년월일시를 알려 주세요.' : '먼저 내 생년월일시를 알려 주세요.'}</p>
+          {me ? (
+            <>
+              <StepForm key="partner" onSubmit={onSubmit} submitLabel="궁합 보기" />
+              <button type="button" className="my-link pair-back" onClick={() => setMe(null)}>
+                내 정보 다시 입력하기
+              </button>
+            </>
+          ) : (
+            <StepForm key="me" mine={mine} onSubmit={onSubmit} submitLabel="다음: 상대 정보" />
+          )}
+        </>
+      ) : (
+        <>
+          <p className="start-lead">생년월일시를 알려 주면 천둥도사가 여덟 글자를 펼쳐 풀어 드려요.</p>
+          <StepForm mine={mine} onSubmit={onSubmit} />
+        </>
+      )}
     </section>
   );
 }

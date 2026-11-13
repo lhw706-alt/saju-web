@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
-import { SITE } from '../site.js';
+import { ShareButtons } from './ShareRow.jsx';
 
 // 오른쪽 아래 '오늘의 운세' 플로팅 부적 (다모아픽 FortuneFab 을 사주천문 다크·금박 스타일로 옮김).
 // - 금박 부적을 긁으면 오늘의 운세가 드러남. 하루 한 번: 이 브라우저(localStorage)에 날짜·운세 번호만 저장, 서버로 안 보냄
@@ -256,48 +256,7 @@ function CharmIcon() {
   );
 }
 
-// ── 공유 (2026-11-13): 카카오톡 공유(로그인 회원만) · 링크 복사 ──
-// 카카오 JavaScript SDK 는 누를 때만 불러옴. 키 = Netlify 환경 변수 VITE_KAKAO_JS_KEY (카카오 개발자 앱의 JavaScript 키, 공개돼도 되는 키)
-// 공유 링크 /fortune 로 들어오면 받은 사람도 바로 오늘의 운세 창이 열림 (운세는 사람마다 따로 뽑힘)
-// 링크 복사는 읽기 쉬운 한글 주소(사주천문.com/fortune), 카카오 공유는 등록한 영문 변환 주소
-const KAKAO_SDK = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-const SHARE_URL = `${SITE.url}/fortune`;
-const COPY_URL = `${SITE.displayUrl}/fortune`;
-function loadKakao() {
-  const key = import.meta.env.VITE_KAKAO_JS_KEY;
-  if (!key) return Promise.reject(new Error('no key'));
-  if (window.Kakao?.isInitialized?.()) return Promise.resolve(window.Kakao);
-  return new Promise((resolve, reject) => {
-    const done = () => {
-      if (!window.Kakao.isInitialized()) window.Kakao.init(key);
-      resolve(window.Kakao);
-    };
-    if (window.Kakao) return done();
-    const sc = document.createElement('script');
-    sc.src = KAKAO_SDK;
-    sc.crossOrigin = 'anonymous';
-    sc.onload = done;
-    sc.onerror = () => reject(new Error('sdk'));
-    document.head.appendChild(sc);
-  });
-}
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const t = document.createElement('textarea');
-    t.value = text;
-    t.setAttribute('readonly', '');
-    t.style.position = 'fixed';
-    t.style.opacity = '0';
-    document.body.appendChild(t);
-    t.select();
-    const ok = document.execCommand('copy');
-    t.remove();
-    return ok;
-  }
-}
+// 공유: 카카오톡(로그인 회원만) · 링크 복사 — src/components/ShareRow.jsx. 공유 링크 /fortune 로 들어오면 운세 창이 열림
 
 // loggedIn·onNeedLogin·onNotice: Layout 이 넘겨줌 (카카오 공유는 로그인 회원만, 결과 안내는 토스트)
 export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) {
@@ -358,39 +317,13 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     } catch {}
   }, [loggedIn]);
 
-  const shareKakao = async () => {
-    if (!loggedIn) {
-      try {
-        sessionStorage.setItem('sc:afterLogin', 'fortune');
-      } catch {}
-      close();
-      onNeedLogin?.('천둥도사의 부적을 카카오톡으로 나누려면 로그인이 필요해요.');
-      return;
-    }
-    const fx = FORTUNES[state.idx];
+  // 카카오 공유하려는데 비로그인: 로그인하고 오면 운세 창을 다시 열어 줌
+  const needLogin = () => {
     try {
-      const Kakao = await loadKakao();
-      Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: `오늘의 운세 · ${fx.title}`,
-          description: `${fx.text} 나도 오늘의 부적을 긁어 볼까요?`,
-          imageUrl: `${SITE.url}/share-fortune.png`, // 800×400 가로형 (public/share-fortune.png)
-          imageWidth: 800,
-          imageHeight: 400,
-          link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL },
-        },
-        buttons: [{ title: '내 운세 보기', link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL } }],
-      });
-      trackEvent('fortune_share', { method: 'kakao' });
-    } catch (e) {
-      onNotice?.(e?.message === 'no key' ? '카카오톡 공유는 준비중이에요.' : '카카오톡 공유를 열지 못했어요. 잠시 뒤 다시 시도해 주세요.', e?.message === 'no key' ? undefined : 'negative');
-    }
-  };
-  const copyLink = async () => {
-    const ok = await copyText(COPY_URL);
-    onNotice?.(ok ? '링크를 복사했어요.' : '복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.', ok ? 'positive' : 'negative');
-    if (ok) trackEvent('fortune_share', { method: 'link' });
+      sessionStorage.setItem('sc:afterLogin', 'fortune');
+    } catch {}
+    close();
+    onNeedLogin?.('천둥도사의 부적을 카카오톡으로 나누려면 로그인이 필요해요.');
   };
 
   const f = state && FORTUNES[state.idx];
@@ -463,17 +396,14 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
 
               {f && state.revealed && (
                 <div className="fortune__share">
-                  <button type="button" className="share-btn is-kakao" onClick={shareKakao} aria-label="카카오톡으로 공유하기">
-                    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fill="#000" d="M12 3C6.48 3 2 6.58 2 11c0 2.85 1.86 5.35 4.66 6.77l-.95 3.48c-.08.3.26.54.52.37l4.13-2.74c.54.08 1.08.12 1.64.12 5.52 0 10-3.58 10-8S17.52 3 12 3z" />
-                    </svg>
-                  </button>
-                  <button type="button" className="share-btn is-link" onClick={copyLink} aria-label="링크 복사하기">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
-                      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
-                    </svg>
-                  </button>
+                  <ShareButtons
+                    kakao={{ title: `오늘의 운세 · ${f.title}`, description: `${f.text} 나도 오늘의 부적을 긁어 볼까요?`, button: '내 운세 보기', image: 'share-fortune.png' }}
+                    path="/fortune"
+                    loggedIn={loggedIn}
+                    onNeedLogin={needLogin}
+                    onNotice={onNotice}
+                    event="fortune_share"
+                  />
                 </div>
               )}
 

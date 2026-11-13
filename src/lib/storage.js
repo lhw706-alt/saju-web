@@ -15,6 +15,7 @@ export function clearInput() {
     sessionStorage.removeItem(KEY);
     sessionStorage.removeItem(REPORT_KEY);
     sessionStorage.removeItem(FRESH_KEY);
+    sessionStorage.removeItem('saju:partner');
   } catch {
     /* 무시 */
   }
@@ -52,6 +53,15 @@ export function saveReportPart(input, id, text) {
   } catch {
     /* 무시 */
   }
+}
+
+// 궁합 상대의 생년월일시 (입력값과 똑같이 이 탭에만 잠시)
+const PARTNER_KEY = 'saju:partner';
+export function savePartner(input) {
+  try { sessionStorage.setItem(PARTNER_KEY, JSON.stringify(input)); } catch { /* 무시 */ }
+}
+export function loadPartner() {
+  try { return JSON.parse(sessionStorage.getItem(PARTNER_KEY) || 'null'); } catch { return null; }
 }
 
 export function loadInput() {

@@ -51,13 +51,36 @@ export default async (req, context) => {
     return json({ error: '사주를 계산하지 못했어요.' }, 400);
   }
 
+  // 궁합: 상대 원국도 서버에서 다시 계산
+  let partner = null;
+  if (topic.pair) {
+    try {
+      partner = computeSaju(body?.partner);
+    } catch (e) {
+      if (e instanceof SajuInputError) return json({ error: `상대 정보: ${e.message}` }, 400);
+      return json({ error: '상대의 사주를 계산하지 못했어요.' }, 400);
+    }
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
 
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
 
-  const userText = `[사주 원국 — 서버 계산 결과]
+  const userText = partner
+    ? `[나의 사주 원국 — 서버 계산 결과]
+${chartSummary(chart)}
+
+[상대의 사주 원국 — 서버 계산 결과]
+${chartSummary(partner)}
+
+[풀이 주제] ${topic.label}
+다룰 내용: ${topic.focus}
+기준 연도: ${chart.seun.year}년
+
+${topic.format}`
+    : `[사주 원국 — 서버 계산 결과]
 ${chartSummary(chart)}
 
 [풀이 주제] ${topic.label}

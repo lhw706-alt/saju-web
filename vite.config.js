@@ -72,7 +72,7 @@ function devFakeLogin() {
             return send(res, 200, { ok: true });
           }
           const b = await readBody(req);
-          const cur = devHist[b.key] || { key: b.key, input: b.input, topic: b.topic, parts: {}, createdAt: new Date().toISOString() };
+          const cur = devHist[b.key] || { key: b.key, input: b.input, topic: b.topic, partner: b.partner, parts: {}, createdAt: new Date().toISOString() };
           cur.parts[b.partId] = b.text;
           cur.updatedAt = new Date().toISOString();
           devHist[b.key] = cur;

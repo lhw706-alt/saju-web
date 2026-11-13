@@ -61,7 +61,8 @@ const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분
 // 같은 생년월일시·주제·연도로 다시 보면 새로 만들지 않고 이걸 보여 줌 (화면 src/lib/history.js). 탈퇴하면 지움.
 const historyStore = () => getStore({ name: 'history', consistency: 'strong' });
 const HISTORY_TOPICS = new Set(['life', ...TOPICS.map((t) => t.id)]);
-const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id)]);
+const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), 'match']);
+const historyTopicOk = (t) => HISTORY_TOPICS.has(t) || (typeof t === 'string' && t.startsWith('match@') && t.length < 120); // 궁합: 'match@상대키'
 const historyId = (sub, key) => `${sub}/${createHash('sha256').update(String(key)).digest('base64url').slice(0, 32)}`;
 const historyLimited = createRateLimiter(60, 10 * 60_000);
 
@@ -455,18 +456,20 @@ export default async (req, context) => {
     if (historyLimited(s.sub)) return json({ error: '요청이 많아요.' }, 429);
     const body = await readJson();
     const text = String(body?.text || '');
-    if (!body?.key || String(body.key).length > 200 || !HISTORY_TOPICS.has(body?.topic) || !HISTORY_PARTS.has(body?.partId) || !text || text.length > 30000) {
+    if (!body?.key || String(body.key).length > 200 || !historyTopicOk(body?.topic) || !HISTORY_PARTS.has(body?.partId) || !text || text.length > 30000) {
       return json({ error: '잘못된 요청이에요.' }, 400);
     }
     let input;
+    let partner = null;
     try {
       input = normalizeInput(body.input);
+      if (String(body.topic).startsWith('match@')) partner = normalizeInput(body.partner);
     } catch {
       return json({ error: '잘못된 요청이에요.' }, 400);
     }
     const id = historyId(s.sub, body.key);
     const now = new Date().toISOString();
-    const cur = (await store.get(id, { type: 'json' })) || { key: String(body.key), input, topic: body.topic, parts: {}, createdAt: now };
+    const cur = (await store.get(id, { type: 'json' })) || { key: String(body.key), input, topic: body.topic, parts: {}, createdAt: now, ...(partner ? { partner } : {}) };
     cur.parts = { ...cur.parts, [body.partId]: text };
     cur.updatedAt = now;
     await store.setJSON(id, cur);

@@ -8,7 +8,8 @@ const MAX_LOCAL = 12;
 
 // 생년월일시 정보 → 사람 키 (불러오기 목록과 같은 기준)
 export const personKey = (p) => [p.calendar, p.leap ? 1 : 0, p.year, p.month, p.day, p.timeKnown ? `${p.hour}:${p.minute || 0}` : '-', p.gender, p.city].join('|');
-// 주제 'life' = 평생 사주 리포트(네 부분), 그 밖엔 topics.js 의 주제 id
+// 주제 'life' = 평생 사주 리포트(네 부분), 'match@상대키' = 궁합, 그 밖엔 topics.js 의 주제 id
+export const matchTopic = (partner) => `match@${personKey(partner)}`;
 export const readingKey = (input, topic) => `${personKey(input)}#${topic}#${new Date().getFullYear()}`;
 
 function loadAll() {
@@ -35,11 +36,12 @@ export function localParts(input, topic) {
 }
 
 // 풀이 한 조각 저장 (이 브라우저 + 회원이면 서버)
-export function rememberPart(input, topic, partId, text, { member = false } = {}) {
+// partner: 궁합 상대 (topic 은 'match@상대 키')
+export function rememberPart(input, topic, partId, text, { member = false, partner = null } = {}) {
   if (!text) return;
   const key = readingKey(input, topic);
   const all = loadAll();
-  const cur = all[key] || { input, topic, parts: {} };
+  const cur = all[key] || { input, topic, parts: {}, ...(partner ? { partner } : {}) };
   cur.parts = { ...cur.parts, [partId]: text };
   cur.at = Date.now();
   all[key] = cur;
@@ -48,7 +50,7 @@ export function rememberPart(input, topic, partId, text, { member = false } = {}
     fetch('/api/history', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ key, input, topic, partId, text }),
+      body: JSON.stringify({ key, input, topic, partId, text, ...(partner ? { partner } : {}) }),
     }).catch(() => {});
   }
 }
@@ -68,7 +70,7 @@ export async function serverParts(input, topic) {
 // 내역에서 다시 열 때: 서버에서 받은 풀이를 이 브라우저에 넣어 두면 결과 화면이 바로 보여 줌
 export function seedLocal(item) {
   const all = loadAll();
-  all[item.key] = { input: item.input, topic: item.topic, parts: item.parts || {}, at: Date.now() };
+  all[item.key] = { input: item.input, topic: item.topic, parts: item.parts || {}, ...(item.partner ? { partner: item.partner } : {}), at: Date.now() };
   saveAll(all);
 }
 
@@ -84,14 +86,17 @@ function guestSeen() {
   }
 }
 // 이 사람을 볼 수 있는지 (이미 본 사람은 몇 번이든 다시 볼 수 있음)
+// 궁합은 두 사람을 한 번으로 셈 (pairKey)
+export const pairKey = (me, partner) => `${personKey(me)}&${personKey(partner)}`;
 export function guestCanView(input) {
   const seen = guestSeen();
-  return seen.includes(personKey(input)) || seen.length < GUEST_LIMIT;
+  const k = typeof input === 'string' ? input : personKey(input);
+  return seen.includes(k) || seen.length < GUEST_LIMIT;
 }
 export function markGuestView(input) {
   try {
     const seen = guestSeen();
-    const k = personKey(input);
+    const k = typeof input === 'string' ? input : personKey(input);
     if (!seen.includes(k)) localStorage.setItem(GUEST_KEY, JSON.stringify([...seen, k].slice(-20)));
   } catch {
     /* 무시 */
