@@ -745,10 +745,14 @@ legend.contact-label { margin-bottom: 12px; }
 .my-row > .my-row-value:last-child { grid-column: 2 / -1; }
 .my-break { overflow-wrap: anywhere; }
 .my-muted { color: var(--muted); font-weight: 400; }
+/* 내 사주 정보: 생년월일(주) 아래에 출생(보조)을 붙여 한 덩어리로 */
+.my-row-tight { min-height: 0; padding: 4px 0; }
+.my-sec-head + .my-row-tight { margin-top: 14px; }
+.my-row-sub { font-size: 15px; font-weight: 400; color: var(--text-2); }
 .my-dots { letter-spacing: 2px; font-size: 12px; color: var(--text-2); }
 .my-set { height: 40px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; }
 .my-set:hover { border-color: var(--text-2); }
-.my-avatar { position: relative; display: block; flex: none; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
+.my-avatar { position: relative; display: block; flex: none; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
 /* 천동이를 조금 키우고 아래로 내려 몸이 동그라미 아래 끝까지 차게 (잘린 밑부분이 안 보이게) */
 .my-avatar .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
 .my-empty { display: grid; justify-items: start; gap: 4px; }

@@ -143,7 +143,7 @@ export default function My() {
           <span className="my-row-label">이미지</span>
           <span className="my-row-value">
             <span className="my-avatar" aria-hidden="true">
-              <LogoSymbol size={64} />
+              <LogoSymbol size={56} />
             </span>
           </span>
         </div>
@@ -249,7 +249,6 @@ export default function My() {
             {p.phone ? '변경' : '인증하기'}
           </button>
         </div>
-        <p className="my-sec-note">결제할 때만 휴대폰 본인인증이 필요해요.</p>
         {phoneMsg && (
           <p className="my-msg" role="status">
             {phoneMsg}
@@ -281,13 +280,13 @@ export default function My() {
           <p className="my-sec-note">아래에서 입력하고 저장해 주세요.</p>
         ) : p.birth ? (
           <>
-            <div className="my-row">
+            <div className="my-row my-row-tight">
               <span className="my-row-label">생년월일</span>
               <span className="my-row-value">{presetMain(p.birth)}</span>
             </div>
-            <div className="my-row">
-              <span className="my-row-label">태어난 때·곳</span>
-              <span className="my-row-value">{presetSub(p.birth)}</span>
+            <div className="my-row my-row-tight">
+              <span className="my-row-label">출생</span>
+              <span className="my-row-value my-row-sub">{presetSub(p.birth)}</span>
             </div>
           </>
         ) : (
