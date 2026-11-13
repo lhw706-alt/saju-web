@@ -1379,7 +1379,7 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 
 /* 글래스모피즘 아이콘 (이름 궁합, 2026-11-14): 뒤 색 번짐 + 앞 반투명 유리판 + 흰 선 아이콘 */
 .glass-ic { position: relative; flex: none; display: grid; place-items: center; width: 46px; height: 46px; isolation: isolate; }
-.glass-ic::before { content: ''; position: absolute; z-index: -2; inset: 14%; border-radius: 50%; background: linear-gradient(135deg, var(--g1), var(--g2)); filter: blur(9px); opacity: 0.85; } /* 뒤 색은 도형이 보이지 않게 크게 흐려 유리 안으로 은은히 번지게 (사용자 지시) */
+.glass-ic::before { content: ''; position: absolute; z-index: -2; width: 64%; height: 64%; right: -4%; top: -4%; border-radius: 40%; background: linear-gradient(135deg, var(--g1), var(--g2)); filter: blur(3.5px); opacity: 0.9; transform: rotate(12deg); box-shadow: 0 6px 18px color-mix(in srgb, var(--g1) 40%, transparent); } /* 예전 도형 + 블러 조금 더 (사용자 지시) */
 .glass-ic::after { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: 14px; background: linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06)); -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 20px rgba(0, 0, 0, 0.25); }
 .glass-ic svg { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)); }
 .glass-ic.is-sm { width: 32px; height: 32px; }
@@ -1388,3 +1388,22 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .nm-feats .glass-ic { margin-left: 2px; }
 .nm-rels button { gap: 10px; padding-left: 8px; }
 .nm-rels button .glass-ic svg { color: #fff; }
+
+/* 이름 궁합 결과 머리 (2026-11-14 사용자 지시: 아이콘·시각적 계층) — 이름표 두 개를 관계 글래스 아이콘으로 잇고, 점수 원 → 제목 → 설명 */
+.nm-head { gap: 6px; }
+.nm-pair { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
+.nm-tag { display: grid; justify-items: center; gap: 2px; min-width: 104px; padding: 10px 16px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.1); background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)); }
+.nm-tag small { font-size: 13px; color: var(--text-2); }
+.nm-tag b { font-family: var(--title); font-size: clamp(20px, 5.4vw, 26px); font-weight: 400; color: var(--text); white-space: nowrap; }
+.nm-pair .glass-ic { width: 44px; height: 44px; }
+.nm-rel-text { margin: 4px 0 0; font-size: 14px; color: var(--text-2); }
+.nm-ring { position: relative; display: grid; place-items: center; width: 168px; height: 168px; margin-top: 14px; }
+.nm-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.nm-ring .nm-ring-track { stroke: rgba(255, 255, 255, 0.08); }
+.nm-ring .nm-ring-val { stroke: var(--primary); transition: stroke-dashoffset 1s ease; filter: drop-shadow(0 0 8px rgba(226, 194, 122, 0.35)); }
+.nm-ring-num { display: grid; justify-items: center; line-height: 1; }
+.nm-ring-num b { font-size: 56px; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
+.nm-ring-num small { margin-top: 6px; font-size: 14px; color: var(--text-2); }
+.nm-head .nm-r-title { margin-top: 12px; font-size: clamp(22px, 5.6vw, 26px); color: var(--primary); }
+.nm-head .nm-r-sub { font-size: 16px; color: var(--text-2); }
+@media (max-width: 400px) { .nm-tag { min-width: 0; padding: 8px 12px; } .nm-ring { width: 148px; height: 148px; } .nm-ring-num b { font-size: 48px; } }

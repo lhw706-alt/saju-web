@@ -352,23 +352,31 @@ export default function NameMatch() {
       {phase === 'result' && sent && (
         <>
           <section className="nm-head">
-            <p className="nm-kicker">이름 궁합 분석 완료</p>
-            <h1 className="nm-names">
-              {sent.me}
-              <span className="nm-names-link" aria-label="와">
-                <RelIcon id={rel?.romantic ? 'some' : 'friend'} size={22} />
+            <p className="nm-kicker">이름 궁합 결과</p>
+            <h1 className="nm-pair" aria-label={`${sent.me}와 ${sent.partner}의 이름 궁합`}>
+              <span className="nm-tag">
+                <small>나</small>
+                <b>{sent.me}</b>
               </span>
-              {sent.partner}
+              <GlassIcon kind={rel?.id} />
+              <span className="nm-tag">
+                <small>상대</small>
+                <b>{sent.partner}</b>
+              </span>
             </h1>
-            <span className="nm-rel-chip">
-              <RelIcon id={rel?.id} size={15} /> {rel?.label}
-            </span>
-            <div className="nm-score" aria-label={score != null ? `이름 궁합 ${score}점` : '점수를 계산하는 중'}>
+            <p className="nm-rel-text">{rel?.label} 사이</p>
+            <div className="nm-ring" role="img" aria-label={score != null ? `이름 궁합 ${score}점` : '점수를 계산하는 중'}>
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle className="nm-ring-track" cx="60" cy="60" r="52" fill="none" strokeWidth="8" />
+                {score != null && (
+                  <circle className="nm-ring-val" cx="60" cy="60" r="52" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * (1 - score / 100)} />
+                )}
+              </svg>
               {score != null ? (
-                <>
+                <span className="nm-ring-num">
                   <b>{score}</b>
                   <small>점</small>
-                </>
+                </span>
               ) : (
                 <span className="moon-spin" aria-hidden="true" />
               )}
