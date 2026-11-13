@@ -1225,26 +1225,27 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .ny-note { margin: 0; font-size: 14px; color: var(--text-2); }
 @media (max-width: 479px) { .ny-points { grid-template-columns: 1fr; } }
 
-/* 사주 용어 사전 /dict (2026-11-14) */
+/* 사주 용어 사전 /dict (2026-11-14) — 누르면 아래로 펼쳐지는 아코디언 */
 .dict { padding: 24px 0 8px; }
-.dict-crumb { margin: 0 0 8px; font-size: 14px; }
-.dict-crumb a { color: var(--primary); text-decoration: none; }
 .dict-group { margin-top: 28px; }
 .dict-group h2 { margin: 0 0 12px; font-size: 17px; font-weight: 600; color: var(--text); }
-.dict-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.dict-list a { display: grid; gap: 2px; height: 100%; padding: 14px 16px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); text-decoration: none; }
-.dict-list a:hover { border-color: var(--primary-line); }
-.dict-list b { font-size: 16px; font-weight: 600; }
-.dict-list span { font-size: 14px; line-height: 1.5; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
-.dict-body { margin-top: 16px; padding: 20px; }
-.dict-body p { margin: 0 0 10px; font-size: 16px; line-height: 1.8; color: var(--text); word-break: keep-all; }
-.dict-body p:last-child { margin-bottom: 0; }
-.dict-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.dict-chips a { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); color: var(--text); font-size: 15px; text-decoration: none; }
-.dict-chips a:hover { border-color: var(--primary-line); color: var(--primary); }
-.dict-cta { display: grid; justify-items: center; margin-top: 32px; }
-.dict-cta .btn-primary { width: min(100%, 360px); }
-@media (max-width: 479px) { .dict-list { grid-template-columns: 1fr; } }
+.dict-acc { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dict-acc li { border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); scroll-margin-top: 16px; overflow: hidden; }
+.dict-acc li.is-open { border-color: var(--primary-line); }
+.dict-q { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 16px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.dict-q-text { display: grid; gap: 2px; min-width: 0; }
+.dict-q b { font-size: 16px; font-weight: 600; }
+.dict-q-text span { font-size: 14px; line-height: 1.5; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.dict-chev { flex: none; color: var(--text-2); transition: transform 0.2s; }
+.dict-acc li.is-open .dict-chev { transform: rotate(180deg); color: var(--primary); }
+.dict-a { padding: 0 16px 16px; border-top: 1px solid var(--line-soft); animation: dict-open 0.2s ease-out; }
+.dict-a p { margin: 12px 0 0; font-size: 15px; line-height: 1.8; color: var(--text); word-break: keep-all; }
+.dict-rel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.dict-rel span { font-size: 14px; color: var(--text-2); margin-right: 2px; }
+.dict-rel button { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.dict-rel button:hover { border-color: var(--primary-line); color: var(--primary); }
+@keyframes dict-open { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .dict-a { animation: none; } .dict-chev { transition: none; } }
 
 /* 오늘의 띠별 운세 /tti (2026-11-14) */
 .tti { padding: 24px 0 8px; }
