@@ -746,7 +746,6 @@ legend.contact-label { margin-bottom: 12px; }
 .inq-info { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px 12px; margin: 0; padding: 14px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); font-size: 14px; }
 .inq-info dt { color: var(--muted); }
 .inq-info dd { margin: 0; color: var(--text); }
-.inq-info dd.mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 .inq-info dd.is-done { color: var(--primary); }
 .inq-sub { font-size: 13px; color: var(--muted); margin-bottom: -6px; }
 .inq-msg { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }

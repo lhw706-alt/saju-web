@@ -426,8 +426,6 @@ export default function My() {
                     <div className="inq-body">
                       {/* 상세 정보 표 */}
                       <dl className="inq-info">
-                        <dt>문의번호</dt>
-                        <dd className="mono">{q.id.toUpperCase()}</dd>
                         <dt>유형</dt>
                         <dd>{INQ_TYPES[q.type] || '문의'}</dd>
                         <dt>접수일시</dt>
