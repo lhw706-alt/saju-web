@@ -793,9 +793,6 @@ legend.contact-label { margin-bottom: 12px; }
 .my-sec-head .my-sec-title { margin: 0; }
 .my-sec-title small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--muted); }
 .my-sec-btns { display: flex; gap: 8px; }
-.hist-empty { display: grid; justify-items: start; gap: 14px; }
-.hist-empty .my-sec-note { margin: 0; }
-.hist-empty .btn-primary.inline { margin: 0; }
 .my-sec-note { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .my-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; }
 .my-row-label { color: var(--text-2); font-size: 15px; }
