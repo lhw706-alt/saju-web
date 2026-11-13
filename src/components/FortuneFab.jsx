@@ -258,9 +258,11 @@ function CharmIcon() {
 
 // ── 공유 (2026-11-13): 카카오톡 공유(로그인 회원만) · 링크 복사 ──
 // 카카오 JavaScript SDK 는 누를 때만 불러옴. 키 = Netlify 환경 변수 VITE_KAKAO_JS_KEY (카카오 개발자 앱의 JavaScript 키, 공개돼도 되는 키)
-// 공유 링크 /?fortune=1 로 들어오면 받은 사람도 바로 오늘의 운세 창이 열림 (운세는 사람마다 따로 뽑힘)
+// 공유 링크 /fortune 로 들어오면 받은 사람도 바로 오늘의 운세 창이 열림 (운세는 사람마다 따로 뽑힘)
+// 링크 복사는 읽기 쉬운 한글 주소(사주천문.com/fortune), 카카오 공유는 등록한 영문 변환 주소
 const KAKAO_SDK = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-const SHARE_URL = `${SITE.url}/?fortune=1`;
+const SHARE_URL = `${SITE.url}/fortune`;
+const COPY_URL = `${SITE.displayUrl}/fortune`;
 function loadKakao() {
   const key = import.meta.env.VITE_KAKAO_JS_KEY;
   if (!key) return Promise.reject(new Error('no key'));
@@ -337,14 +339,14 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
     navigate('/start');
   };
 
-  // 공유 링크(/?fortune=1)로 들어오면 운세 창을 열고 주소는 깨끗하게
-  const { search } = useLocation();
+  // 공유 링크(/fortune)로 들어오면 메인으로 바꾸고 운세 창을 엶
+  const { pathname } = useLocation();
   useEffect(() => {
-    if (!/[?&]fortune=1/.test(search)) return;
+    if (pathname !== '/fortune') return;
     setOpen(true);
-    navigate(window.location.pathname + search.replace(/[?&]fortune=1/, '').replace(/^&/, '?'), { replace: true });
+    navigate('/', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [pathname]);
   // 카카오 공유하려다 로그인했으면 운세 창을 다시 열어 줌
   useEffect(() => {
     if (!loggedIn) return;
@@ -380,12 +382,12 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
       });
       trackEvent('fortune_share', { method: 'kakao' });
     } catch (e) {
-      onNotice?.(e?.message === 'no key' ? '카카오톡 공유는 준비중이에요.' : '카카오톡 공유를 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      onNotice?.(e?.message === 'no key' ? '카카오톡 공유는 준비중이에요.' : '카카오톡 공유를 열지 못했어요. 잠시 뒤 다시 시도해 주세요.', e?.message === 'no key' ? undefined : 'negative');
     }
   };
   const copyLink = async () => {
-    const ok = await copyText(SHARE_URL);
-    onNotice?.(ok ? '링크를 복사했어요.' : '복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.');
+    const ok = await copyText(COPY_URL);
+    onNotice?.(ok ? '링크를 복사했어요.' : '복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.', ok ? 'positive' : 'negative');
     if (ok) trackEvent('fortune_share', { method: 'link' });
   };
 

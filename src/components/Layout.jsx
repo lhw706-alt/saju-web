@@ -37,9 +37,10 @@ export default function Layout() {
   }, []);
   // 토스트: 4초 동안 보이고(마지막 0.4초는 CSS 로 흐려짐) 사라짐. 새 안내가 오면 처음부터 다시
   const noticeTimer = useRef(null);
-  const showNotice = (text) => {
+  // tone: 'positive'(초록 체크) · 'negative'(빨간 느낌표) · 없으면 아이콘 없이 (Montage Toast)
+  const showNotice = (text, tone) => {
     clearTimeout(noticeTimer.current);
-    setNotice({ text, key: Date.now() });
+    setNotice({ text, tone, key: Date.now() });
     noticeTimer.current = setTimeout(() => setNotice(''), 4000);
   };
   useEffect(() => () => clearTimeout(noticeTimer.current), []);
@@ -113,7 +114,7 @@ export default function Layout() {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setAuth((a) => ({ ...a, user: null }));
-    showNotice('로그아웃했어요.');
+    showNotice('로그아웃했어요.', 'positive');
   };
   // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃 → 성공하면 true
   const withdraw = async () => {
@@ -124,7 +125,7 @@ export default function Layout() {
       trackEvent('withdraw', { method: auth.user?.provider || 'kakao' });
       setAuth((a) => ({ ...a, user: null }));
       showNotice(auth.user?.provider === 'email' ? '탈퇴했어요. 그동안 고마웠어요.' : '탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
-    } else showNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    } else showNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.', 'negative');
     return ok;
   };
   useEffect(() => {
@@ -214,12 +215,24 @@ export default function Layout() {
           trackEvent('login', { method: 'email' });
           setAuth((a) => ({ ...a, user: { nick, provider: 'email' } }));
           setLogin(false);
-          showNotice('로그인했어요.');
+          showNotice('로그인했어요.', 'positive');
         }}
       />
       <div className="toast-wrap" role="status" aria-live="polite">
         {notice && (
-          <p key={notice.key} className="toast">
+          <p key={notice.key} className={`toast${notice.tone ? ` is-${notice.tone}` : ''}`}>
+            {notice.tone === 'positive' && (
+              <svg className="toast-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" fill="var(--positive)" />
+                <path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            {notice.tone === 'negative' && (
+              <svg className="toast-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" fill="var(--danger)" />
+                <path d="M12 7v6M12 16.5v.5" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
             {notice.text}
           </p>
         )}
