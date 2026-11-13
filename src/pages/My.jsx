@@ -24,7 +24,7 @@ const fmtDate = (iso) => {
 
 export default function My() {
   const navigate = useNavigate();
-  const { auth, openLogin, openContact, inquiryVer, logout, withdraw, setNick } = useOutletContext();
+  const { auth, openLogin, openContact, inquiryVer, withdraw, setNick } = useOutletContext();
   const { hash } = useLocation();
   const params = useParams();
   // 예전 링크 /my#inquiries 는 고객센터 탭으로
@@ -292,10 +292,8 @@ export default function My() {
         )}
       </div>
 
+      {/* 로그아웃은 상단 닉네임 메뉴로 옮김 */}
       <div className="my-foot">
-        <button type="button" className="my-set" onClick={() => logout().then(() => navigate('/'))}>
-          로그아웃
-        </button>
         <button type="button" className="my-withdraw" onClick={() => withdraw().then((ok) => ok && navigate('/'))}>
           회원 탈퇴
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">

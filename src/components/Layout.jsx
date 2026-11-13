@@ -6,6 +6,7 @@ import { GROUPS } from '../lib/contents.js';
 import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
 import LoginModal from './LoginModal.jsx';
+import UserMenu from './UserMenu.jsx';
 import { clearInput } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -161,9 +162,7 @@ export default function Layout() {
         </nav>
         {/* 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         {auth.user ? (
-          <Link to="/my" className="header-contact user-link" aria-label={`${auth.user.nick || '내 계정'} 마이페이지`}>
-            {auth.user.nick || '내 계정'}
-          </Link>
+          <UserMenu nick={auth.user.nick} onLogout={() => logout().then(() => pathname.startsWith('/my') && navigate('/'))} />
         ) : (
           <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setLogin(true)}>
             로그인

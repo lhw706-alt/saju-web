@@ -739,6 +739,15 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-inq-actions .btn-primary.inline { margin: 0; height: 40px; padding: 0 16px; font-size: 14px; }
 /* 상단 닉네임(마이페이지 링크) */
 .header-contact.user-link { display: inline-flex; align-items: center; text-decoration: none; }
+/* 상단 닉네임 펼침 메뉴 */
+.user-menu { position: relative; flex: none; }
+.user-menu-btn { display: inline-flex; align-items: center; gap: 4px; }
+.user-menu-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
+.user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 150px; padding: 6px; border-radius: var(--r-md); background: #2a2b2f; border: 1px solid var(--line); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4); }
+.user-menu-list a, .user-menu-list button { display: flex; align-items: center; height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
+.user-menu-list a:hover, .user-menu-list button:hover, .user-menu-list :focus-visible { background: rgba(255, 255, 255, 0.06); outline: none; }
+.user-menu-list button { color: var(--text-2); border-top: 1px solid var(--line-soft); border-radius: 0 0 8px 8px; margin-top: 4px; }
+@media (max-width: 559px) { .user-menu { order: 1; } }
 /* 마이페이지 — 카드마다 제목 + "항목 이름 · 값 · 버튼" 줄 (2026-11-13) */
 .my { padding: 28px 0 0; }
 /* 왼쪽 탭 + 오른쪽 내용. 좁은 화면에선 위쪽 가로 탭 */
@@ -746,7 +755,7 @@ legend.contact-label { margin-bottom: 12px; }
 .my-side { position: sticky; top: 16px; display: grid; gap: 4px; margin-top: 16px; }
 .my-side a { display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: var(--r-md); color: var(--text-2); font-size: 15px; text-decoration: none; }
 .my-side a:hover { color: var(--text); }
-.my-side a.on { color: var(--text); background: var(--bg-2); font-weight: 600; }
+.my-side a.on { color: var(--text); background: #2c2d31; font-weight: 600; }
 .my-main { min-width: 0; }
 .my-main > .my-sec:first-child { margin-top: 16px; }
 @media (max-width: 719px) {
@@ -810,7 +819,7 @@ legend.contact-label { margin-bottom: 12px; }
 .my-edit { display: grid; gap: 6px; justify-items: center; margin-top: 12px; }
 .my-edit .steps { width: 100%; }
 .my-msg { margin: 10px 0 0; font-size: 14px; color: var(--primary); }
-.my-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.my-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 .my-withdraw { display: inline-flex; align-items: center; gap: 2px; padding: 8px 4px; border: 0; background: none; color: var(--muted); font-size: 14px; cursor: pointer; }
 .my-withdraw:hover { color: var(--danger); }
 /* 닉네임 변경 */
