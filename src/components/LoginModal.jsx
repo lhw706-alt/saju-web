@@ -132,7 +132,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
               {!emailEnabled && <p className="login-off-note">이메일 로그인은 준비중이에요.</p>}
             </form>
             <p className="login-switch">
-              아직 회원이 아니에요?
+              처음 오셨어요?
               <button type="button" className="my-link" onClick={() => setView('signup')}>
                 이메일로 회원가입
               </button>
@@ -168,7 +168,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
             </button>
             {!emailEnabled && <p className="login-off-note">이메일 가입은 준비중이에요. 카카오로 가입해 주세요.</p>}
             <p className="login-switch">
-              이미 회원이에요?
+              이미 가입하셨어요?
               <button type="button" className="my-link" onClick={() => setView('login')}>
                 로그인
               </button>
@@ -189,12 +189,15 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
           </div>
         )}
 
-        <p className="login-note">
-          이메일은 가입·로그인에만 써요.{' '}
-          <Link to="/privacy" onClick={onClose}>
-            개인정보 처리방침
-          </Link>
-        </p>
+        {view === 'signup' && (
+          <p className="login-note">
+            가입하면{' '}
+            <Link to="/privacy" onClick={onClose}>
+              개인정보 처리방침
+            </Link>
+            에 동의한 것으로 봐요. 이메일은 가입·로그인에만 써요.
+          </p>
+        )}
       </div>
     </div>,
     document.body
