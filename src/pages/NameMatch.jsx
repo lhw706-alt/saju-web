@@ -72,6 +72,28 @@ const AREAS = [
   ['감정', '감정 궁합'],
   ['지속력', '관계 지속력'],
 ];
+// 관계 아이콘: 이모지 대신 사이트 톤의 얇은 선 아이콘 (2026-11-14 사용자 지시)
+const REL_PATHS = {
+  lover: 'M9 19s-6-3.6-6-8.2A3.3 3.3 0 0 1 9 9a3.3 3.3 0 0 1 6 1.8M15 21s-5-3-5-6.8A2.7 2.7 0 0 1 15 12.6a2.7 2.7 0 0 1 5 1.6C20 18 15 21 15 21z',
+  some: 'M12 20s-7-4.2-7-9.4A3.8 3.8 0 0 1 12 8.5a3.8 3.8 0 0 1 7 2.1C19 15.8 12 20 12 20zM19 3v3M17.5 4.5h3',
+  friend: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 20c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M12.5 16.2c.9-.8 2.1-1.2 3.5-1.2 2.7 0 4.9 2 5.5 5',
+  spouse: 'M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM9.5 9.6 8 6l2-3h4l2 3-1.5 3.6M8 6h8',
+  coworker: 'M4 8h16v11H4zM9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 13h16',
+  etc: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z',
+};
+const RelIcon = ({ id, size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d={REL_PATHS[id] || REL_PATHS.etc} />
+  </svg>
+);
+
+// 소개 화면 특징 3가지 (✦ 목록 대신 아이콘 카드, 2026-11-14 사용자 지시)
+const FEATS = [
+  { title: '이름 두 개면 끝', desc: '생년월일 없이 바로 시작해요', path: 'M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4' },
+  { title: '4가지 궁합 점수', desc: '성격·대화·감정·지속력', path: 'M5 20V12M10 20V6M15 20v-9M20 20V4' },
+  { title: '숨은 관계 해석', desc: '누가 먼저 다가갈지까지', path: 'M12 20s-7-4.2-7-9.4A3.8 3.8 0 0 1 12 8.5a3.8 3.8 0 0 1 7 2.1C19 15.8 12 20 12 20z' },
+];
+
 const STEPS = ['두 사람의 이름을 살펴보고 있어요', '글자마다 첫소리로 소리 오행을 찾고 있어요', '두 이름의 오행이 어떻게 어울리는지 보고 있어요', '궁합 결과가 나왔어요!'];
 
 function SoundRow({ name, sound, lit = 99 }) {
@@ -232,10 +254,20 @@ export default function NameMatch() {
               setPhase('form');
             }}
           />
-          <ul className="nm-points">
-            <li>이름 두 개만 넣으면 바로 시작해요</li>
-            <li>종합 점수와 성격·대화·감정·지속력 궁합</li>
-            <li>누가 먼저 다가갈지, 오래 가는 법까지</li>
+          <ul className="nm-feats">
+            {FEATS.map((f) => (
+              <li key={f.title}>
+                <span className="nm-feat-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d={f.path} />
+                  </svg>
+                </span>
+                <span className="nm-feat-text">
+                  <b>{f.title}</b>
+                  <span>{f.desc}</span>
+                </span>
+              </li>
+            ))}
           </ul>
         </section>
       )}
@@ -270,8 +302,8 @@ export default function NameMatch() {
           <div className="nm-rels" role="radiogroup" aria-labelledby="nm-rel-label">
             {RELATIONS.map((r) => (
               <button key={r.id} type="button" role="radio" aria-checked={relation === r.id} className={relation === r.id ? 'on' : ''} onClick={() => setRelation(r.id)}>
-                <span aria-hidden="true">{r.icon}</span>
-                {r.label}
+                <RelIcon id={r.id} />
+                <span>{r.label}</span>
               </button>
             ))}
           </div>
@@ -304,10 +336,14 @@ export default function NameMatch() {
           <section className="nm-head">
             <p className="nm-kicker">이름 궁합 분석 완료</p>
             <h1 className="nm-names">
-              {sent.me} <span aria-label="와">{rel?.romantic ? '❤️' : '🤝'}</span> {sent.partner}
+              {sent.me}
+              <span className="nm-names-link" aria-label="와">
+                <RelIcon id={rel?.romantic ? 'some' : 'friend'} size={22} />
+              </span>
+              {sent.partner}
             </h1>
             <span className="nm-rel-chip">
-              {rel?.icon} {rel?.label}
+              <RelIcon id={rel?.id} size={15} /> {rel?.label}
             </span>
             <div className="nm-score" aria-label={score != null ? `이름 궁합 ${score}점` : '점수를 계산하는 중'}>
               {score != null ? (

@@ -1354,3 +1354,25 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .nm-stage .nm-art { width: 78%; }
 .nm-submit { display: grid; justify-items: center; margin-top: 18px; }
 .nm-intro .lmb { margin-top: 4px; }
+
+/* 이름 궁합 관계 고르기: 이모지 타일 대신 얇은 선 아이콘 알약 (2026-11-14 사용자 지시) */
+.nm-rels { gap: 10px; }
+.nm-rels button { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 999px; background: rgba(255, 255, 255, 0.03); color: var(--text-2); font-size: 15px; font-weight: 500; transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s; }
+.nm-rels button svg { flex: none; color: rgba(226, 194, 122, 0.75); }
+.nm-rels button:hover { border-color: rgba(226, 194, 122, 0.45); color: var(--text); }
+.nm-rels button.on { border-color: var(--primary); background: linear-gradient(180deg, rgba(226, 194, 122, 0.16), rgba(226, 194, 122, 0.06)); color: var(--primary); font-weight: 600; box-shadow: 0 0 0 3px rgba(226, 194, 122, 0.12), 0 8px 20px rgba(0, 0, 0, 0.25); }
+.nm-rels button.on svg { color: var(--primary); }
+.nm-names { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.nm-names-link { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(226, 194, 122, 0.12); color: var(--primary); }
+.nm-rel-chip { display: inline-flex; align-items: center; gap: 5px; }
+@media (max-width: 400px) { .nm-rels button { height: 48px; gap: 6px; font-size: 14px; } }
+
+.nm-rels button span { font-size: inherit; line-height: 1.2; }
+/* 이름 궁합 소개 특징 카드 (2026-11-14) */
+.nm-feats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 640px; margin: 16px 0 0; padding: 0; list-style: none; text-align: left; }
+.nm-feats li { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); }
+.nm-feat-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(226, 194, 122, 0.12); color: var(--primary); }
+.nm-feat-text { display: grid; gap: 2px; min-width: 0; }
+.nm-feat-text b { font-size: 15px; font-weight: 600; color: var(--text); }
+.nm-feat-text span { font-size: 13px; line-height: 1.45; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+@media (max-width: 640px) { .nm-feats { grid-template-columns: 1fr; max-width: 420px; } }
