@@ -6,6 +6,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
 import ResultShare from '../components/ShareRow.jsx';
+import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
 // 3D 천동이 (메인과 같은 모델 + 로또 공, 2026-11-14 사용자 요청). 불러오는 동안·WebGL 이 없으면 2D 그림
@@ -126,9 +127,7 @@ export default function Lucky() {
       <div className="lucky-panel" aria-live="polite">
         {phase === 'idle' && (
           <>
-            <button type="button" className="btn-glass" onClick={draw}>
-              {member ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'}
-            </button>
+            <LiquidMetalButton label={member ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'} width={member ? 196 : 224} onClick={draw} />
             <p className="lucky-hint">{member ? '천둥도사를 눌러도 뽑을 수 있어요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
           </>
         )}
