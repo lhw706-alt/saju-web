@@ -1,9 +1,9 @@
 // 하루 운세 화면 (/result?v=day&t=today|tomorrow|date) — 2026-11-13
-// 레퍼런스(오늘의 운세 화면)처럼 필요한 것만: 위쪽 오늘·내일·지정일 탭 → 큰 점수 + 한 줄 요약 →
-// 총운·오전·오후·밤 탭 → 분야별 점수 육각형 그래프 → 고른 탭의 글.
-// 풀이는 주제 today·tomorrow·date (topics.js DAY_TOPICS), 맨 앞 json 에 점수·요약·분야별 점수.
-// 같은 사람·같은 날이면 기억한 풀이를 그대로 (키 '주제@날짜').
-import { useEffect, useMemo, useRef, useState } from 'react';
+// 위쪽 탭 두 개: 그날 운세(오늘·내일·지정일 중 고른 것) | 띠 운세. 들어오면 두 풀이를 함께 요청.
+// 그날 운세: 천둥도사 + 점수 + 한 줄 요약 → 분야별 육각형 그래프 → 오전·오후·밤 원형 그래프 → 총운·오전·오후·밤 탭 글.
+// 띠 운세(topics.js TTI_TOPIC): 점수 + 요약 → 행운 포인트(색·숫자·방향) → 띠 운세 글 → 한 줄 조언.
+// 같은 사람·같은 날이면 기억한 풀이를 그대로 (키 주제@날짜, tti@날짜).
+import { useEffect, useMemo, useState } from 'react';
 import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import { DAY_TOPICS, dayTopicDate, ymdOf } from '../lib/topics.js';
@@ -11,6 +11,7 @@ import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { FreshLoader } from './LifeReport.jsx';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
+import { computeSaju } from '../lib/saju.js';
 
 const AXES = ['총운', '재물운', '연애운', '사업운', '건강운', '학업운'];
 const TIMES = ['총운', '오전', '오후', '밤'];
@@ -115,46 +116,36 @@ function Radar({ scores }) {
   );
 }
 
-export default function DayReport({ input, member = false, initial = 'today' }) {
-  const topic = DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today';
-  const label = DAY_TOPICS.find((t) => t.id === topic).label;
-  const [picked, setPicked] = useState('');
-  const [pickedFor, setPickedFor] = useState(null);
-  const [time, setTime] = useState('총운');
+// 풀이 한 개 받기: 기억한 풀이 → (회원) 계정 → 새로 받기. valid: 기억한 풀이를 써도 되는지
+function useDayPart(input, member, id, date, valid) {
   const [parts, setParts] = useState({}); // '주제@날짜' -> { text, status, error, end }
-  const abortRef = useRef(null);
-  const [tries, setTries] = useState(0); // 다시 받기
+  const [tries, setTries] = useState(0);
+  const key = date ? `${id}@${date}` : null;
 
-  const date = dayTopicDate(topic, pickedFor);
-  const key = date ? `${topic}@${date}` : null;
-  const cur = key ? parts[key] : null;
-
-  // 주제·날짜가 정해지면: 기억한 풀이 → (회원) 계정 → 새로 받기
   useEffect(() => {
     if (!key || parts[key]) return undefined;
     const update = (patch) => setParts((p) => ({ ...p, [key]: { ...p[key], ...patch } }));
-    const memo = localParts(input, key)[topic];
-    if (hasTimes(memo)) {
+    const memo = localParts(input, key)[id];
+    if (valid(memo)) {
       update({ text: memo, status: 'done', error: '', end: null });
       return undefined;
     }
     const ctrl = new AbortController();
-    abortRef.current = ctrl;
     const t = setTimeout(async () => {
       update({ text: '', status: 'loading', error: '', end: null });
       if (member) {
-        const srv = (await serverParts(input, key))[topic];
-        if (hasTimes(srv)) {
-          rememberPart(input, key, topic, srv);
+        const srv = (await serverParts(input, key))[id];
+        if (valid(srv)) {
+          rememberPart(input, key, id, srv);
           return update({ text: srv, status: 'done' });
         }
       }
-      trackEvent('reading_start', { topic });
+      trackEvent('reading_start', { topic: id });
       try {
-        const r = await streamReading({ input, topic, date, signal: ctrl.signal, onText: (text) => update({ text }) });
+        const r = await streamReading({ input, topic: id, date, signal: ctrl.signal, onText: (text) => update({ text }) });
         update({ text: r.text, status: r.error ? 'error' : 'done', error: r.error || '', end: r.end });
-        if (!r.error && r.text && !r.end) rememberPart(input, key, topic, r.text, { member });
-        trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic, end: r.end || 'ok' });
+        if (!r.error && r.text && !r.end) rememberPart(input, key, id, r.text, { member });
+        trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic: id, end: r.end || 'ok' });
       } catch (e) {
         if (e.name === 'AbortError') setParts(({ [key]: _drop, ...rest }) => rest);
         else update({ status: 'error', error: '네트워크 연결을 확인하고 다시 시도해 주세요.' });
@@ -167,15 +158,83 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, tries]);
 
-  const { data, sections } = useMemo(() => parseDay(cur?.text || ''), [cur?.text]);
-  const score = data && Number.isFinite(Number(data.score)) ? clamp(data.score, 0, 100) : null;
-  const times = TIMES.filter((t) => sections[t]);
-  const shownTime = sections[time] ? time : times[0] || '총운';
-
   const retry = () => {
     setParts(({ [key]: _drop, ...rest }) => rest);
     setTries((n) => n + 1);
   };
+  return [key ? parts[key] : null, retry];
+}
+
+// 점수 + 천둥도사 + 한 줄 요약
+function ScoreHead({ date, data, cur, art, sub }) {
+  const score = data && Number.isFinite(Number(data.score)) ? clamp(data.score, 0, 100) : null;
+  return (
+    <section className="day-top">
+      <p className="day-date">{sub || dateTitle(date)}</p>
+      <div className="day-score" aria-live="polite">
+        {score != null ? (
+          <>
+            <span className="day-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaFaceSvg(faceOf(score), art) }} />
+            <b>
+              {score}
+              <small>점</small>
+            </b>
+          </>
+        ) : (
+          <span className="day-score-wait" aria-label="점수를 계산하는 중">
+            <span className="moon-spin" aria-hidden="true" />
+          </span>
+        )}
+      </div>
+      <p className="day-summary">{data?.summary || (cur?.status === 'loading' ? '천둥도사가 그날의 기운을 읽고 있어요…' : '')}</p>
+    </section>
+  );
+}
+
+function EndNotice({ cur, retry }) {
+  if (!(cur?.status === 'error' || (cur?.status === 'done' && cur.end && cur.end !== 'refusal'))) return null;
+  return (
+    <div className="notice">
+      <p>{cur.status === 'error' ? cur.error : END_MESSAGES[cur.end] || END_MESSAGES.error}</p>
+      <button type="button" className="btn-ghost" onClick={retry}>
+        다시 받기
+      </button>
+    </div>
+  );
+}
+
+const dateTitle = (ymd) => {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return `${m}월 ${d}일 ${WEEK[new Date(y, m - 1, d).getDay()]}요일`;
+};
+const ANIMAL_BRANCH = { 쥐: '子', 소: '丑', 호랑이: '寅', 토끼: '卯', 용: '辰', 뱀: '巳', 말: '午', 양: '未', 원숭이: '申', 닭: '酉', 개: '戌', 돼지: '亥' };
+
+export default function DayReport({ input, member = false, initial = 'today' }) {
+  const topic = DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today';
+  const label = DAY_TOPICS.find((t) => t.id === topic).label;
+  const [view, setView] = useState('day'); // 위쪽 탭: 'day'(그날 운세) | 'tti'(띠 운세)
+  const [picked, setPicked] = useState('');
+  const [pickedFor, setPickedFor] = useState(null);
+  const [time, setTime] = useState('총운');
+
+  const date = dayTopicDate(topic, pickedFor);
+  // 두 풀이를 함께 요청 (탭을 바꿔도 기다리지 않게)
+  const [cur, retry] = useDayPart(input, member, topic, date, hasTimes);
+  const [ttiCur, ttiRetry] = useDayPart(input, member, 'tti', date, (t) => typeof t === 'string' && t.length > 0);
+
+  const { data, sections } = useMemo(() => parseDay(cur?.text || ''), [cur?.text]);
+  const tti = useMemo(() => parseDay(ttiCur?.text || ''), [ttiCur?.text]);
+  const times = TIMES.filter((t) => sections[t]);
+  const shownTime = sections[time] ? time : times[0] || '총운';
+
+  const animal = useMemo(() => {
+    try {
+      const c = computeSaju(input);
+      return { name: c.animal, year: c.solarDate.slice(0, 4) };
+    } catch {
+      return null;
+    }
+  }, [input]);
 
   const today = ymdOf();
   const maxDate = (() => {
@@ -184,15 +243,21 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
     return ymdOf(d);
   })();
   const pickOk = /^\d{4}-\d{2}-\d{2}$/.test(picked) && picked >= today && picked <= maxDate;
-  const dateTitle = (ymd) => {
-    const [y, m, d] = ymd.split('-').map(Number);
-    return `${m}월 ${d}일 ${WEEK[new Date(y, m - 1, d).getDay()]}요일`;
-  };
+  const lucky = tti.data?.lucky && typeof tti.data.lucky === 'object' ? Object.entries(tti.data.lucky).filter(([, v]) => v != null && String(v).trim()) : [];
 
   return (
     <>
       <FreshLoader />
-      <h1 className="day-title">{label}</h1>
+      <nav className="day-tabs" role="tablist" aria-label="운세 종류">
+        {[
+          ['day', label],
+          ['tti', '띠 운세'],
+        ].map(([v, l]) => (
+          <button key={v} type="button" role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
+            {l}
+          </button>
+        ))}
+      </nav>
 
       {topic === 'date' && (
         <form
@@ -218,56 +283,65 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
         </form>
       )}
 
-      {date && (
-        <section className="day-top">
-          <p className="day-date">{dateTitle(date)}</p>
-          <div className="day-score" aria-live="polite">
-            {score != null ? (
-              <>
-                <span className="day-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaFaceSvg(faceOf(score), topic) }} />
-                <b>
-                  {score}
-                  <small>점</small>
-                </b>
-              </>
-            ) : (
-              <span className="day-score-wait" aria-label="점수를 계산하는 중">
-                <span className="moon-spin" aria-hidden="true" />
-              </span>
-            )}
-          </div>
-          <p className="day-summary">{data?.summary || (cur?.status === 'loading' ? '천둥도사가 그날의 기운을 읽고 있어요…' : '')}</p>
-        </section>
+      {date && view === 'day' && (
+        <>
+          <ScoreHead date={date} data={data} cur={cur} art={topic} />
+          <section className="day-body">
+            <h2 className="day-sub">분야별 운</h2>
+            <Radar scores={data?.scores} />
+            <h2 className="day-sub">때별 운</h2>
+            <TimeRings times={data?.times} current={shownTime} onPick={(t) => sections[t] && setTime(t)} />
+            <div className="day-times" role="tablist" aria-label="때별 운세">
+              {TIMES.map((t) => (
+                <button key={t} type="button" role="tab" aria-selected={shownTime === t} className={shownTime === t ? 'on' : ''} disabled={!sections[t]} onClick={() => setTime(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <article className="day-text" aria-busy={cur?.status === 'loading'}>
+              <h2>{shownTime}</h2>
+              {sections[shownTime] ? <Markdown text={sections[shownTime]} /> : cur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
+              {cur?.status === 'loading' && sections[shownTime] && <span className="cursor" aria-hidden="true" />}
+              <EndNotice cur={cur} retry={retry} />
+            </article>
+          </section>
+        </>
       )}
 
-      {date && (
-        <section className="day-body">
-          <h2 className="day-sub">분야별 운</h2>
-          <Radar scores={data?.scores} />
-          <h2 className="day-sub">때별 운</h2>
-          <TimeRings times={data?.times} current={shownTime} onPick={(t) => sections[t] && setTime(t)} />
-          <div className="day-times" role="tablist" aria-label="때별 운세">
-            {TIMES.map((t) => (
-              <button key={t} type="button" role="tab" aria-selected={shownTime === t} className={shownTime === t ? 'on' : ''} disabled={!sections[t]} onClick={() => setTime(t)}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <article className="day-text" aria-busy={cur?.status === 'loading'}>
-            <h2>{shownTime}</h2>
-            {sections[shownTime] ? <Markdown text={sections[shownTime]} /> : cur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
-            {cur?.status === 'loading' && sections[shownTime] && <span className="cursor" aria-hidden="true" />}
-            {(cur?.status === 'error' || (cur?.status === 'done' && cur.end && cur.end !== 'refusal')) && (
-              <div className="notice">
-                <p>{cur.status === 'error' ? cur.error : END_MESSAGES[cur.end] || END_MESSAGES.error}</p>
-                <button type="button" className="btn-ghost" onClick={retry}>
-                  다시 받기
-                </button>
-              </div>
+      {date && view === 'tti' && (
+        <>
+          <ScoreHead
+            date={date}
+            data={tti.data}
+            cur={ttiCur}
+            art={topic}
+            sub={animal ? `${dateTitle(date)} · ${animal.year}년생 ${animal.name}띠(${ANIMAL_BRANCH[animal.name] || ''})` : dateTitle(date)}
+          />
+          <section className="day-body">
+            {lucky.length > 0 && (
+              <>
+                <h2 className="day-sub">행운 포인트</h2>
+                <ul className="day-lucky">
+                  {lucky.map(([k, v]) => (
+                    <li key={k}>
+                      <span>{k}</span>
+                      <b>{String(v)}</b>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
-          </article>
-        </section>
+            {['띠 운세', '한 줄 조언'].map((h) =>
+              tti.sections[h] || (h === '띠 운세' && ttiCur) ? (
+                <article key={h} className="day-text" aria-busy={ttiCur?.status === 'loading'}>
+                  <h2>{h}</h2>
+                  {tti.sections[h] ? <Markdown text={tti.sections[h]} /> : ttiCur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
+                  {h === '띠 운세' && <EndNotice cur={ttiCur} retry={ttiRetry} />}
+                </article>
+              ) : null,
+            )}
+          </section>
+        </>
       )}
     </>
   );

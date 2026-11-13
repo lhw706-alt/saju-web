@@ -30,6 +30,17 @@ export const DAY_TOPICS = [
   { id: 'tomorrow', label: '내일의 운세', desc: '내일을 미리 준비하는 조언', day: 'tomorrow', focus: '내일 하루의 흐름, 미리 준비하면 좋은 일과 조심할 일', format: DAY_FORMAT },
   { id: 'date', label: '지정일 운세', desc: '중요한 날, 그날의 기운 미리 보기', day: 'pick', focus: '고른 날 하루의 흐름, 그날 중요한 일을 잘 치르기 위해 힘을 쓰면 좋은 점과 조심할 점', format: DAY_FORMAT },
 ];
+// 띠 운세 (2026-11-13 사용자 지시): 하루 운세 화면의 두 번째 탭. 하루 운세와 동시에 따로 요청 (기억하기 키 'tti@날짜')
+const TTI_FORMAT = `맨 처음에 json 코드블록(세 개의 백틱 + json) 하나를 설명 없이 쓴다:
+{"score":그날 띠 운 점수 40~95 정수,"summary":"그날 내 띠의 하루를 한 문장으로(25자 안팎, ~하루예요 꼴)","lucky":{"색":"색 이름 하나","숫자":"한 자리 또는 두 자리 숫자 하나","방향":"동·서·남·북·동남 같은 방향 하나"}}
+점수는 내 띠(태어난 해의 지지)와 그날 일진의 지지가 맺는 관계(육합·삼합·충·형·파·해·원진)를 중심으로 정한다. lucky 는 그날 힘이 되는 오행에 맞춰 고른다.
+그다음 아래 제목을 그대로, 이 순서대로 쓴다.
+## 띠 운세
+(3~4문장. 내 띠와 그날 일진 지지의 관계를 근거로 하루 흐름과 사람 관계를 풀고, 힘을 쓰면 좋은 일을 담는다)
+## 한 줄 조언
+(한 문장)
+그 하루에 대한 이야기만 쓰고, 겁주는 예언은 하지 않는다. 전체(JSON 제외) 250~400자.`;
+export const TTI_TOPIC = { id: 'tti', label: '띠 운세', day: 'pick', focus: '내 띠(태어난 해의 지지)와 그날 일진이 만나 생기는 하루의 흐름', format: TTI_FORMAT };
 // 하루 운세는 전용 화면(/result?v=day&t=주제)에서만 — 일반 결과 화면의 주제 칩에는 넣지 않음 (2026-11-13 사용자 지시)
 const DAY_IDS = new Set(DAY_TOPICS.map((t) => t.id));
 export const isDayTopic = (id) => DAY_IDS.has(id);
@@ -151,4 +162,4 @@ ${MATCH_COMMON}
 ];
 
 export const topicById = (id) =>
-  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : null);
+  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : id === 'tti' ? TTI_TOPIC : null);

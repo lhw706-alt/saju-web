@@ -63,11 +63,11 @@ const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분
 // 같은 생년월일시·주제·연도로 다시 보면 새로 만들지 않고 이걸 보여 줌 (화면 src/lib/history.js). 탈퇴하면 지움.
 const historyStore = () => getStore({ name: 'history', consistency: 'strong' });
 const HISTORY_TOPICS = new Set(['life', ...TOPICS.map((t) => t.id)]);
-const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'match', 'match1', 'match2']);
+const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'tti', 'match', 'match1', 'match2']);
 const historyTopicOk = (t) =>
   HISTORY_TOPICS.has(t) ||
   (typeof t === 'string' && t.startsWith('match@') && t.length < 120) || // 궁합: 'match@상대키'
-  (typeof t === 'string' && /^(today|tomorrow|date)@\d{4}-\d{2}-\d{2}$/.test(t)); // 하루 운세: '주제@날짜'
+  (typeof t === 'string' && /^(today|tomorrow|date|tti)@\d{4}-\d{2}-\d{2}$/.test(t)); // 하루 운세: '주제@날짜'
 const historyId = (sub, key) => `${sub}/${createHash('sha256').update(String(key)).digest('base64url').slice(0, 32)}`;
 const historyLimited = createRateLimiter(60, 10 * 60_000);
 

@@ -1045,8 +1045,15 @@ legend.contact-label { margin-bottom: 12px; }
 @media (max-width: 479px) { .day-pick-row { grid-template-columns: 1fr; } }
 
 /* 하루 운세 화면 (DayReport, 2026-11-13 레퍼런스: 큰 점수 → 때별 탭 → 육각형 그래프 → 글) */
-.day-title { margin: 28px 0 0; font-family: var(--title); font-size: 24px; font-weight: 400; text-align: center; }
-.day-top { display: grid; justify-items: center; padding: 10px 0 10px; text-align: center; }
+.day-tabs { display: grid; grid-template-columns: repeat(2, 1fr); margin-top: 20px; border-bottom: 1px solid var(--line-soft); }
+.day-tabs button { height: 48px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-2); font-size: 16px; font-weight: 500; cursor: pointer; }
+.day-tabs button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--primary); }
+.day-lucky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+.day-lucky li { display: grid; justify-items: center; gap: 6px; padding: 16px 8px; border: 1px solid var(--line-soft); border-radius: var(--r); background: var(--bg-2); text-align: center; }
+.day-lucky span { font-size: 14px; color: var(--text-2); }
+.day-lucky b { font-size: 18px; font-weight: 600; color: var(--primary); word-break: keep-all; }
+.day-body .day-text + .day-text { margin-top: 12px; }
+.day-top { display: grid; justify-items: center; padding: 26px 0 10px; text-align: center; }
 .day-date { margin: 0; font-size: 15px; color: var(--text-2); }
 .day-score { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-top: 10px; }
 .day-dosa { display: block; width: 104px; height: 78px; }
