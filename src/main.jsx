@@ -27,7 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/result" element={<Result />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/my" element={<My />} />
+          <Route path="/my/:tab?" element={<My />} />
           <Route path="/reset" element={<Reset />} />
           <Route path="*" element={<NotFound />} />
         </Route>

@@ -477,7 +477,7 @@ export default async (req, context) => {
           title: '문의에 답변했어요',
           lines: [`남겨 주신 '${INQUIRY_TYPES[q.type] || '문의'}'에 답변을 달았어요.`, '마이페이지의 내 문의내역에서 확인해 주세요.'],
           button: '답변 확인하기',
-          link: `${url.origin}/my#inquiries`,
+          link: `${url.origin}/my/support`,
           ignore: '문의한 적이 없다면 이 메일은 무시해 주세요.',
         });
         mailed = true;

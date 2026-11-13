@@ -151,8 +151,8 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
               <button type="button" className="btn-primary" onClick={onClose}>
                 확인
               </button>
-              {pathname !== '/my' && (
-                <Link to="/my#inquiries" className="btn-ghost" onClick={onClose}>
+              {!pathname.startsWith('/my/support') && (
+                <Link to="/my/support" className="btn-ghost" onClick={onClose}>
                   내 문의내역 보기
                 </Link>
               )}

@@ -741,6 +741,21 @@ legend.contact-label { margin-bottom: 12px; }
 .header-contact.user-link { display: inline-flex; align-items: center; text-decoration: none; }
 /* 마이페이지 — 카드마다 제목 + "항목 이름 · 값 · 버튼" 줄 (2026-11-13) */
 .my { padding: 28px 0 0; }
+/* 왼쪽 탭 + 오른쪽 내용. 좁은 화면에선 위쪽 가로 탭 */
+.my-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 2px; }
+.my-side { position: sticky; top: 16px; display: grid; gap: 4px; margin-top: 16px; }
+.my-side a { display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: var(--r-md); color: var(--text-2); font-size: 15px; text-decoration: none; }
+.my-side a:hover { color: var(--text); background: var(--bg-2); }
+.my-side a.on { color: var(--primary); background: rgba(226, 194, 122, 0.1); font-weight: 600; }
+.my-main { min-width: 0; }
+.my-main > .my-sec:first-child { margin-top: 16px; }
+@media (max-width: 719px) {
+  .my-layout { grid-template-columns: 1fr; gap: 0; }
+  .my-side { position: static; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; margin-top: 12px; border-bottom: 1px solid var(--line-soft); }
+  .my-side a { justify-content: center; height: 46px; padding: 0 6px; border-radius: 0; font-size: 15px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .my-side a:hover { background: none; }
+  .my-side a.on { background: none; border-bottom-color: var(--primary); }
+}
 .my-sec { margin-top: 16px; padding: 26px 24px; }
 .my-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .my-sec-title { margin: 0 0 8px; font-size: 18px; font-weight: 600; }

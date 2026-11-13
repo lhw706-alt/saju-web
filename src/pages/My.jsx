@@ -1,7 +1,7 @@
 // 마이페이지 (/my): 상단 닉네임을 누르면 이동. 카드형(항목 이름 · 값 · 버튼 줄) —
 // 내 프로필 · 기본 정보(이메일·비밀번호 변경·휴대폰 본인인증 자리(준비중)) · 내 사주 정보(계정에 저장) · 저장된 사주 정보(이 브라우저) · 로그아웃·탈퇴
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
@@ -9,6 +9,12 @@ import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset } from '../lib/storage.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
 
+// 마이페이지 탭 (주소 /my, /my/saju, /my/support). 세로로 길어지지 않게 기능별로 나눔 (2026-11-13)
+const MY_TABS = [
+  { id: 'account', label: '계정 정보', to: '/my' },
+  { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
+  { id: 'support', label: '고객센터', to: '/my/support' },
+];
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmtDate = (iso) => {
   if (!iso) return '';
@@ -20,6 +26,9 @@ export default function My() {
   const navigate = useNavigate();
   const { auth, openLogin, openContact, inquiryVer, logout, withdraw, setNick } = useOutletContext();
   const { hash } = useLocation();
+  const params = useParams();
+  // 예전 링크 /my#inquiries 는 고객센터 탭으로
+  const tab = hash === '#inquiries' ? 'support' : MY_TABS.some((t) => t.id === params.tab) ? params.tab : 'account';
 
   // 내 문의내역 (서버 /api/inquiry). 문의를 새로 보내면 inquiryVer 가 바뀌어 다시 읽음
   const [inqs, setInqs] = useState(null);
@@ -151,7 +160,18 @@ export default function My() {
   return (
     <section className="my">
       <h1 className="start-title">마이페이지</h1>
-
+      <div className="my-layout">
+        {/* 왼쪽 탭 (휴대폰에선 위쪽 가로 탭). 메뉴가 늘면 MY_TABS 에 추가 */}
+        <nav className="my-side" aria-label="마이페이지 메뉴">
+          {MY_TABS.map((t) => (
+            <Link key={t.id} to={t.to} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined}>
+              {t.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="my-main">
+      {tab === 'account' && (
+        <>
       {/* 내 프로필: 이미지(천동이) · 닉네임 */}
       <div className="my-sec card">
         <h2 className="my-sec-title">내 프로필</h2>
@@ -272,6 +292,22 @@ export default function My() {
         )}
       </div>
 
+      <div className="my-foot">
+        <button type="button" className="my-set" onClick={() => logout().then(() => navigate('/'))}>
+          로그아웃
+        </button>
+        <button type="button" className="my-withdraw" onClick={() => withdraw().then((ok) => ok && navigate('/'))}>
+          회원 탈퇴
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+        </>
+      )}
+
+      {tab === 'saju' && (
+        <>
       {/* 내 사주 정보 (계정에 저장 — 다른 기기에서도 그대로) */}
       <div className="my-sec card">
         <div className="my-sec-head">
@@ -353,8 +389,11 @@ export default function My() {
           </ul>
         )}
       </div>
+        </>
+      )}
 
-      {/* 내 문의내역: 접수일 · 유형 · 답변 상태. 누르면 내용과 답변을 펼침 */}
+      {tab === 'support' && (
+      /* 고객센터 · 내 문의내역: 접수일 · 유형 · 답변 상태. 누르면 내용과 답변을 펼침 */
       <div className="my-sec card" id="inquiries">
         <div className="my-sec-head">
           <h2 className="my-sec-title">내 문의내역</h2>
@@ -398,17 +437,8 @@ export default function My() {
           </ul>
         )}
       </div>
-
-      <div className="my-foot">
-        <button type="button" className="my-set" onClick={() => logout().then(() => navigate('/'))}>
-          로그아웃
-        </button>
-        <button type="button" className="my-withdraw" onClick={() => withdraw().then((ok) => ok && navigate('/'))}>
-          회원 탈퇴
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+      )}
+        </div>
       </div>
     </section>
   );
