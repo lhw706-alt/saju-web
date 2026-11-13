@@ -375,7 +375,9 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
         content: {
           title: `오늘의 운세 · ${fx.title}`,
           description: `${fx.text} 나도 오늘의 부적을 긁어 볼까요?`,
-          imageUrl: `${SITE.url}/icon-512.png`,
+          imageUrl: `${SITE.url}/share-fortune.png`, // 800×400 가로형 (public/share-fortune.png)
+          imageWidth: 800,
+          imageHeight: 400,
           link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL },
         },
         buttons: [{ title: '내 운세 보기', link: { mobileWebUrl: SHARE_URL, webUrl: SHARE_URL } }],
