@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { computeSaju, ELEMENT_KO, ELEMENTS } from '../lib/saju.js';
 import { loadInput, peekTopic, clearTopic, saveTopic } from '../lib/storage.js';
 import ChartTable from '../components/ChartTable.jsx';
@@ -17,6 +17,8 @@ const DAY_MASTER_IMAGE = {
 
 export default function Result() {
   const input = loadInput();
+  const { auth } = useOutletContext();
+  const member = !!auth.user;
   const [params] = useSearchParams();
   const life = params.get("v") === "life"; // 평생 사주 리포트 화면
   const [initialTopic] = useState(peekTopic); // 메인 카드에서 고른 주제
@@ -36,7 +38,7 @@ export default function Result() {
     return (
       <GlossaryProvider>
         <div className="report-top" />
-        <LifeReport key={JSON.stringify(input)} chart={chart} input={input} />
+        <LifeReport key={JSON.stringify(input)} chart={chart} input={input} member={member} />
         {/* 맨 아래: 다시 보기 (새로 입력한 뒤에도 평생 사주 리포트로) */}
         <div className="report-bottom">
           <Link to="/start" className="btn-primary inline" onClick={() => saveTopic('overall')}>
@@ -118,7 +120,7 @@ export default function Result() {
 
       <section className="block">
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
-        <Reading input={inp} initialTopic={initialTopic} />
+        <Reading input={inp} initialTopic={initialTopic} member={member} />
       </section>
       {/* 맨 아래: 사주 다시 보기 */}
       <div className="report-bottom">

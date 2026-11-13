@@ -853,6 +853,10 @@ legend.contact-label { margin-bottom: 12px; }
 }
 /* 로그인·회원가입 창 */
 .login-form { display: grid; gap: 12px; margin-top: 14px; }
+.login-reason { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 16px; border-radius: var(--r-md); background: var(--primary-soft); border: 1px solid var(--primary-line); }
+.login-reason p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--text); }
+.login-reason-face { position: relative; flex: none; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
+.login-reason-face .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
 .login-field { display: grid; gap: 6px; }
 .login-form .btn-primary { margin-top: 4px; }
 .login-form .btn-primary:disabled { opacity: 0.5; cursor: default; }
@@ -899,3 +903,4 @@ legend.contact-label { margin-bottom: 12px; }
 .login-sent p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--text-2); }
 .login-sent b { color: var(--text); font-weight: 600; }
 .login-sent .btn-primary { margin-top: 8px; }
+.hist-person { margin-left: 6px; font-weight: 400; color: var(--text-2); font-size: 14px; }

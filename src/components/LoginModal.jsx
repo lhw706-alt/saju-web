@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
+import { LogoSymbol } from './Logo.jsx';
 import PasswordInput from './PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 
@@ -23,7 +24,8 @@ function KakaoSymbol({ size = 30 }) {
   );
 }
 
-export default function LoginModal({ open, enabled, emailEnabled, onClose, onLoggedIn }) {
+// reason: 로그인을 권하는 이유 (예: 비회원 3번째 사주) — 창 맨 위에 천동이와 함께 보여 줌
+export default function LoginModal({ open, enabled, emailEnabled, onClose, onLoggedIn, reason = '' }) {
   const { pathname, search } = useLocation();
   const panel = useRef(null);
   const [view, setView] = useState('login'); // login | signup | sent | find | findSent
@@ -156,6 +158,14 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
 
         {view === 'login' && (
           <>
+            {reason && (
+              <div className="login-reason">
+                <span className="login-reason-face" aria-hidden="true">
+                  <LogoSymbol size={44} />
+                </span>
+                <p>{reason}</p>
+              </div>
+            )}
             <form className="login-form" onSubmit={login} noValidate>
               {field('login-email', '이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
               <PasswordInput id="login-pw" label="비밀번호" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} error={fieldErr('password')} />

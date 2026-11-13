@@ -12,6 +12,7 @@
 // - /api/auth/birth          → 내 사주 정보 저장(POST)·삭제(DELETE) — 마이페이지
 // - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
 // - /api/inquiry             → 문의 남기기(POST)·내 문의내역(GET), 로그인 회원만
+// - /api/history             → 풀이 내역 목록·하나(GET)·저장(POST)·삭제(DELETE), 로그인 회원만
 // - /api/admin/users         → 관리자용 회원 목록 + 문의 목록 (Authorization: Bearer ADMIN_PASSWORD)
 // - /api/admin/inquiry       → 관리자 문의 답변 저장
 // 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
@@ -19,10 +20,11 @@
 // 환경 변수: KAKAO_REST_API_KEY(필수), KAKAO_CLIENT_SECRET(카카오 앱에서 켰다면), SESSION_SECRET(필수, 긴 무작위 문자열),
 //           ADMIN_PASSWORD(관리자 회원 목록 보기용, 없으면 관리자 목록 꺼짐),
 //           RESEND_API_KEY·MAIL_FROM(이메일 가입 인증 메일, 없으면 이메일 가입·로그인 꺼짐)
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { createRateLimiter } from '../lib/guard.mjs';
-import { computeSaju, SajuInputError } from '../../src/lib/saju.js';
+import { computeSaju, normalizeInput, SajuInputError } from '../../src/lib/saju.js';
+import { TOPICS, REPORT_PARTS } from '../../src/lib/topics.js';
 import { passwordOk } from '../../src/lib/password.js';
 
 const SESSION = 'sc_session';
@@ -54,6 +56,15 @@ function adminAuth(req, ip) {
 const inquiries = () => getStore({ name: 'inquiries', consistency: 'strong' });
 const INQUIRY_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분 5건
+// ── 풀이 내역 (2026-11-13, 로그인 회원) ──
+// Netlify Blobs 'history': 키 = 회원번호/풀이키 해시, 값 = { key, input, topic, parts: { partId: text }, createdAt, updatedAt }
+// 같은 생년월일시·주제·연도로 다시 보면 새로 만들지 않고 이걸 보여 줌 (화면 src/lib/history.js). 탈퇴하면 지움.
+const historyStore = () => getStore({ name: 'history', consistency: 'strong' });
+const HISTORY_TOPICS = new Set(['life', ...TOPICS.map((t) => t.id)]);
+const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id)]);
+const historyId = (sub, key) => `${sub}/${createHash('sha256').update(String(key)).digest('base64url').slice(0, 32)}`;
+const historyLimited = createRateLimiter(60, 10 * 60_000);
+
 // 메일 HTML 에 넣을 사용자 글자 이스케이프
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 async function listInquiries(prefix) {
@@ -421,6 +432,47 @@ export default async (req, context) => {
     return json({ ok: true });
   }
 
+  // 풀이 내역: GET(목록, 또는 ?key= 하나) · POST(풀이 조각 저장) · DELETE(?key= 지우기) — 로그인 회원만
+  if (path === '/api/history') {
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    const store = historyStore();
+    const key = url.searchParams.get('key');
+    if (req.method === 'GET') {
+      if (key) return json({ item: await store.get(historyId(s.sub, key), { type: 'json' }) });
+      const { blobs } = await store.list({ prefix: `${s.sub}/` });
+      const items = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })))).filter(Boolean);
+      items.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      // 목록에는 풀이 글은 빼고 (열 때 ?key= 로 받음)
+      return json({ items: items.map(({ parts, ...it }) => ({ ...it, done: Object.keys(parts || {}).length })) });
+    }
+    if (req.method === 'DELETE') {
+      if (!key) return json({ error: '잘못된 요청이에요.' }, 400);
+      await store.delete(historyId(s.sub, key));
+      return json({ ok: true });
+    }
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요.' }, 429);
+    const body = await readJson();
+    const text = String(body?.text || '');
+    if (!body?.key || String(body.key).length > 200 || !HISTORY_TOPICS.has(body?.topic) || !HISTORY_PARTS.has(body?.partId) || !text || text.length > 30000) {
+      return json({ error: '잘못된 요청이에요.' }, 400);
+    }
+    let input;
+    try {
+      input = normalizeInput(body.input);
+    } catch {
+      return json({ error: '잘못된 요청이에요.' }, 400);
+    }
+    const id = historyId(s.sub, body.key);
+    const now = new Date().toISOString();
+    const cur = (await store.get(id, { type: 'json' })) || { key: String(body.key), input, topic: body.topic, parts: {}, createdAt: now };
+    cur.parts = { ...cur.parts, [body.partId]: text };
+    cur.updatedAt = now;
+    await store.setJSON(id, cur);
+    return json({ ok: true });
+  }
+
   // 문의: POST = 문의 남기기 / GET = 내 문의내역 (로그인 회원만)
   if (path === '/api/inquiry') {
     const s = verify(cookies(req)[SESSION], secret);
@@ -591,10 +643,11 @@ export default async (req, context) => {
         if (owner === s.sub) await nicknames().delete(nickKey(rec.displayNick));
       }
       if (rec?.email) await emails().delete(emailKey(rec.email));
-      // 이 회원이 남긴 문의도 지움
-      const store = inquiries();
-      const { blobs } = await store.list({ prefix: `${s.sub}/` });
-      await Promise.all(blobs.map((b) => store.delete(b.key)));
+      // 이 회원이 남긴 문의·풀이 내역도 지움
+      for (const store of [inquiries(), historyStore()]) {
+        const { blobs } = await store.list({ prefix: `${s.sub}/` });
+        await Promise.all(blobs.map((b) => store.delete(b.key)));
+      }
       await users().delete(s.sub);
     } catch (e) {
       console.error('user delete failed:', e?.name);
@@ -688,4 +741,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/admin/users', '/api/admin/inquiry'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/admin/users', '/api/admin/inquiry'] };

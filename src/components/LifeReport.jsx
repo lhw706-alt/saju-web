@@ -5,6 +5,7 @@ import { ELEMENTS, ELEMENT_KO, ELEMENT_HANJA } from '../lib/saju.js';
 import { REPORT_PARTS } from '../lib/topics.js';
 import { streamReading } from '../lib/stream.js';
 import { loadReport, saveReportPart, peekFresh, clearFresh } from '../lib/storage.js';
+import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import { trackEvent } from '../lib/analytics.js';
 import { GOD_SHORT } from '../lib/glossary.js';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
@@ -240,13 +241,15 @@ function Skeleton() {
   );
 }
 
-export default function LifeReport({ chart, input }) {
+// member: 로그인 회원이면 풀이를 계정 내역에도 저장하고, 전에 본 풀이를 서버에서 찾아 씀
+export default function LifeReport({ chart, input, member = false }) {
   // 로딩은 방금 입력을 마치고 들어왔을 때만 (새로고침이면 안 나옴)
   const [loading, setLoading] = useState(peekFresh);
   useEffect(() => clearFresh(), []);
-  // 이미 받은 풀이(새로고침 전)는 그대로 보여 주고 다시 부르지 않음
+  // 이미 받은 풀이(이 탭·이 브라우저에 기억한 것)는 그대로 보여 주고 다시 부르지 않음
+  const known = () => ({ ...localParts(input, 'life'), ...loadReport(input) });
   const [parts, setParts] = useState(() =>
-    Object.fromEntries(Object.entries(loadReport(input)).map(([id, text]) => [id, { text, status: 'done', error: null }]))
+    Object.fromEntries(Object.entries(known()).map(([id, text]) => [id, { text, status: 'done', error: null }]))
   ); // id → { text, status, error }
   const abortRef = useRef(null);
 
@@ -259,7 +262,10 @@ export default function LifeReport({ chart, input }) {
       try {
         const r = await streamReading({ input, topic: id, signal: ctrl.signal, onText: (text) => update({ text }) });
         update({ text: r.text, status: r.error ? 'error' : 'done', error: r.error });
-        if (!r.error && r.text) saveReportPart(input, id, r.text);
+        if (!r.error && r.text) {
+          saveReportPart(input, id, r.text);
+          rememberPart(input, 'life', id, r.text, { member });
+        }
         trackEvent(r.error ? 'reading_fail' : 'reading_done', { topic: id, end: r.end || 'ok' });
       } catch (e) {
         if (e.name !== 'AbortError') update({ status: 'error', error: '네트워크 연결을 확인하고 다시 시도해 주세요.' });
@@ -269,9 +275,22 @@ export default function LifeReport({ chart, input }) {
 
   // 화면에 들어오면 네 부분을 한꺼번에 요청 (StrictMode 이중 실행 대비 setTimeout)
   useEffect(() => {
-    const t = setTimeout(() => {
-      const saved = loadReport(input);
-      const todo = REPORT_PARTS.map((p) => p.id).filter((id) => !saved[id]);
+    const t = setTimeout(async () => {
+      const saved = known();
+      let todo = REPORT_PARTS.map((p) => p.id).filter((id) => !saved[id]);
+      // 회원: 다른 기기에서 본 같은 풀이가 계정에 있으면 그걸 씀
+      if (todo.length && member) {
+        const srv = await serverParts(input, 'life');
+        const found = todo.filter((id) => srv[id]);
+        if (found.length) {
+          setParts((p) => ({ ...p, ...Object.fromEntries(found.map((id) => [id, { text: srv[id], status: 'done', error: null }])) }));
+          found.forEach((id) => {
+            saveReportPart(input, id, srv[id]);
+            rememberPart(input, 'life', id, srv[id]);
+          });
+          todo = todo.filter((id) => !srv[id]);
+        }
+      }
       if (!todo.length) return;
       trackEvent('reading_start', { topic: 'life' });
       run(todo);

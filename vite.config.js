@@ -9,6 +9,7 @@ function devFakeLogin() {
   let provider = 'kakao';
   let devPw = 'test1234';
   const devInqs = [];
+  const devHist = {};
   let birth = null;
   let nick = '천동이(테스트)';
   const now = new Date().toISOString();
@@ -60,6 +61,22 @@ function devFakeLogin() {
           loggedIn = true;
           provider = 'email';
           return send(res, 200, { ok: true, nick });
+        }
+        // 풀이 내역 흉내: 미리보기 서버 메모리에만
+        if (path === '/api/history') {
+          if (!loggedIn) return send(res, 401, { error: '로그인이 필요해요.', login: true });
+          const key = url.searchParams.get('key');
+          if (req.method === 'GET') return key ? send(res, 200, { item: devHist[key] || null }) : send(res, 200, { items: Object.values(devHist).map(({ parts, ...it }) => it) });
+          if (req.method === 'DELETE') {
+            delete devHist[key];
+            return send(res, 200, { ok: true });
+          }
+          const b = await readBody(req);
+          const cur = devHist[b.key] || { key: b.key, input: b.input, topic: b.topic, parts: {}, createdAt: new Date().toISOString() };
+          cur.parts[b.partId] = b.text;
+          cur.updatedAt = new Date().toISOString();
+          devHist[b.key] = cur;
+          return send(res, 200, { ok: true });
         }
         // 문의 흉내: 미리보기 서버 메모리에만
         if (path === '/api/inquiry') {

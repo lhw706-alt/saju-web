@@ -6,15 +6,19 @@ import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
-import { loadPresets, removePreset } from '../lib/storage.js';
+import { loadPresets, removePreset, saveInput, saveTopic } from '../lib/storage.js';
+import { seedLocal } from '../lib/history.js';
+import { TOPICS } from '../lib/topics.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
 
 // 마이페이지 탭 (주소 /my, /my/saju, /my/support). 세로로 길어지지 않게 기능별로 나눔 (2026-11-13)
 const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
+  { id: 'history', label: '풀이 내역', to: '/my/history' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
+const HISTORY_LABEL = (topic) => (topic === 'life' ? '평생 사주' : TOPICS.find((t) => t.id === topic)?.label || '사주 풀이');
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmtDateTime = (iso) => {
   if (!iso) return '';
@@ -35,6 +39,33 @@ export default function My() {
   const params = useParams();
   // 예전 링크 /my#inquiries 는 고객센터 탭으로
   const tab = hash === '#inquiries' ? 'support' : MY_TABS.some((t) => t.id === params.tab) ? params.tab : 'account';
+
+  // 풀이 내역 (서버 /api/history): 누르면 저장된 풀이를 그대로 다시 보여 줌 (새로 만들지 않음)
+  const [hist, setHist] = useState(null);
+  useEffect(() => {
+    if (!auth.user || tab !== 'history') return;
+    fetch('/api/history', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setHist(d?.items || []))
+      .catch(() => setHist([]));
+  }, [auth.user, tab]);
+  const openHistory = async (it) => {
+    const r = await fetch(`/api/history?key=${encodeURIComponent(it.key)}`, { cache: 'no-store' }).catch(() => null);
+    const d = await r?.json().catch(() => null);
+    if (!d?.item) return;
+    seedLocal(d.item);
+    saveInput(d.item.input);
+    if (d.item.topic === 'life') navigate('/result?v=life');
+    else {
+      saveTopic(d.item.topic);
+      navigate('/result');
+    }
+  };
+  const deleteHistory = async (it) => {
+    if (!window.confirm('이 풀이 내역을 지울까요?')) return;
+    const r = await fetch(`/api/history?key=${encodeURIComponent(it.key)}`, { method: 'DELETE' }).catch(() => null);
+    if (r?.ok) setHist((h) => h.filter((x) => x.key !== it.key));
+  };
 
   // 내 문의내역 (서버 /api/inquiry). 문의를 새로 보내면 inquiryVer 가 바뀌어 다시 읽음
   const [inqs, setInqs] = useState(null);
@@ -394,6 +425,42 @@ export default function My() {
         )}
       </div>
         </>
+      )}
+
+      {tab === 'history' && (
+      <div className="my-sec card">
+        <h2 className="my-sec-title">
+          풀이 내역 <small>같은 정보로 다시 보면 천둥도사가 전에 펼친 풀이를 그대로 보여 드려요</small>
+        </h2>
+        {hist === null ? (
+          <p className="my-sec-note">불러오는 중…</p>
+        ) : hist.length === 0 ? (
+          <p className="my-sec-note">아직 본 풀이가 없어요. 로그인한 채로 사주를 보면 여기에 쌓여요.</p>
+        ) : (
+          <ul className="saved-list">
+            {hist.map((it) => (
+              <li key={it.key} className="saved-item">
+                <button type="button" className="saved-load" onClick={() => openHistory(it)}>
+                  <span className="saved-text">
+                    <b>
+                      {HISTORY_LABEL(it.topic)} <span className="hist-person">{presetMain(it.input)}</span>
+                    </b>
+                    <span>
+                      {presetSub(it.input)} · {fmtDate(it.updatedAt)}
+                    </span>
+                  </span>
+                  <span className="saved-go">다시 보기</span>
+                </button>
+                <button type="button" className="saved-del" aria-label={`${HISTORY_LABEL(it.topic)} 내역 지우기`} onClick={() => deleteHistory(it)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       )}
 
       {tab === 'support' && (

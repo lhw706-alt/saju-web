@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TOPICS } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
+import { localParts, rememberPart, serverParts } from '../lib/history.js';
 
 const END_MESSAGES = {
   refusal: '이 주제는 풀이를 만들지 못했어요. 다른 주제를 골라 주세요.',
@@ -10,7 +11,8 @@ const END_MESSAGES = {
   error: '풀이 중에 문제가 생겼어요. 잠시 뒤 다시 시도해 주세요.',
 };
 
-export default function Reading({ input, initialTopic = null }) {
+// member: 로그인 회원이면 풀이를 계정 내역에도 저장. 같은 정보·주제로 본 적 있으면 새로 만들지 않고 그대로 보여 줌
+export default function Reading({ input, initialTopic = null, member = false }) {
   const [topic, setTopic] = useState(null);
   const [results, setResults] = useState({}); // topicId -> { text, status, end, error }
   const abortRef = useRef(null);
@@ -39,6 +41,17 @@ export default function Reading({ input, initialTopic = null }) {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     const update = (patch) => setResults((r) => ({ ...r, [id]: { ...r[id], ...patch } }));
+    // 전에 본 풀이 (이 브라우저 → 회원이면 계정)
+    let memo = localParts(input, id)[id];
+    if (!memo && member) {
+      update({ text: '', status: 'loading', end: null, error: null });
+      memo = (await serverParts(input, id))[id];
+      if (memo) rememberPart(input, id, id, memo);
+    }
+    if (memo) {
+      update({ text: memo, status: 'done', end: null, error: null });
+      return;
+    }
     update({ text: '', status: 'loading', end: null, error: null });
     trackEvent('reading_start', { topic: id });
 
@@ -66,7 +79,10 @@ export default function Reading({ input, initialTopic = null }) {
       const m = text.match(/\[\[END:(\w+)\]\]\s*$/);
       const clean = text.replace(/\n*\[\[END:\w+\]\]\s*$/, '');
       if (m && !clean.trim()) update({ status: 'error', error: END_MESSAGES[m[1]] || END_MESSAGES.error, text: '' });
-      else update({ status: 'done', text: clean, end: m ? m[1] : null });
+      else {
+        update({ status: 'done', text: clean, end: m ? m[1] : null });
+        if (!m || m[1] === 'truncated') rememberPart(input, id, id, clean, { member });
+      }
       trackEvent(m && !clean.trim() ? 'reading_fail' : 'reading_done', { topic: id, end: m ? m[1] : 'ok' });
     } catch (e) {
       if (e.name === 'AbortError') {

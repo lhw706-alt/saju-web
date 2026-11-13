@@ -364,7 +364,7 @@ export default function FortuneFab({ loggedIn = false, onNeedLogin, onNotice }) 
         sessionStorage.setItem('sc:afterLogin', 'fortune');
       } catch {}
       close();
-      onNeedLogin?.('카카오톡으로 공유하려면 로그인해 주세요.');
+      onNeedLogin?.('천둥도사의 부적을 카카오톡으로 나누려면 로그인이 필요해요.');
       return;
     }
     const fx = FORTUNES[state.idx];

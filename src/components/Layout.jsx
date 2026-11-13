@@ -27,10 +27,16 @@ export default function Layout() {
   // 로그인 상태 (카카오 로그인 — 서버 /api/auth/me). enabled: 서버에 카카오 키가 설정됐는지
   const [auth, setAuth] = useState({ enabled: false, user: null, ready: false });
   const [login, setLogin] = useState(false);
+  const [loginReason, setLoginReason] = useState(''); // 로그인 창 맨 위 안내 (천둥도사 말투)
+  const askLogin = (reason = '') => {
+    setLoginReason(reason);
+    setLogin(true);
+  };
   const [notice, setNotice] = useState('');
   // 로그인 창을 그냥 닫으면 '로그인 뒤 문의 창 열기' 예약도 취소
   const closeLogin = useCallback(() => {
     setLogin(false);
+    setLoginReason('');
     try {
       sessionStorage.removeItem('sc:afterLogin');
     } catch {}
@@ -52,8 +58,7 @@ export default function Layout() {
     try {
       sessionStorage.setItem('sc:afterLogin', 'contact');
     } catch {}
-    setLogin(true);
-    showNotice('문의하려면 로그인해 주세요.');
+    askLogin('천둥도사에게 문의를 남기려면 로그인이 필요해요.');
   };
   useEffect(() => {
     if (!auth.user) return;
@@ -173,14 +178,11 @@ export default function Layout() {
       </header>
 
       <main className="main">
-        <Outlet context={{ auth, openLogin: () => setLogin(true), openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
+        <Outlet context={{ auth, openLogin: (reason) => askLogin(typeof reason === 'string' ? reason : ''), openContact, inquiryVer, logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
       </main>
       <FortuneFab
         loggedIn={!!auth.user}
-        onNeedLogin={(msg) => {
-          setLogin(true);
-          showNotice(msg);
-        }}
+        onNeedLogin={(msg) => askLogin(msg)}
         onNotice={showNotice}
       />
 
@@ -210,6 +212,7 @@ export default function Layout() {
         open={login}
         enabled={auth.enabled}
         emailEnabled={auth.emailEnabled}
+        reason={loginReason}
         onClose={closeLogin}
         onLoggedIn={(nick) => {
           trackEvent('login', { method: 'email' });
