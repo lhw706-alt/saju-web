@@ -468,7 +468,7 @@ export default function My() {
       {tab === 'history' && (
       <div className="my-sec card">
         <h2 className="my-sec-title">
-          풀이 내역 <small>같은 정보로 다시 보면 천둥도사가 전에 펼친 풀이를 그대로 보여 드려요</small>
+          풀이 내역
         </h2>
         {hist === null ? (
           <p className="my-sec-note">불러오는 중…</p>
