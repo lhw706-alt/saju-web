@@ -34,7 +34,27 @@ function devFakeLogin() {
         const url = new URL(req.url, 'http://localhost');
         const path = url.pathname;
         if (path === '/api/auth/me') {
-          return send(res, 200, { enabled: true, user: loggedIn ? { nick, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
+          return send(res, 200, { enabled: true, emailEnabled: true, user: loggedIn ? { nick, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
+        }
+        // 이메일 가입·로그인 흉내: 가입하면 미리보기 서버 터미널에 인증 링크를 찍음 (메일은 안 보냄)
+        if (path === '/api/auth/email/signup') {
+          const body = await readBody(req);
+          if (body.email === 'taken@test.com') return send(res, 409, { error: '이미 가입한 이메일이에요. 로그인해 주세요.', field: 'email' });
+          console.log('[미리보기] 인증 링크: http://localhost:5179/api/auth/email/verify?token=dev');
+          if (body.nick) nick = body.nick;
+          return send(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/email/verify') {
+          loggedIn = true;
+          res.statusCode = 302;
+          res.setHeader('location', '/?login=new&via=email');
+          return res.end();
+        }
+        if (path === '/api/auth/email/login') {
+          const body = await readBody(req);
+          if (body.password !== 'test1234') return send(res, 401, { error: '이메일 또는 비밀번호가 맞지 않아요.' });
+          loggedIn = true;
+          return send(res, 200, { ok: true, nick });
         }
         if (path === '/api/auth/kakao/login') {
           loggedIn = true;

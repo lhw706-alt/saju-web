@@ -686,11 +686,7 @@ legend.contact-label { margin-bottom: 12px; }
 .input input[aria-invalid="true"] { border-color: var(--danger); }
 .sel-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 로그인 */
-.login { position: relative; width: 100%; max-width: 400px; padding: 22px 20px 20px; border-radius: 24px; outline: none; background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6); animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
-.login-lead { margin: 6px 0 18px; font-size: 15px; color: var(--text-2); }
-.kakao-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 12px; background: #fee500; color: rgba(0, 0, 0, 0.85); font-size: 16px; font-weight: 600; text-decoration: none; }
-.kakao-btn:hover { filter: brightness(0.97); }
-.login-off { margin: 0; padding: 14px; border-radius: 12px; background: var(--bg); color: var(--text-2); text-align: center; font-size: 15px; }
+.login { position: relative; width: 100%; max-width: 420px; max-height: 92dvh; overflow-y: auto; padding: 22px 20px 20px; border-radius: 24px; outline: none; background: var(--bg-2); border: 1px solid var(--line-soft); color: var(--text); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6); animation: fortune-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
 .login-note { margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
 .login-note a { color: var(--text-2); }
 @media (max-width: 559px) { .login { max-width: none; border-radius: 24px 24px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); animation-name: fortune-up; } }
@@ -782,3 +778,22 @@ legend.contact-label { margin-bottom: 12px; }
   .my-nick-form { grid-template-columns: 1fr; }
   .my-nick-actions { justify-content: flex-start; }
 }
+/* 로그인·회원가입 창 */
+.login-form { display: grid; gap: 12px; margin-top: 14px; }
+.login-field { display: grid; gap: 6px; }
+.login-form .btn-primary { margin-top: 4px; }
+.login-form .btn-primary:disabled { opacity: 0.5; cursor: default; }
+.login-hint { margin: -4px 0 0; font-size: 14px; color: var(--muted); }
+.login-off-note { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.login-switch { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.login-or { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; font-size: 14px; color: var(--muted); }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
+.login-social { display: grid; justify-items: center; gap: 6px; }
+.kakao-circle { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: #fee500; transition: transform 0.15s ease, filter 0.15s ease; }
+.kakao-circle:hover { transform: translateY(-2px); filter: brightness(0.97); }
+.kakao-circle.is-off { opacity: 0.4; cursor: default; }
+.login-social-label { font-size: 14px; color: var(--text-2); }
+.login-sent { display: grid; gap: 10px; margin-top: 12px; }
+.login-sent p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--text-2); }
+.login-sent b { color: var(--text); font-weight: 600; }
+.login-sent .btn-primary { margin-top: 8px; }

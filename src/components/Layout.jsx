@@ -39,7 +39,7 @@ export default function Layout() {
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setAuth({ enabled: !!d?.enabled, user: d?.user || null, ready: true }))
+      .then((d) => setAuth({ enabled: !!d?.enabled, emailEnabled: !!d?.emailEnabled, user: d?.user || null, ready: true }))
       .catch(() => setAuth((a) => ({ ...a, ready: true })));
   }, []);
   // 로그인하고 돌아왔을 때: GA 이벤트(new → sign_up, ok → login) / 실패·준비중 안내. 주소의 ?login=… 은 지움
@@ -47,22 +47,36 @@ export default function Layout() {
     const m = search.match(/[?&]login=(\w+)/);
     if (!m) return undefined;
     const kind = m[1];
+    const method = /[?&]via=email/.test(search) ? 'email' : 'kakao';
     // 같은 로그인 복귀에 이벤트가 두 번 가지 않게 (개발 모드 이중 실행·뒤로 가기 대비)
     if ((kind === 'new' || kind === 'ok') && !window.__scLoginTracked) {
       window.__scLoginTracked = true;
-      if (kind === 'new') trackEvent('sign_up', { method: 'kakao' });
-      trackEvent('login', { method: 'kakao' });
+      if (kind === 'new') trackEvent('sign_up', { method });
+      trackEvent('login', { method });
+    }
+    if (kind === 'new' || kind === 'ok') {
+      // 이메일 인증으로 막 가입한 경우 등: 로그인 상태 다시 읽기
+      fetch('/api/auth/me', { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d && setAuth({ enabled: !!d.enabled, emailEnabled: !!d.emailEnabled, user: d.user || null, ready: true }))
+        .catch(() => {});
     }
     showNotice(
       kind === 'new'
-        ? '반가워요! 카카오로 가입했어요.'
+        ? method === 'email'
+          ? '반가워요! 이메일 인증을 마치고 가입했어요.'
+          : '반가워요! 카카오로 가입했어요.'
         : kind === 'ok'
           ? '로그인했어요.'
-          : kind === 'unavailable'
-            ? '로그인은 준비중이에요. 곧 열려요!'
-            : '로그인하지 못했어요. 다시 시도해 주세요.'
+          : kind === 'expired'
+            ? '인증 링크가 만료됐거나 이미 쓴 링크예요. 다시 가입해 주세요.'
+            : kind === 'exists'
+              ? '이미 가입한 이메일이에요. 로그인해 주세요.'
+              : kind === 'unavailable'
+                ? '로그인은 준비중이에요. 곧 열려요!'
+                : '로그인하지 못했어요. 다시 시도해 주세요.'
     );
-    navigate(pathname + search.replace(/[?&]login=\w+/, '').replace(/^&/, '?'), { replace: true });
+    navigate(pathname + search.replace(/[?&]login=\w+/, '').replace(/[?&]via=\w+/, '').replace(/^&/, '?'), { replace: true });
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
@@ -146,7 +160,18 @@ export default function Layout() {
         </p>
       </footer>
       <ContactModal open={contact} onClose={closeContact} />
-      <LoginModal open={login} enabled={auth.enabled} onClose={closeLogin} />
+      <LoginModal
+        open={login}
+        enabled={auth.enabled}
+        emailEnabled={auth.emailEnabled}
+        onClose={closeLogin}
+        onLoggedIn={(nick) => {
+          trackEvent('login', { method: 'email' });
+          setAuth((a) => ({ ...a, user: { nick } }));
+          setLogin(false);
+          showNotice('로그인했어요.');
+        }}
+      />
       <div className="toast-wrap" role="status" aria-live="polite">
         {notice && (
           <p key={notice.key} className="toast">

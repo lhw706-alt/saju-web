@@ -1,4 +1,7 @@
-// 카카오 로그인 (Netlify Function, 서버에서만 실행) — 2026-11-13
+// 카카오·이메일 로그인 (Netlify Function, 서버에서만 실행) — 2026-11-13
+// - /api/auth/email/signup   → 이메일 가입 신청(이메일·비밀번호·닉네임) → 인증 메일(Resend)
+// - /api/auth/email/verify   → 메일 링크: 인증 + 가입 완료 + 로그인 → /?login=new&via=email
+// - /api/auth/email/login    → 이메일·비밀번호 로그인 (비밀번호는 scrypt 해시로만 저장)
 // - /api/auth/kakao/login    → 카카오 인가 화면으로 보냄 (state 쿠키로 위조 요청 방지)
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
@@ -10,8 +13,9 @@
 // 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
 // 회원번호·닉네임·가입일·마지막 로그인·로그인 횟수만 저장 (2026-11-13).
 // 환경 변수: KAKAO_REST_API_KEY(필수), KAKAO_CLIENT_SECRET(카카오 앱에서 켰다면), SESSION_SECRET(필수, 긴 무작위 문자열),
-//           ADMIN_PASSWORD(관리자 회원 목록 보기용, 없으면 관리자 목록 꺼짐)
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+//           ADMIN_PASSWORD(관리자 회원 목록 보기용, 없으면 관리자 목록 꺼짐),
+//           RESEND_API_KEY·MAIL_FROM(이메일 가입 인증 메일, 없으면 이메일 가입·로그인 꺼짐)
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 import { createRateLimiter } from '../lib/guard.mjs';
 import { computeSaju, SajuInputError } from '../../src/lib/saju.js';
@@ -22,6 +26,49 @@ const SESSION_DAYS = 30;
 const users = () => getStore('users');
 // 관리자 비밀번호 대입 막기: 같은 IP 는 10분에 5번까지만 시도
 const adminLimited = createRateLimiter(5, 10 * 60_000);
+
+// ── 이메일 회원 (2026-11-13) ──
+// emails: 키 = 정규화한 이메일, 값 = 회원번호(e_…) / pending: 키 = 인증 토큰, 값 = 가입 대기 정보(24시간)
+const emails = () => getStore('emails');
+const pending = () => getStore('pending');
+const emailKey = (e) => encodeURIComponent(String(e).trim().toLowerCase());
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const signupLimited = createRateLimiter(5, 10 * 60_000); // 같은 IP 10분 5번
+const loginLimited = createRateLimiter(10, 10 * 60_000); // 같은 IP 10분 10번
+function hashPassword(pw) {
+  const salt = randomBytes(16);
+  return `scrypt$${salt.toString('base64')}$${scryptSync(pw, salt, 64).toString('base64')}`;
+}
+function checkPassword(pw, stored) {
+  const [kind, salt, hash] = String(stored || '').split('$');
+  if (kind !== 'scrypt' || !salt || !hash) return false;
+  const a = scryptSync(String(pw), Buffer.from(salt, 'base64'), 64);
+  const b = Buffer.from(hash, 'base64');
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+function passwordError(pw) {
+  const p = String(pw || '');
+  if (p.length < 8 || p.length > 64) return '비밀번호는 8~64자로 정해 주세요.';
+  if (!/[A-Za-z]/.test(p) || !/[0-9]/.test(p)) return '비밀번호에 영문과 숫자를 함께 넣어 주세요.';
+  return '';
+}
+// 인증 메일 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
+async function sendVerifyMail(to, link) {
+  const html = `<!doctype html><html><body style="margin:0;background:#1b1c1e;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+<div style="max-width:480px;margin:0 auto;padding:40px 24px;color:#f7f7f8">
+<p style="margin:0 0 6px;color:#e2c27a;font-size:14px">사주천문</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">이메일 인증을 마쳐 주세요</h1>
+<p style="margin:0 0 24px;color:#c2c4c8;font-size:15px;line-height:1.7">아래 버튼을 누르면 인증이 끝나고 바로 가입돼요.<br>이 링크는 24시간 동안만 쓸 수 있어요.</p>
+<a href="${link}" style="display:inline-block;padding:14px 28px;border-radius:12px;background:#e2c27a;color:#1b1c1e;font-size:16px;font-weight:600;text-decoration:none">이메일 인증하기</a>
+<p style="margin:28px 0 0;color:#878a93;font-size:13px;line-height:1.6">직접 가입하지 않았다면 이 메일은 무시해 주세요. 아무 일도 일어나지 않아요.</p>
+</div></body></html>`;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject: '[사주천문] 이메일 인증을 마쳐 주세요', html }),
+  });
+  if (!r.ok) throw new Error(`resend ${r.status}`);
+}
 
 // ── 사이트 닉네임 (중복 금지 — 나중에 커뮤니티·랭킹에 보일 이름, 2026-11-13) ──
 // 닉네임 주인 목록: Netlify Blobs 'nicknames' (키 = 비교용으로 정규화한 닉네임, 값 = 회원번호)
@@ -64,6 +111,7 @@ async function upsertUser(id, nick) {
   const rec = {
     ...(prev || {}),
     id,
+    provider: 'kakao',
     nick, // 카카오 닉네임(최신) — 관리자 목록 참고용, 화면에는 안 씀
     joinedAt: prev?.joinedAt || now,
     lastLoginAt: now,
@@ -153,7 +201,8 @@ export default async (req, context) => {
 
   if (path === '/api/auth/me') {
     const s = verify(cookies(req)[SESSION], secret);
-    if (!s) return json({ enabled, user: null });
+    const mailOn = Boolean(secret && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+    if (!s) return json({ enabled, emailEnabled: mailOn, user: null });
     // 마이페이지용: ?full=1 이면 저장된 회원 정보(가입일·마지막 로그인·횟수)도 함께
     let profile = null;
     if (url.searchParams.get('full') === '1') {
@@ -165,8 +214,88 @@ export default async (req, context) => {
     }
     return json({
       enabled,
+      emailEnabled: mailOn,
       user: { nick: s.nick || '', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null } : {}) },
     });
+  }
+
+  // ── 이메일 회원가입: 정보 확인 → 가입 대기 저장 → 인증 메일 ──
+  const emailEnabled = Boolean(secret && process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+  const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
+  const readJson = async () => {
+    try {
+      return await req.json();
+    } catch {
+      return null;
+    }
+  };
+
+  if (path === '/api/auth/email/signup') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (!emailEnabled) return json({ error: '이메일 가입은 준비중이에요. 카카오로 가입해 주세요.' }, 503);
+    if (signupLimited(ip)) return json({ error: '요청이 많아요. 10분 뒤 다시 시도해 주세요.' }, 429);
+    const body = await readJson();
+    const email = String(body?.email || '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 100) return json({ error: '이메일 주소를 확인해 주세요.', field: 'email' }, 400);
+    const pwErr = passwordError(body?.password);
+    if (pwErr) return json({ error: pwErr, field: 'password' }, 400);
+    let nick = body?.nick ? cleanNick(body.nick) : { nick: await freeRandomNick() };
+    if (nick.error) return json({ error: nick.error, field: 'nick' }, 400);
+    nick = nick.nick;
+    if (await emails().get(emailKey(email))) return json({ error: '이미 가입한 이메일이에요. 로그인해 주세요.', field: 'email' }, 409);
+    if (await nicknames().get(nickKey(nick))) return json({ error: '이미 쓰고 있는 닉네임이에요. 다른 닉네임을 정해 주세요.', field: 'nick' }, 409);
+    const token = randomBytes(32).toString('hex');
+    await pending().setJSON(token, { email, passHash: hashPassword(body.password), nick, exp: Date.now() + 24 * 3600_000 });
+    try {
+      await sendVerifyMail(email, `${url.origin}/api/auth/email/verify?token=${token}`);
+    } catch (e) {
+      console.error('verify mail failed:', e?.message);
+      await pending().delete(token);
+      return json({ error: '인증 메일을 보내지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, 502);
+    }
+    return json({ ok: true });
+  }
+
+  // 메일의 '이메일 인증하기' → 가입 완료 + 로그인 → 메인으로
+  if (path === '/api/auth/email/verify') {
+    const token = url.searchParams.get('token') || '';
+    const p = /^[a-f0-9]{64}$/.test(token) ? await pending().get(token, { type: 'json' }) : null;
+    if (!p || p.exp < Date.now()) {
+      if (p) await pending().delete(token);
+      return redirect('/?login=expired');
+    }
+    await pending().delete(token);
+    if (await emails().get(emailKey(p.email))) return redirect('/?login=exists');
+    const id = `e_${randomBytes(9).toString('hex')}`;
+    let nick = p.nick;
+    if (!(await claimNick(id, nick))) {
+      nick = await freeRandomNick(); // 기다리는 사이 다른 사람이 같은 닉네임을 가져갔으면 랜덤으로
+      await claimNick(id, nick);
+    }
+    const now = new Date().toISOString();
+    await users().setJSON(id, { id, provider: 'email', email: p.email, passHash: p.passHash, displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 1 });
+    await emails().set(emailKey(p.email), id);
+    const session = sign({ sub: id, nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
+    return redirect('/?login=new&via=email', [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+  }
+
+  if (path === '/api/auth/email/login') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (!emailEnabled) return json({ error: '이메일 로그인은 준비중이에요. 카카오로 로그인해 주세요.' }, 503);
+    if (loginLimited(ip)) return json({ error: '시도가 너무 많아요. 10분 뒤 다시 시도해 주세요.' }, 429);
+    const body = await readJson();
+    const email = String(body?.email || '').trim().toLowerCase();
+    const fail = () => json({ error: '이메일 또는 비밀번호가 맞지 않아요.' }, 401);
+    const id = EMAIL_RE.test(email) ? await emails().get(emailKey(email)) : null;
+    if (!id) return fail();
+    const rec = await users().get(id, { type: 'json' });
+    if (!rec || !checkPassword(body?.password, rec.passHash)) return fail();
+    rec.lastLoginAt = new Date().toISOString();
+    rec.loginCount = (rec.loginCount || 0) + 1;
+    await users().setJSON(id, rec);
+    const nick = rec.displayNick || '사주천문 회원';
+    const session = sign({ sub: id, nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
+    return json({ ok: true, nick }, 200, [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
   }
 
   if (path === '/api/auth/logout') {
@@ -177,8 +306,6 @@ export default async (req, context) => {
   // 사이트 닉네임 변경 (POST {nick}) → 계정에 저장 + 로그인 쿠키도 새 닉네임으로 다시 발급
   // 입력칸에 회색으로 보여 줄, 아무도 안 쓰는 랜덤 닉네임
   if (path === '/api/auth/nickname/suggest') {
-    const s = verify(cookies(req)[SESSION], secret);
-    if (!s) return json({ error: '로그인이 필요해요.' }, 401);
     return json({ nick: await freeRandomNick() });
   }
 
@@ -257,6 +384,7 @@ export default async (req, context) => {
         const owner = await nicknames().get(nickKey(rec.displayNick));
         if (owner === s.sub) await nicknames().delete(nickKey(rec.displayNick));
       }
+      if (rec?.email) await emails().delete(emailKey(rec.email));
       await users().delete(s.sub);
     } catch (e) {
       console.error('user delete failed:', e?.name);
@@ -274,7 +402,9 @@ export default async (req, context) => {
     if (!sameSecret(given, admin)) return json({ error: '비밀번호가 맞지 않아요.' }, 401);
     const store = users();
     const { blobs } = await store.list();
-    const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })))).filter(Boolean);
+    const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }))))
+      .filter(Boolean)
+      .map(({ passHash, ...u }) => u); // 비밀번호 해시는 절대 내보내지 않음
     list.sort((a, b) => String(b.lastLoginAt).localeCompare(String(a.lastLoginAt)));
     return json({ total: list.length, users: list });
   }
@@ -342,4 +472,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/admin/users'] };
