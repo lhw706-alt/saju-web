@@ -445,7 +445,7 @@ export default function My() {
                           <p>{q.answer}</p>
                         </div>
                       ) : (
-                        <p className="inq-wait">답변을 준비하고 있어요. 보통 영업일 기준 2~3일 안에 답변해요.</p>
+                        <p className="inq-wait">답변을 준비하고 있어요. 보통 영업일 기준 2~3일 안에 답변드려요.</p>
                       )}
                     </div>
                   )}

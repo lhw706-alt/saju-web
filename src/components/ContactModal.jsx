@@ -133,7 +133,7 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
             <p>
               답변은 마이페이지의 내 문의내역에서 볼 수 있어요.
               <br />
-              보통 영업일 기준 2~3일 안에 답변해요.
+              보통 영업일 기준 2~3일 안에 답변드려요.
             </p>
             <div className="contact-done-btns">
               <button type="button" className="btn-primary" onClick={onClose}>
@@ -210,7 +210,7 @@ export default function ContactModal({ open, onClose, onSent, onNeedLogin }) {
 
             {/* 회원 요청 처리에 필요한 정보라 별도 동의 없이 받고 처리방침에 공개 (개인정보 보호법 제15조 1항 4호) */}
             <p className="contact-notice">
-              문의 내용은 답변을 위해 회원 정보와 함께 보관하고, 답변 후 1년이 지나거나 탈퇴하면 지워요.{' '}
+              문의 내용은 답변을 위해 회원 정보와 함께 보관하고, 답변 후 1년이 지나거나 탈퇴하면 지워져요.{' '}
               <Link to="/privacy" onClick={onClose}>
                 개인정보 처리방침
               </Link>

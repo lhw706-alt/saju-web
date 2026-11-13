@@ -803,7 +803,7 @@ legend.contact-label { margin-bottom: 12px; }
 .inq-answer-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--primary); }
 .inq-answer p { margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .inq-wait { margin: 0; font-size: 14px; color: var(--muted); }
-.contact-done-btns { display: grid; gap: 8px; }
+.contact-done-btns { display: grid; gap: 8px; width: 100%; }
 .my-age {margin-left: 6px; font-size: 14px; font-weight: 400; color: var(--muted); }
 .my-row-sub {font-size: 15px; font-weight: 400; color: var(--text-2); }
 .my-dots { letter-spacing: 2px; font-size: 12px; color: var(--text-2); }
