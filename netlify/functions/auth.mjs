@@ -11,11 +11,14 @@
 //           ADMIN_PASSWORD(관리자 회원 목록 보기용, 없으면 관리자 목록 꺼짐)
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
+import { createRateLimiter } from '../lib/guard.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
 const SESSION_DAYS = 30;
 const users = () => getStore('users');
+// 관리자 비밀번호 대입 막기: 같은 IP 는 10분에 5번까지만 시도
+const adminLimited = createRateLimiter(5, 10 * 60_000);
 
 // 로그인할 때 회원 정보 저장·갱신 → 처음이면 true
 async function upsertUser(id, nick) {
@@ -88,7 +91,7 @@ const json = (data, status = 200, setCookies = []) => {
   return new Response(JSON.stringify(data), { status, headers });
 };
 
-export default async (req) => {
+export default async (req, context) => {
   const url = new URL(req.url);
   const key = process.env.KAKAO_REST_API_KEY;
   const secret = process.env.SESSION_SECRET;
@@ -123,6 +126,8 @@ export default async (req) => {
     const admin = process.env.ADMIN_PASSWORD;
     const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     if (!admin) return json({ error: '관리자 비밀번호가 설정되지 않았어요.' }, 503);
+    const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
+    if (adminLimited(ip)) return json({ error: '시도가 너무 많아요. 10분 뒤 다시 해 주세요.' }, 429);
     if (!sameSecret(given, admin)) return json({ error: '비밀번호가 맞지 않아요.' }, 401);
     const store = users();
     const { blobs } = await store.list();
