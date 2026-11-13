@@ -5,6 +5,9 @@ import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'rea
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import CharmBook from './CharmBook.jsx';
+import ChartTable from '../components/ChartTable.jsx';
+import { GlossaryProvider, Help } from '../components/Glossary.jsx';
+import { computeSaju, ELEMENT_KO } from '../lib/saju.js';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset, saveInput, savePartner, savePartnerName } from '../lib/storage.js';
@@ -191,6 +194,14 @@ export default function My() {
 
   const p = profile || auth.user;
   const isEmail = (profile?.provider || auth.user.provider) === 'email';
+  let myChart = null;
+  if (tab === 'saju' && p.birth && !editing) {
+    try {
+      myChart = computeSaju(p.birth);
+    } catch {
+      myChart = null;
+    }
+  }
   return (
     <section className="my">
       <h1 className="start-title">마이페이지</h1>
@@ -375,6 +386,20 @@ export default function My() {
               <span className="my-row-label">출생</span>
               <span className="my-row-value my-row-sub">{presetSub(p.birth)}</span>
             </div>
+            {/* 내 만세력 (2026-11-13 사용자 요청) — 등록한 정보로 이 화면에서 계산, 서버로 보내지 않음 */}
+            {myChart && (
+              <GlossaryProvider>
+                <div className="my-chart">
+                  <h3 className="my-chart-title">
+                    내 만세력 <Help term="사주원국" label="사주 원국" />
+                    <small>
+                      나를 나타내는 글자 <b className={`el-${myChart.dayMaster.element}`}>{myChart.dayMaster.stem}({myChart.dayMaster.ko}{ELEMENT_KO[myChart.dayMaster.element]})</b>
+                    </small>
+                  </h3>
+                  <ChartTable chart={myChart} />
+                </div>
+              </GlossaryProvider>
+            )}
           </>
         ) : (
           <p className="my-sec-note">생년월일과 태어난 시각을 등록하면 다른 기기에서도 바로 내 사주를 볼 수 있어요.</p>
