@@ -79,6 +79,7 @@ export default function Admin() {
                 <thead>
                   <tr>
                     <th>닉네임</th>
+                    <th>카카오 이름</th>
                     <th>카카오 회원번호</th>
                     <th>가입</th>
                     <th>마지막 로그인</th>
@@ -88,6 +89,7 @@ export default function Admin() {
                 <tbody>
                   {data.users.map((u) => (
                     <tr key={u.id}>
+                      <td>{u.displayNick || '-'}</td>
                       <td>{u.nick || '-'}</td>
                       <td className="mono">{u.id}</td>
                       <td>{fmt(u.joinedAt)}</td>

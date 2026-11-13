@@ -52,11 +52,15 @@ function devFakeLogin() {
           birth = null;
           return send(res, 200, { ok: true });
         }
+        if (path === '/api/auth/nickname/suggest') {
+          return send(res, 200, { nick: `천둥의 별빛 ${1 + Math.floor(Math.random() * 99)}` });
+        }
         if (path === '/api/auth/nickname') {
           if (!loggedIn) return send(res, 401, { error: '로그인이 필요해요.' });
           const body = await readBody(req);
           const n = String(body.nick || '').replace(/\s+/g, ' ').trim();
           if ([...n].length < 2 || [...n].length > 12) return send(res, 400, { error: '닉네임은 2~12자로 정해 주세요.' });
+          if (n.replace(/ /g, '') === '천둥도사') return send(res, 409, { error: '이미 쓰고 있는 닉네임이에요. 다른 닉네임을 정해 주세요.' }); // 미리보기용 중복 예시
           nick = n;
           return send(res, 200, { ok: true, nick });
         }

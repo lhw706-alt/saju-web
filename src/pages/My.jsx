@@ -55,16 +55,21 @@ export default function My() {
   const [nickDraft, setNickDraft] = useState('');
   const [nickErr, setNickErr] = useState('');
   const [nickSaving, setNickSaving] = useState(false);
+  const [nickSuggest, setNickSuggest] = useState('천둥의 별빛 7'); // 입력칸에 회색으로 보이는 랜덤 닉네임 (비우고 저장하면 이 이름)
   const startNick = () => {
-    setNickDraft(auth.user?.nick || '');
+    setNickDraft('');
     setNickErr('');
     setNickEdit(true);
+    fetch('/api/auth/nickname/suggest', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.nick && setNickSuggest(d.nick))
+      .catch(() => {});
   };
   const saveNick = async (e) => {
     e.preventDefault();
     setNickSaving(true);
     setNickErr('');
-    const r = await fetch('/api/auth/nickname', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nick: nickDraft }) }).catch(() => null);
+    const r = await fetch('/api/auth/nickname', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nick: nickDraft.trim() || nickSuggest }) }).catch(() => null);
     const d = await r?.json().catch(() => ({}));
     setNickSaving(false);
     if (!r?.ok) return setNickErr(d?.error || '바꾸지 못했어요. 잠시 뒤 다시 시도해 주세요.');
@@ -111,7 +116,7 @@ export default function My() {
                 maxLength={12}
                 autoFocus
                 onChange={(e) => setNickDraft(e.target.value)}
-                placeholder="2~12자"
+                placeholder={nickSuggest}
                 aria-invalid={!!nickErr}
                 aria-describedby={nickErr ? 'my-nick-err' : undefined}
               />

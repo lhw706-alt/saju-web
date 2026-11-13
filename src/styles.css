@@ -778,3 +778,7 @@ legend.contact-label { margin-bottom: 12px; }
 .my-nick-actions { display: flex; align-items: center; gap: 2px; }
 .my-nick-actions .btn-primary.inline { margin: 0; height: 44px; padding: 0 18px; font-size: 15px; }
 .my-nick-form .field-msg { grid-column: 1 / -1; }
+@media (max-width: 480px) {
+  .my-nick-form { grid-template-columns: 1fr; }
+  .my-nick-actions { justify-content: flex-start; }
+}
