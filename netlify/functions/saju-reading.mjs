@@ -5,7 +5,7 @@
 // - API 키는 Netlify 환경 변수 ANTHROPIC_API_KEY 에만 둔다 (VITE_ 접두사 금지 → 브라우저 번들에 안 들어감).
 
 import Anthropic from '@anthropic-ai/sdk';
-import { computeSaju, chartSummary, SajuInputError } from '../../src/lib/saju.js';
+import { computeSaju, chartSummary, dayLuck, dayLuckSummary, SajuInputError } from '../../src/lib/saju.js';
 import { topicById, TOPIC_FORMAT } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 
@@ -62,6 +62,19 @@ export default async (req, context) => {
     }
   }
 
+  // 하루 운세: 보는 날(YYYY-MM-DD)을 확인하고 그날의 일진 계산 — 어제~1년 뒤까지만
+  let day = null;
+  if (topic.day) {
+    const ymd = String(body?.date || '');
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+    const t = m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN;
+    const kstToday = Date.parse(new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10));
+    if (!m || Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== ymd || t < kstToday - 2 * 86400e3 || t > kstToday + 366 * 86400e3) {
+      return json({ error: '운세를 볼 날짜를 다시 골라 주세요. 오늘부터 1년 안의 날만 볼 수 있어요.' }, 400);
+    }
+    day = dayLuck(chart, ymd);
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
 
@@ -85,7 +98,8 @@ ${chartSummary(chart)}
 
 [풀이 주제] ${topic.label}
 다룰 내용: ${topic.focus}
-기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년
+${day ? `[보는 날 — 서버 계산 결과]
+${dayLuckSummary(day)}` : `기준 연도: ${topic.year === 'next' ? chart.nextSeun.year : chart.seun.year}년`}
 
 ${topic.format || TOPIC_FORMAT}`;
 

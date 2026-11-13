@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { TOPICS } from '../lib/topics.js';
+import { TOPICS, isDayTopic, dayTopicDate, ymdOf } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
@@ -14,7 +14,9 @@ const END_MESSAGES = {
 // member: 로그인 회원이면 풀이를 계정 내역에도 저장. 같은 정보·주제로 본 적 있으면 새로 만들지 않고 그대로 보여 줌
 export default function Reading({ input, initialTopic = null, member = false }) {
   const [topic, setTopic] = useState(null);
-  const [results, setResults] = useState({}); // topicId -> { text, status, end, error }
+  const [results, setResults] = useState({}); // 풀이 키(주제 id, 하루 운세는 '주제@날짜') -> { text, status, end, error }
+  const [picked, setPicked] = useState(''); // 지정일 운세: 입력칸의 날짜
+  const [pickedFor, setPickedFor] = useState(null); // 지정일 운세: '이 날 운세 보기'를 누른 날짜
   const abortRef = useRef(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -32,21 +34,26 @@ export default function Reading({ input, initialTopic = null, member = false }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTopic]);
 
-  const run = async (id) => {
+  // 하루 운세는 날짜까지 붙인 키로 기억 (날이 바뀌면 새로 풀이)
+  const keyOf = (id, date) => (isDayTopic(id) ? (date ? `${id}@${date}` : null) : id);
+  const run = async (id, pickDate = null) => {
     setTopic(id);
-    const prev = results[id];
+    const date = isDayTopic(id) ? dayTopicDate(id, pickDate) : null;
+    if (isDayTopic(id) && !date) return; // 지정일 운세: 날짜부터 고르기
+    const rk = keyOf(id, date);
+    const prev = results[rk];
     if (prev && (prev.status === 'done' || prev.status === 'loading')) return;
 
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    const update = (patch) => setResults((r) => ({ ...r, [id]: { ...r[id], ...patch } }));
+    const update = (patch) => setResults((r) => ({ ...r, [rk]: { ...r[rk], ...patch } }));
     // 전에 본 풀이 (이 브라우저 → 회원이면 계정)
-    let memo = localParts(input, id)[id];
+    let memo = localParts(input, rk)[id];
     if (!memo && member) {
       update({ text: '', status: 'loading', end: null, error: null });
-      memo = (await serverParts(input, id))[id];
-      if (memo) rememberPart(input, id, id, memo);
+      memo = (await serverParts(input, rk))[id];
+      if (memo) rememberPart(input, rk, id, memo);
     }
     if (memo) {
       update({ text: memo, status: 'done', end: null, error: null });
@@ -59,7 +66,7 @@ export default function Reading({ input, initialTopic = null, member = false }) 
       const res = await fetch('/api/reading', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ input, topic: id }),
+        body: JSON.stringify(date ? { input, topic: id, date } : { input, topic: id }),
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) {
@@ -81,13 +88,13 @@ export default function Reading({ input, initialTopic = null, member = false }) 
       if (m && !clean.trim()) update({ status: 'error', error: END_MESSAGES[m[1]] || END_MESSAGES.error, text: '' });
       else {
         update({ status: 'done', text: clean, end: m ? m[1] : null });
-        if (!m) rememberPart(input, id, id, clean, { member }); // 중간에 끊긴 글은 기억하지 않음
+        if (!m) rememberPart(input, rk, id, clean, { member }); // 중간에 끊긴 글은 기억하지 않음
       }
       trackEvent(m && !clean.trim() ? 'reading_fail' : 'reading_done', { topic: id, end: m ? m[1] : 'ok' });
     } catch (e) {
       if (e.name === 'AbortError') {
         setResults((r) => {
-          const { [id]: _drop, ...rest } = r;
+          const { [rk]: _drop, ...rest } = r;
           return rest;
         });
         return;
@@ -96,7 +103,20 @@ export default function Reading({ input, initialTopic = null, member = false }) 
     }
   };
 
-  const cur = topic ? results[topic] : null;
+  const curDate = topic && isDayTopic(topic) ? dayTopicDate(topic, pickedFor) : null;
+  const curKey = topic ? keyOf(topic, curDate) : null;
+  const cur = curKey ? results[curKey] : null;
+  const today = ymdOf();
+  const maxDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 365);
+    return ymdOf(d);
+  })();
+  const dayTitle = (ymd) => {
+    const [y, m, d] = ymd.split('-').map(Number);
+    return `${y}년 ${m}월 ${d}일 ${'일월화수목금토'[new Date(y, m - 1, d).getDay()]}요일`;
+  };
+  const pickOk = /^\d{4}-\d{2}-\d{2}$/.test(picked) && picked >= today && picked <= maxDate;
 
   return (
     <section className="reading" ref={rootRef}>
@@ -117,6 +137,30 @@ export default function Reading({ input, initialTopic = null, member = false }) 
 
       {!topic && <p className="hint center">궁금한 주제를 고르면 천둥도사가 풀이를 시작해요.</p>}
 
+      {topic === 'date' && (
+        <form
+          className="day-pick card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!pickOk) return;
+            setPickedFor(picked);
+            run('date', picked);
+          }}
+        >
+          <label htmlFor="day-pick" className="day-pick-label">
+            운세를 볼 날을 골라 주세요 <small>오늘부터 1년 안의 날을 볼 수 있어요</small>
+          </label>
+          <div className="day-pick-row">
+            <span className="input">
+              <input id="day-pick" type="date" min={today} max={maxDate} value={picked} onChange={(e) => setPicked(e.target.value)} required />
+            </span>
+            <button type="submit" className="btn-primary inline" disabled={!pickOk}>
+              이 날 운세 보기
+            </button>
+          </div>
+        </form>
+      )}
+
       {cur && (
         <article className="reading-body card" aria-live="polite" aria-busy={cur.status === 'loading'}>
           {cur.status === 'loading' && !cur.text && (
@@ -125,13 +169,14 @@ export default function Reading({ input, initialTopic = null, member = false }) 
               천둥도사가 원국을 읽고 있어요…
             </div>
           )}
+          {curDate && <p className="day-head">{dayTitle(curDate)}의 운세</p>}
           {cur.text && <Markdown text={cur.text} />}
           {cur.status === 'loading' && cur.text && <span className="cursor" aria-hidden="true" />}
           {cur.end && <p className="notice">{END_MESSAGES[cur.end]}</p>}
           {cur.status === 'error' && (
             <div className="notice">
               <p>{cur.error}</p>
-              <button className="btn-ghost" onClick={() => { setResults((r) => ({ ...r, [topic]: undefined })); run(topic); }}>
+              <button className="btn-ghost" onClick={() => { setResults((r) => ({ ...r, [curKey]: undefined })); run(topic, pickedFor); }}>
                 다시 시도
               </button>
             </div>

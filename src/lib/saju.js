@@ -263,6 +263,27 @@ function seunOf(dayStem, year) {
   return { year, ganzhi: gz, ko: ganzhiKo(gz), stemGod: tenGod(dayStem, STEM_ELEMENT[gz[0]], STEM_YANG(gz[0])), branchGod: tenGod(dayStem, BRANCH_ELEMENT[gz[1]], BRANCH_YANG[gz[1]]) };
 }
 
+// 하루 운세(오늘·내일·지정일): 그날의 일진·월건·세운과 내 일간의 관계 (2026-11-13)
+// ymd: 'YYYY-MM-DD' (양력). 일진은 자정 기준(만세력 일주와 같음)
+export function dayLuck(c, ymd) {
+  const [y, m, d] = String(ymd).split('-').map(Number);
+  const l = Solar.fromYmd(y, m, d).getLunar();
+  const ds = c.dayMaster.stem;
+  const info = (gz) => ({ ganzhi: gz, ko: ganzhiKo(gz), stemGod: tenGod(ds, STEM_ELEMENT[gz[0]], STEM_YANG(gz[0])), branchGod: tenGod(ds, BRANCH_ELEMENT[gz[1]], BRANCH_YANG[gz[1]]) });
+  const daeun = c.daeun.find((x) => y >= x.startYear && y <= x.endYear) || null;
+  return { date: ymd, day: info(l.getDayInGanZhi()), month: info(l.getMonthInGanZhiExact()), year: info(l.getYearInGanZhiExact()), daeun, lunar: `음력 ${Math.abs(l.getMonth())}월 ${l.getDay()}일` };
+}
+export function dayLuckSummary(x) {
+  const g = (v) => `${v.ganzhi}(${v.ko}) — 천간 ${v.stemGod}, 지지 ${v.branchGod}`;
+  return [
+    `보는 날: ${x.date} (${x.lunar})`,
+    `그날의 일진(日辰): ${g(x.day)}`,
+    `그달의 월건: ${g(x.month)}`,
+    `그해의 세운: ${g(x.year)}`,
+    `그때의 대운: ${x.daeun ? `${x.daeun.ko}(${x.daeun.startYear}~${x.daeun.endYear})` : '대운 시작 전'}`,
+  ].join('\n');
+}
+
 // 풀이 모델에 넘길 요약 (계산 결과만, 개인 식별 정보 없음)
 export function chartSummary(c) {
   const order = [['년주', c.pillars.year], ['월주', c.pillars.month], ['일주', c.pillars.day], ['시주', c.pillars.hour]];

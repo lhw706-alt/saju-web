@@ -11,6 +11,38 @@ export const TOPICS = [
   { id: 'career', label: '직업·적성', desc: '일하는 방식과 어울리는 분야', focus: '관성·인성·식상 구조로 본 일하는 방식, 어울리는 직무와 환경, 커리어 전환에 유리한 시기' },
 ];
 
+// 하루 운세 (오늘·내일·지정일, 2026-11-13): day 가 있으면 화면이 보는 날짜(YYYY-MM-DD)를 함께 보내고,
+// 서버가 그날의 일진·월건·세운을 계산해 붙임. 기억하기 키는 '주제@날짜' (날이 바뀌면 새로 풀이)
+const DAY_FORMAT = `아래 제목을 그대로, 이 순서대로 쓴다.
+## 하루의 흐름
+(2~3문장. 그날의 일진이 내 일간·원국과 어떻게 만나는지 근거(어느 글자의 합·충·생·극, 어떤 십성)를 들어 설명)
+## 일과 공부
+## 사람과 관계
+## 돈과 생활
+## 한 줄 조언
+(한 문장)
+각 ## 아래는 2~3문장. 그 하루에 대한 이야기만 쓰고, 사고·질병·불운 같은 겁주는 예언은 하지 않는다. 오전·오후처럼 때를 나눠 짚어도 좋다. 전체 700~1,000자.`;
+export const DAY_TOPICS = [
+  { id: 'today', label: '오늘의 운세', desc: '오늘 일진과 내 원국이 만나는 하루', day: 'today', focus: '오늘 하루의 흐름, 일·관계·돈에서 힘을 쓰면 좋은 일과 조심할 일', format: DAY_FORMAT },
+  { id: 'tomorrow', label: '내일의 운세', desc: '내일을 미리 준비하는 조언', day: 'tomorrow', focus: '내일 하루의 흐름, 미리 준비하면 좋은 일과 조심할 일', format: DAY_FORMAT },
+  { id: 'date', label: '지정일 운세', desc: '중요한 날, 그날의 기운 미리 보기', day: 'pick', focus: '고른 날 하루의 흐름, 그날 중요한 일을 잘 치르기 위해 힘을 쓰면 좋은 점과 조심할 점', format: DAY_FORMAT },
+];
+// 화면 주제 칩에도 나오도록 TOPICS 에 합침
+TOPICS.push(...DAY_TOPICS);
+const DAY_IDS = new Set(DAY_TOPICS.map((t) => t.id));
+export const isDayTopic = (id) => DAY_IDS.has(id);
+// 날짜 문자열 (브라우저 지역 날짜 기준)
+export const ymdOf = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+export const dayTopicDate = (id, picked = null) => {
+  if (id === 'today') return ymdOf();
+  if (id === 'tomorrow') {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return ymdOf(d);
+  }
+  return picked;
+};
+
 // 주제 풀이 형식 (서버가 사용자 메시지에 붙임)
 export const TOPIC_FORMAT = "형식: '## 소제목'으로 시작하는 3~5개 단락, 전체 1,200~1,800자. 마지막 단락은 '## 한 줄 조언'으로 1~2문장.";
 
