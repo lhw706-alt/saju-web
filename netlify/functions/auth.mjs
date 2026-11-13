@@ -802,7 +802,31 @@ export default async (req, context) => {
     list.sort((a, b) => String(b.lastLoginAt).localeCompare(String(a.lastLoginAt)));
     // 문의 목록도 함께 (관리자 화면의 '문의' 탭). key 로 답변을 저장함
     const inqs = (await listInquiries()).map((q) => ({ ...q, key: `${q.userId}/${q.id}` }));
-    return json({ total: list.length, users: list, inquiries: inqs });
+    // 오늘(KST) 뽑은 행운의 번호 (관리자 '행운의 번호' 탭 — 초기화할 수 있음)
+    const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    const lk = getStore({ name: 'lucky', consistency: 'strong' });
+    const { blobs: lkb } = await lk.list({ prefix: 'u/' });
+    const nickOf = Object.fromEntries(list.map((u) => [u.id, u.displayNick || u.nick]));
+    const lucky = (await Promise.all(lkb.filter((b) => b.key.endsWith(`/${today}`)).map(async (b) => ({ userId: b.key.split('/')[1], ...(await lk.get(b.key, { type: 'json' })) }))))
+      .map((x) => ({ ...x, nick: nickOf[x.userId] || '-' }))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return json({ total: list.length, users: list, inquiries: inqs, lucky, luckyDate: today });
+  }
+
+  // 관리자: 회원의 오늘 행운의 번호 지우기 (다시 뽑을 수 있게) — POST {userId}
+  if (path === '/api/admin/lucky') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const admin = process.env.ADMIN_PASSWORD;
+    const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (!admin) return json({ error: '관리자 비밀번호가 설정되지 않았어요.' }, 503);
+    if (adminLimited(ip)) return json({ error: '시도가 너무 많아요. 10분 뒤 다시 해 주세요.' }, 429);
+    if (!sameSecret(given, admin)) return json({ error: '비밀번호가 맞지 않아요.' }, 401);
+    const body = await readJson();
+    const userId = String(body?.userId || '');
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(userId)) return json({ error: '잘못된 요청이에요.' }, 400);
+    const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    await getStore({ name: 'lucky', consistency: 'strong' }).delete(`u/${userId}/${today}`);
+    return json({ ok: true });
   }
 
   if (path === '/api/auth/kakao/login') {
@@ -869,4 +893,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/lucky'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky'] };

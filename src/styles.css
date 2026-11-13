@@ -1152,3 +1152,9 @@ legend.contact-label { margin-bottom: 12px; }
 .lmb-ripple { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 236, 190, 0.45) 0%, rgba(255, 236, 190, 0) 70%); pointer-events: none; animation: lmb-ripple 0.6s ease-out forwards; }
 @keyframes lmb-ripple { from { transform: translate(-50%, -50%) scale(0); opacity: 0.7; } to { transform: translate(-50%, -50%) scale(5); opacity: 0; } }
 .lucky-stage.is-idle + .lucky-panel { position: relative; z-index: 2; margin-top: 4px; } /* 버튼은 마법진 아래 (천동이를 가리지 않게) */
+
+/* 관리자 '행운의 번호' 탭 (2026-11-14) */
+.admin-lucky-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.admin-lucky-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 16px; border-radius: 14px; background: var(--surface, #212225); }
+.admin-lucky-nums { font-size: 16px; font-weight: 600; color: var(--primary); font-variant-numeric: tabular-nums; }
+.admin-lucky-list .btn-ghost { margin-left: auto; }

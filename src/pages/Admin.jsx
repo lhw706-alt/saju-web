@@ -55,6 +55,22 @@ export default function Admin() {
     setAnsMsg((m) => ({ ...m, [q.key]: answer ? (d.mailed ? '저장했어요 · 알림 메일 보냄' : '저장했어요') : '답변을 지웠어요' }));
   };
 
+  // 행운의 번호 탭: 오늘 뽑은 회원 목록 + 초기화(다시 뽑을 수 있게) — /api/admin/lucky
+  const lucky = data?.lucky || [];
+  const [luckyMsg, setLuckyMsg] = useState('');
+  const resetLucky = async (x) => {
+    if (!window.confirm(`${x.nick} 님의 오늘 행운의 번호를 지울까요? 지우면 오늘 다시 뽑을 수 있어요.`)) return;
+    const r = await fetch('/api/admin/lucky', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${pw}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ userId: x.userId }),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    if (!r?.ok) return setLuckyMsg(d?.error || '초기화하지 못했어요.');
+    setData((old) => ({ ...old, lucky: old.lucky.filter((y) => y.userId !== x.userId) }));
+    setLuckyMsg(`${x.nick} 님의 오늘 번호를 지웠어요. 다시 뽑을 수 있어요.`);
+  };
+
   const today = new Date().toDateString();
   const todayCount = data?.users.filter((u) => new Date(u.lastLoginAt).toDateString() === today).length ?? 0;
   const newToday = data?.users.filter((u) => new Date(u.joinedAt).toDateString() === today).length ?? 0;
@@ -108,8 +124,32 @@ export default function Admin() {
               문의 {inqs.length}
               {waiting > 0 && <span className="admin-dot">답변 대기 {waiting}</span>}
             </button>
+            <button type="button" role="tab" aria-selected={tab === 'lucky'} className={tab === 'lucky' ? 'on' : ''} onClick={() => setTab('lucky')}>
+              행운의 번호 {lucky.length}
+            </button>
           </div>
-          {tab === 'inquiries' ? (
+          {tab === 'lucky' ? (
+            <div className="admin-lucky">
+              <p className="hint">{data.luckyDate} (한국 시각) 오늘 뽑은 회원이에요. 초기화하면 그 회원은 오늘 다시 뽑을 수 있어요.</p>
+              {luckyMsg && <p className="inq-meta" role="status">{luckyMsg}</p>}
+              {lucky.length === 0 ? (
+                <p className="hint">오늘은 아직 뽑은 회원이 없어요.</p>
+              ) : (
+                <ul className="admin-lucky-list">
+                  {lucky.map((x) => (
+                    <li key={x.userId}>
+                      <b>{x.nick}</b>
+                      <span className="admin-lucky-nums">{(x.numbers || []).join(' · ')}</span>
+                      <span className="inq-meta">{fmt(x.createdAt)}</span>
+                      <button type="button" className="btn-ghost" onClick={() => resetLucky(x)}>
+                        초기화
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : tab === 'inquiries' ? (
             inqs.length === 0 ? (
               <p className="hint">아직 들어온 문의가 없어요.</p>
             ) : (
