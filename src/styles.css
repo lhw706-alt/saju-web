@@ -1048,18 +1048,23 @@ legend.contact-label { margin-bottom: 12px; }
 .day-title { margin: 28px 0 0; font-family: var(--title); font-size: 24px; font-weight: 400; text-align: center; }
 .day-top { display: grid; justify-items: center; padding: 10px 0 10px; text-align: center; }
 .day-date { margin: 0; font-size: 15px; color: var(--text-2); }
-.day-score { min-height: 108px; display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; }
-.day-dosa { display: block; width: 112px; height: 84px; }
+.day-score { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-top: 10px; }
+.day-dosa { display: block; width: 104px; height: 78px; }
 .day-dosa svg { display: block; width: 100%; height: 100%; }
-.day-score b { font-size: 80px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
-.day-score b small { margin-left: 4px; font-size: 22px; font-weight: 500; letter-spacing: 0; color: var(--text-2); }
+.day-score b { font-size: 56px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
+.day-score b small { margin-left: 3px; font-size: 18px; font-weight: 500; letter-spacing: 0; color: var(--text-2); }
 .day-score-wait { display: grid; place-items: center; width: 108px; height: 96px; }
 .day-summary { min-height: 26px; margin: 8px 0 0; font-size: 18px; color: var(--text); word-break: keep-all; }
 .day-body { margin-top: 18px; }
-.day-times { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line-soft); }
+.day-times { margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line-soft); }
 .day-times button { height: 48px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-2); font-size: 16px; cursor: pointer; }
 .day-times button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
 .day-times button:disabled { color: rgba(194, 196, 200, 0.4); cursor: default; }
+.day-sub { margin: 26px 0 0; font-size: 17px; font-weight: 600; color: var(--text); }
+.day-rings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.day-ring { display: grid; justify-items: center; gap: 8px; padding: 16px 6px 14px; border: 1px solid var(--line-soft); border-radius: var(--r); background: var(--bg-2); color: var(--text-2); font-size: 15px; cursor: pointer; }
+.day-ring svg { width: 76px; height: 76px; }
+.day-ring.on { border-color: var(--primary); color: var(--text); }
 .day-radar { display: block; width: 100%; max-width: 360px; margin: 18px auto 0; overflow: visible; }
 .day-radar-shape { transition: all 0.4s ease; }
 .day-text { margin-top: 18px; padding: 22px 22px 24px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line-soft); }

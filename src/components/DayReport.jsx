@@ -28,7 +28,14 @@ function parseDay(text) {
     return '';
   });
   const open = body.indexOf('```');
-  if (open >= 0) body = body.slice(0, open);
+  if (open >= 0) {
+    // json 이 아직 다 오지 않았어도 점수·요약은 먼저 보여 줌 (기다리는 시간 줄이기)
+    const head = body.slice(open);
+    const sc = /"score"\s*:\s*(\d+)/.exec(head);
+    const su = /"summary"\s*:\s*"([^"]+)"/.exec(head);
+    if (!data && (sc || su)) data = { score: sc ? Number(sc[1]) : undefined, summary: su ? su[1] : undefined };
+    body = body.slice(0, open);
+  }
   const sections = {};
   const parts = body.split(/^##\s+(.+)$/m);
   if (parts[0].trim()) sections['총운'] = parts[0].trim(); // 제목 없이 시작한 글
@@ -46,6 +53,34 @@ const faceOf = (s) =>
   : { eyes: 'dot', mouth: 'flat', brows: 'soft' };
 // 시간대 점수(times)가 없는 예전 풀이는 기억에서 꺼내지 않고 새로 받음
 const hasTimes = (t) => typeof t === 'string' && t.includes('"times"');
+
+// 시간대 점수: 숫자 (예전 풀이는 분야별 객체 → 그 안의 총운)
+const timeScore = (v) => (v && typeof v === 'object' ? v['총운'] : v);
+
+// 오전·오후·밤 원형 진행 그래프 (한 번에 보여 줌, 누르면 그때의 글로)
+function TimeRings({ times, current, onPick }) {
+  const R = 30;
+  const C = 2 * Math.PI * R;
+  return (
+    <div className="day-rings">
+      {['오전', '오후', '밤'].map((t) => {
+        const v = times ? clamp(timeScore(times[t]), 0, 100) : null;
+        return (
+          <button key={t} type="button" className={`day-ring${current === t ? ' on' : ''}`} onClick={() => onPick(t)} aria-label={v != null ? `${t} ${v}점, 글 보기` : `${t} 글 보기`}>
+            <svg viewBox="0 0 76 76" aria-hidden="true">
+              <circle cx="38" cy="38" r={R} fill="none" stroke="rgba(194,196,200,0.16)" strokeWidth="6" />
+              {v != null && (
+                <circle cx="38" cy="38" r={R} fill="none" stroke="var(--primary)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(C * v) / 100} ${C}`} transform="rotate(-90 38 38)" />
+              )}
+              <text x="38" y="44" textAnchor="middle" fill="var(--text)" fontSize="18" fontWeight="600">{v ?? '–'}</text>
+            </svg>
+            <span>{t}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // 분야별 점수 육각형 그래프 (0~100)
 function Radar({ scores }) {
@@ -207,6 +242,10 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
 
       {date && (
         <section className="day-body">
+          <h2 className="day-sub">분야별 운</h2>
+          <Radar scores={data?.scores} />
+          <h2 className="day-sub">때별 운</h2>
+          <TimeRings times={data?.times} current={shownTime} onPick={(t) => sections[t] && setTime(t)} />
           <div className="day-times" role="tablist" aria-label="때별 운세">
             {TIMES.map((t) => (
               <button key={t} type="button" role="tab" aria-selected={shownTime === t} className={shownTime === t ? 'on' : ''} disabled={!sections[t]} onClick={() => setTime(t)}>
@@ -214,8 +253,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
               </button>
             ))}
           </div>
-          {/* 오전·오후·밤은 그 시간대 그래프 (예전에 기억한 풀이처럼 없으면 하루 전체 그래프) */}
-          <Radar scores={(shownTime !== '총운' && data?.times?.[shownTime]) || data?.scores} />
+
           <article className="day-text" aria-busy={cur?.status === 'loading'}>
             <h2>{shownTime}</h2>
             {sections[shownTime] ? <Markdown text={sections[shownTime]} /> : cur?.status === 'loading' ? <p className="hint">풀이를 받는 중이에요…</p> : null}
