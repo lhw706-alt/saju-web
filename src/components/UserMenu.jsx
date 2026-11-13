@@ -48,9 +48,6 @@ export default function UserMenu({ nick, onLogout }) {
         onClick={() => setOpen((o) => !o)}
       >
         {nick || '내 계정'}
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
       </button>
       {open && (
         <div className="user-menu-list" role="menu" aria-label="내 계정 메뉴">

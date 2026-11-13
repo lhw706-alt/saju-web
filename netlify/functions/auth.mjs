@@ -454,7 +454,7 @@ export default async (req, context) => {
     return json({ ok: true, id });
   }
 
-  // 관리자: 문의 답변 저장 (POST {key, answer}) — 답변 받을 이메일을 적은 문의면 답변 등록 알림 메일도 보냄
+  // 관리자: 문의 답변 저장 (POST {key, answer}) — (예전 문의에 이메일이 있으면 답변 알림 메일)
   if (path === '/api/admin/inquiry') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     const bad = adminAuth(req, ip);

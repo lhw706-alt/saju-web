@@ -742,7 +742,6 @@ legend.contact-label { margin-bottom: 12px; }
 /* 상단 닉네임 펼침 메뉴 */
 .user-menu { position: relative; flex: none; }
 .user-menu-btn { display: inline-flex; align-items: center; gap: 4px; }
-.user-menu-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
 .user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 150px; padding: 6px; border-radius: var(--r-md); background: #2a2b2f; border: 1px solid var(--line); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4); }
 .user-menu-list a, .user-menu-list button { display: flex; align-items: center; height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
 .user-menu-list a:hover, .user-menu-list button:hover, .user-menu-list :focus-visible { background: rgba(255, 255, 255, 0.06); outline: none; }
