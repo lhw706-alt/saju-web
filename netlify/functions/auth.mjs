@@ -3,6 +3,7 @@
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
 // - /api/auth/logout         → 세션 쿠키 삭제
+// - /api/auth/nickname       → 사이트 닉네임 변경 (중복 허용)
 // - /api/auth/birth          → 내 사주 정보 저장(POST)·삭제(DELETE) — 마이페이지
 // - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
 // - /api/admin/users         → 관리자용 회원 목록 (Authorization: Bearer ADMIN_PASSWORD)
@@ -23,18 +24,30 @@ const users = () => getStore('users');
 const adminLimited = createRateLimiter(5, 10 * 60_000);
 
 // 로그인할 때 회원 정보 저장·갱신 → 처음이면 true
+// 로그인할 때 회원 정보 저장·갱신. 기존 값(내 사주 정보 birth, 사이트 닉네임 displayNick)은 그대로 둠
+// → { isNew, displayNick }  (displayNick: 사용자가 바꾼 사이트 닉네임, 없으면 카카오 닉네임)
 async function upsertUser(id, nick) {
   const store = users();
   const now = new Date().toISOString();
   const prev = await store.get(id, { type: 'json' });
-  await store.setJSON(id, {
+  const rec = {
+    ...(prev || {}),
     id,
-    nick,
+    nick, // 카카오 닉네임(최신)
     joinedAt: prev?.joinedAt || now,
     lastLoginAt: now,
     loginCount: (prev?.loginCount || 0) + 1,
-  });
-  return !prev;
+  };
+  await store.setJSON(id, rec);
+  return { isNew: !prev, displayNick: rec.displayNick || nick };
+}
+
+// 사이트 닉네임 검사: 2~12자, 한글·영문·숫자·공백·일부 기호만 (중복 허용 — 나만 보는 표시용 이름, 2026-11-13)
+function cleanNick(v) {
+  const n = String(v || '').replace(/\s+/g, ' ').trim();
+  if ([...n].length < 2 || [...n].length > 12) return { error: '닉네임은 2~12자로 정해 주세요.' };
+  if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ._\-~♡★☆]+$/u.test(n)) return { error: '한글·영문·숫자와 . _ - ~ ♡ ★ 만 쓸 수 있어요.' };
+  return { nick: n };
 }
 
 function sameSecret(a, b) {
@@ -122,6 +135,27 @@ export default async (req, context) => {
   if (path === '/api/auth/logout') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
+  }
+
+  // 사이트 닉네임 변경 (POST {nick}) → 계정에 저장 + 로그인 쿠키도 새 닉네임으로 다시 발급
+  if (path === '/api/auth/nickname') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.' }, 401);
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: '잘못된 요청이에요.' }, 400);
+    }
+    const c = cleanNick(body?.nick);
+    if (c.error) return json({ error: c.error }, 400);
+    const store = users();
+    const rec = (await store.get(s.sub, { type: 'json' })) || { id: s.sub, nick: s.nick || '', joinedAt: new Date().toISOString(), loginCount: 1 };
+    rec.displayNick = c.nick;
+    await store.setJSON(s.sub, rec);
+    const session = sign({ sub: s.sub, nick: c.nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
+    return json({ ok: true, nick: c.nick }, 200, [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
   }
 
   // 내 사주 정보(생년월일시·성별·태어난 곳)를 계정에 저장(POST {input}) / 삭제(DELETE) — 마이페이지
@@ -236,12 +270,15 @@ export default async (req, context) => {
       const nick = me?.kakao_account?.profile?.nickname || '';
       const id = String(me.id);
       let isNew = false;
+      let showNick = nick.slice(0, 40);
       try {
-        isNew = await upsertUser(id, nick.slice(0, 40));
+        const r = await upsertUser(id, nick.slice(0, 40));
+        isNew = r.isNew;
+        showNick = r.displayNick || showNick;
       } catch (e) {
         console.error('user save failed:', e?.name); // 저장이 안 돼도 로그인은 진행
       }
-      const session = sign({ sub: id, nick: nick.slice(0, 40), exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
+      const session = sign({ sub: id, nick: showNick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
       const dest = safeNext(next);
       // 화면에서 GA 이벤트(sign_up / login)를 보내도록 표시만 붙임 (개인 정보 없음)
       return redirect(`${dest}${dest.includes('?') ? '&' : '?'}login=${isNew ? 'new' : 'ok'}`, [clearState, setCookie(SESSION, session, SESSION_DAYS * 86400)]);
@@ -253,4 +290,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/admin/users'] };

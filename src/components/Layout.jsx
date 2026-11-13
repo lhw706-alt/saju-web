@@ -130,7 +130,7 @@ export default function Layout() {
       </header>
 
       <main className="main">
-        <Outlet context={{ auth, openLogin: () => setLogin(true), logout, withdraw }} />
+        <Outlet context={{ auth, openLogin: () => setLogin(true), logout, withdraw, setNick: (nick) => setAuth((a) => ({ ...a, user: a.user ? { ...a.user, nick } : a.user })) }} />
       </main>
       <FortuneFab />
 

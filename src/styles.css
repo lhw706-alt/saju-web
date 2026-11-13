@@ -770,3 +770,11 @@ legend.contact-label { margin-bottom: 12px; }
 .my-action.is-danger:hover { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
 .saved-load.is-static { cursor: default; }
 .my .saved-item:has(.is-static):hover { background: var(--bg-2); }
+/* 마이페이지 닉네임 변경 */
+.my-hello b { display: flex; align-items: center; gap: 2px; }
+.my-nick-edit { padding: 4px 8px; font-size: 14px; font-weight: 400; }
+.my-nick-form { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.my-nick-form .contact-input { height: 44px; }
+.my-nick-actions { display: flex; align-items: center; gap: 2px; }
+.my-nick-actions .btn-primary.inline { margin: 0; height: 44px; padding: 0 18px; font-size: 15px; }
+.my-nick-form .field-msg { grid-column: 1 / -1; }

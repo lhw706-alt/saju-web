@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react';
 function devFakeLogin() {
   let loggedIn = false;
   let birth = null;
+  let nick = '천동이(테스트)';
   const now = new Date().toISOString();
   const send = (res, status, body) => {
     res.statusCode = status;
@@ -33,7 +34,7 @@ function devFakeLogin() {
         const url = new URL(req.url, 'http://localhost');
         const path = url.pathname;
         if (path === '/api/auth/me') {
-          return send(res, 200, { enabled: true, user: loggedIn ? { nick: '천동이(테스트)', joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
+          return send(res, 200, { enabled: true, user: loggedIn ? { nick, joinedAt: now, lastLoginAt: now, loginCount: 1, birth } : null });
         }
         if (path === '/api/auth/kakao/login') {
           loggedIn = true;
@@ -50,6 +51,14 @@ function devFakeLogin() {
           loggedIn = false;
           birth = null;
           return send(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/nickname') {
+          if (!loggedIn) return send(res, 401, { error: '로그인이 필요해요.' });
+          const body = await readBody(req);
+          const n = String(body.nick || '').replace(/\s+/g, ' ').trim();
+          if ([...n].length < 2 || [...n].length > 12) return send(res, 400, { error: '닉네임은 2~12자로 정해 주세요.' });
+          nick = n;
+          return send(res, 200, { ok: true, nick });
         }
         if (path === '/api/auth/birth') {
           if (!loggedIn) return send(res, 401, { error: '로그인이 필요해요.' });

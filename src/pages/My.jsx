@@ -15,7 +15,7 @@ const presetSub = (p) => {
 
 export default function My() {
   const navigate = useNavigate();
-  const { auth, openLogin, logout, withdraw } = useOutletContext();
+  const { auth, openLogin, logout, withdraw, setNick } = useOutletContext();
   const [profile, setProfile] = useState(null);
   const [presets, setPresets] = useState(loadPresets);
   const [editing, setEditing] = useState(false); // 내 사주 정보 등록·수정 중
@@ -50,6 +50,28 @@ export default function My() {
   };
 
 
+  // 사이트 닉네임 변경 (중복 허용, 2~12자) → 계정에 저장, 상단에도 바로 반영
+  const [nickEdit, setNickEdit] = useState(false);
+  const [nickDraft, setNickDraft] = useState('');
+  const [nickErr, setNickErr] = useState('');
+  const [nickSaving, setNickSaving] = useState(false);
+  const startNick = () => {
+    setNickDraft(auth.user?.nick || '');
+    setNickErr('');
+    setNickEdit(true);
+  };
+  const saveNick = async (e) => {
+    e.preventDefault();
+    setNickSaving(true);
+    setNickErr('');
+    const r = await fetch('/api/auth/nickname', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nick: nickDraft }) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    setNickSaving(false);
+    if (!r?.ok) return setNickErr(d?.error || '바꾸지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    setNick(d.nick);
+    setNickEdit(false);
+  };
+
   if (!auth.ready) return <section className="my" />;
 
   if (!auth.user) {
@@ -77,10 +99,47 @@ export default function My() {
           <span className="my-avatar" aria-hidden="true">
             <LogoSymbol size={44} />
           </span>
-          <div>
-            <b>{p.nick || '사주천문 회원'}님</b>
-            <span>카카오로 로그인했어요</span>
-          </div>
+          {nickEdit ? (
+            <form className="my-nick-form" onSubmit={saveNick}>
+              <label className="visually-hidden" htmlFor="my-nick">
+                닉네임
+              </label>
+              <input
+                id="my-nick"
+                className="contact-input"
+                value={nickDraft}
+                maxLength={12}
+                autoFocus
+                onChange={(e) => setNickDraft(e.target.value)}
+                placeholder="2~12자"
+                aria-invalid={!!nickErr}
+                aria-describedby={nickErr ? 'my-nick-err' : undefined}
+              />
+              <div className="my-nick-actions">
+                <button type="submit" className="btn-primary inline" disabled={nickSaving}>
+                  {nickSaving ? '저장 중…' : '저장'}
+                </button>
+                <button type="button" className="my-link" onClick={() => setNickEdit(false)}>
+                  취소
+                </button>
+              </div>
+              {nickErr && (
+                <p id="my-nick-err" className="field-msg">
+                  {nickErr}
+                </p>
+              )}
+            </form>
+          ) : (
+            <div>
+              <b>
+                {auth.user.nick || '사주천문 회원'}님
+                <button type="button" className="my-link my-nick-edit" onClick={startNick}>
+                  변경
+                </button>
+              </b>
+              <span>카카오로 로그인했어요</span>
+            </div>
+          )}
         </div>
         {/* 가입일·방문 횟수 대신 내 사주 정보 (계정에 저장 — 다른 기기에서도 그대로) */}
         <div className="my-birth">
