@@ -694,6 +694,12 @@ legend.contact-label { margin-bottom: 12px; }
 .saved { display: grid; gap: 10px; }
 .saved-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-2); letter-spacing: var(--ls-body); }
 .saved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+/* 마이페이지에 등록한 내 정보: 목록 맨 위, 선택된 상태로 */
+.saved-mine { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; width: 100%; margin-bottom: 8px; padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--primary); background: rgba(226, 194, 122, 0.08); color: var(--text); text-align: left; cursor: pointer; }
+.saved-mine-badge { grid-column: 1 / -1; justify-self: start; padding: 2px 8px; border-radius: 6px; background: var(--primary); color: #1b1c1e; font-size: 12px; font-weight: 600; }
+.saved-mine .saved-text { min-width: 0; }
+.saved-mine-go { padding: 8px 12px; border-radius: 10px; background: var(--primary); color: #1b1c1e; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.saved-mine:hover .saved-mine-go { filter: brightness(1.05); }
 .saved-item { display: flex; align-items: center; gap: 4px; border-radius: var(--r-md); background: var(--bg); transition: background 0.15s ease; }
 .saved-item:hover { background: #26272b; }
 .saved-load { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 6px 12px 16px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }

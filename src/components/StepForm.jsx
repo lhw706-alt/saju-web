@@ -16,7 +16,8 @@ const STEPS = ['성별', '생년월일', '태어난 시각', '태어난 곳'];
 const QUESTIONS = ['성별을 골라 주세요', '언제 태어났나요?', '몇 시에 태어났나요?', '어디에서 태어났나요?'];
 
 // showSaved=false: 저장된 정보 목록 숨김 (마이페이지 등록용), submitLabel: 마지막 버튼 글자
-export default function StepForm({ initial, onSubmit, showSaved = true, submitLabel = '사주 펼쳐 보기' }) {
+// mine: 마이페이지에 등록한 내 사주 정보(로그인 회원) — 불러오기 목록 맨 위에 '내 정보'로 미리 선택해 둠
+export default function StepForm({ initial, onSubmit, showSaved = true, submitLabel = '사주 펼쳐 보기', mine = null }) {
   const [f, setF] = useState({ ...EMPTY, ...initial });
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
@@ -62,7 +63,9 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
   // 이 브라우저에 기억해 둔 지난 입력: 목록에서 줄을 누르면 바로 불러오기, ✕ 로 지우기 (2명까지 보이고 나머지는 더 보기)
   const [presets, setPresets] = useState(loadPresets);
   const [showAll, setShowAll] = useState(false);
-  const shown = showAll ? presets : presets.slice(0, 2);
+  const key = (x) => presetMain(x) + presetSub(x);
+  const others = mine ? presets.filter((x) => key(x) !== key(mine)) : presets; // 내 정보와 같은 줄은 한 번만
+  const shown = showAll ? others : others.slice(0, 2);
   const finish = (data) => {
     savePreset(data); // 입력을 마치면 이 브라우저에 바로 기억 (불러오기용)
     onSubmit(data);
@@ -93,12 +96,23 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
 
       <div className="step" key={step}>
 
-        {step === 0 && showSaved && presets.length > 0 && (
+        {step === 0 && showSaved && (others.length > 0 || mine) && (
           <div className="saved">
             <div className="saved-head">
               <h2 className="saved-title">입력했던 정보를 불러올 수 있어요</h2>
               <p className="saved-note">최근 5명까지 기억해요</p>
             </div>
+            {mine && (
+              <button type="button" className="saved-mine" aria-pressed="true" onClick={() => applyPreset(mine)}>
+                <span className="saved-mine-badge">내 정보</span>
+                <span className="saved-text">
+                  <b>{presetMain(mine)}</b>
+                  <span>{presetSub(mine)}</span>
+                </span>
+                <span className="saved-mine-go">이 정보로 보기</span>
+              </button>
+            )}
+            {others.length > 0 && (
             <ul className="saved-list">
               {shown.map((x) => (
                 <li key={presetMain(x) + presetSub(x)} className="saved-item">
@@ -117,9 +131,10 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
                 </li>
               ))}
             </ul>
-            {presets.length > 2 && (
+            )}
+            {others.length > 2 && (
               <button type="button" className="saved-more" onClick={() => setShowAll((v) => !v)}>
-                {showAll ? '접기' : `${presets.length - 2}명 더 보기`}
+                {showAll ? '접기' : `${others.length - 2}명 더 보기`}
               </button>
             )}
             <p className="saved-or">
