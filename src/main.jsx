@@ -5,6 +5,7 @@ import Layout from './components/Layout.jsx';
 import Home from './pages/Home.jsx';
 import Result from './pages/Result.jsx';
 import Start from './pages/Start.jsx';
+import Admin from './pages/Admin.jsx';
 import Privacy from './pages/Privacy.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
@@ -23,6 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/start" element={<Start />} />
           <Route path="/result" element={<Result />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

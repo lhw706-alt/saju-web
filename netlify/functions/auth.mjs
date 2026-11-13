@@ -3,13 +3,40 @@
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
 // - /api/auth/logout         → 세션 쿠키 삭제
-// 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 서버 DB 없음: 로그인 상태는 브라우저의 HttpOnly 쿠키에만.
-// 환경 변수: KAKAO_REST_API_KEY(필수), KAKAO_CLIENT_SECRET(카카오 앱에서 켰다면), SESSION_SECRET(필수, 긴 무작위 문자열)
+// - /api/auth/delete         → 회원 탈퇴: 저장된 회원 정보 삭제 + 세션 쿠키 삭제
+// - /api/admin/users         → 관리자용 회원 목록 (Authorization: Bearer ADMIN_PASSWORD)
+// 카카오 액세스 토큰은 쓰고 바로 버린다(저장 안 함). 로그인 상태는 HttpOnly 쿠키, 회원 목록은 Netlify Blobs(users)에
+// 회원번호·닉네임·가입일·마지막 로그인·로그인 횟수만 저장 (2026-11-13).
+// 환경 변수: KAKAO_REST_API_KEY(필수), KAKAO_CLIENT_SECRET(카카오 앱에서 켰다면), SESSION_SECRET(필수, 긴 무작위 문자열),
+//           ADMIN_PASSWORD(관리자 회원 목록 보기용, 없으면 관리자 목록 꺼짐)
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { getStore } from '@netlify/blobs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
 const SESSION_DAYS = 30;
+const users = () => getStore('users');
+
+// 로그인할 때 회원 정보 저장·갱신 → 처음이면 true
+async function upsertUser(id, nick) {
+  const store = users();
+  const now = new Date().toISOString();
+  const prev = await store.get(id, { type: 'json' });
+  await store.setJSON(id, {
+    id,
+    nick,
+    joinedAt: prev?.joinedAt || now,
+    lastLoginAt: now,
+    loginCount: (prev?.loginCount || 0) + 1,
+  });
+  return !prev;
+}
+
+function sameSecret(a, b) {
+  const x = Buffer.from(String(a || ''));
+  const y = Buffer.from(String(b || ''));
+  return x.length > 0 && x.length === y.length && timingSafeEqual(x, y);
+}
 
 const b64 = (s) => Buffer.from(s).toString('base64url');
 const unb64 = (s) => Buffer.from(s, 'base64url').toString();
@@ -79,6 +106,31 @@ export default async (req) => {
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
   }
 
+  if (path === '/api/auth/delete') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인 정보가 없어요.' }, 401);
+    try {
+      await users().delete(s.sub);
+    } catch (e) {
+      console.error('user delete failed:', e?.name);
+      return json({ error: '탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, 500);
+    }
+    return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
+  }
+
+  if (path === '/api/admin/users') {
+    const admin = process.env.ADMIN_PASSWORD;
+    const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (!admin) return json({ error: '관리자 비밀번호가 설정되지 않았어요.' }, 503);
+    if (!sameSecret(given, admin)) return json({ error: '비밀번호가 맞지 않아요.' }, 401);
+    const store = users();
+    const { blobs } = await store.list();
+    const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })))).filter(Boolean);
+    list.sort((a, b) => String(b.lastLoginAt).localeCompare(String(a.lastLoginAt)));
+    return json({ total: list.length, users: list });
+  }
+
   if (path === '/api/auth/kakao/login') {
     if (!enabled) return redirect('/?login=unavailable');
     const state = randomBytes(16).toString('hex');
@@ -120,8 +172,17 @@ export default async (req) => {
       if (!meRes.ok) return fail(`me ${meRes.status}`);
       const me = await meRes.json();
       const nick = me?.kakao_account?.profile?.nickname || '';
-      const session = sign({ sub: String(me.id), nick: nick.slice(0, 40), exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
-      return redirect(safeNext(next), [clearState, setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+      const id = String(me.id);
+      let isNew = false;
+      try {
+        isNew = await upsertUser(id, nick.slice(0, 40));
+      } catch (e) {
+        console.error('user save failed:', e?.name); // 저장이 안 돼도 로그인은 진행
+      }
+      const session = sign({ sub: id, nick: nick.slice(0, 40), exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
+      const dest = safeNext(next);
+      // 화면에서 GA 이벤트(sign_up / login)를 보내도록 표시만 붙임 (개인 정보 없음)
+      return redirect(`${dest}${dest.includes('?') ? '&' : '?'}login=${isNew ? 'new' : 'ok'}`, [clearState, setCookie(SESSION, session, SESSION_DAYS * 86400)]);
     } catch (e) {
       return fail(e?.name || 'error');
     }
@@ -130,4 +191,4 @@ export default async (req) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/admin/users'] };

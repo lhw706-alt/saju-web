@@ -714,3 +714,20 @@ legend.contact-label { margin-bottom: 12px; }
 .saved-or::before, .saved-or::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
 .saved-head { display: grid; gap: 2px; }
 .saved-note { margin: 0; font-size: 14px; color: var(--muted); }
+/* 회원 탈퇴 메뉴 */
+.user-menu-list button.is-danger { color: var(--danger); }
+/* 관리자 회원 목록 */
+.admin { padding: 28px 0 0; }
+.admin-login { display: grid; gap: 10px; max-width: 380px; margin-top: 18px; padding: 20px; }
+.admin-stats { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.admin-stats li { display: grid; gap: 4px; padding: 14px 16px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); }
+.admin-stats span { font-size: 14px; color: var(--muted); }
+.admin-stats b { font-size: 22px; font-weight: 600; }
+.admin-actions { margin: 14px 0 10px; }
+.admin-table-wrap { overflow-x: auto; border-radius: var(--r-md); border: 1px solid var(--line-soft); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; white-space: nowrap; }
+.admin-table th, .admin-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+.admin-table th { background: var(--bg-2); color: var(--muted); font-weight: 500; }
+.admin-table td.mono { font-variant-numeric: tabular-nums; color: var(--text-2); }
+.admin-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-table tbody tr:last-child td { border-bottom: 0; }

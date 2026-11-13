@@ -7,6 +7,7 @@ import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
 import LoginModal from './LoginModal.jsx';
 import { clearInput } from '../lib/storage.js';
+import { trackEvent } from '../lib/analytics.js';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -34,11 +35,26 @@ export default function Layout() {
       .then((d) => setAuth({ enabled: !!d?.enabled, user: d?.user || null, ready: true }))
       .catch(() => setAuth((a) => ({ ...a, ready: true })));
   }, []);
-  // 로그인 실패·준비중으로 돌아왔을 때 안내 (주소의 ?login=… 은 지움)
+  // 로그인하고 돌아왔을 때: GA 이벤트(new → sign_up, ok → login) / 실패·준비중 안내. 주소의 ?login=… 은 지움
   useEffect(() => {
     const m = search.match(/[?&]login=(\w+)/);
     if (!m) return undefined;
-    setNotice(m[1] === 'unavailable' ? '로그인은 준비중이에요. 곧 열려요!' : '로그인하지 못했어요. 다시 시도해 주세요.');
+    const kind = m[1];
+    // 같은 로그인 복귀에 이벤트가 두 번 가지 않게 (개발 모드 이중 실행·뒤로 가기 대비)
+    if ((kind === 'new' || kind === 'ok') && !window.__scLoginTracked) {
+      window.__scLoginTracked = true;
+      if (kind === 'new') trackEvent('sign_up', { method: 'kakao' });
+      trackEvent('login', { method: 'kakao' });
+    }
+    setNotice(
+      kind === 'new'
+        ? '반가워요! 카카오로 가입했어요.'
+        : kind === 'ok'
+          ? '로그인했어요.'
+          : kind === 'unavailable'
+            ? '로그인은 준비중이에요. 곧 열려요!'
+            : '로그인하지 못했어요. 다시 시도해 주세요.'
+    );
     navigate(pathname + search.replace(/[?&]login=\w+/, '').replace(/^&/, '?'), { replace: true });
     const t = setTimeout(() => setNotice(''), 2600);
     return () => clearTimeout(t);
@@ -49,6 +65,18 @@ export default function Layout() {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setAuth((a) => ({ ...a, user: null }));
   };
+  // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃
+  const withdraw = async () => {
+    setMenu(false);
+    if (!window.confirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return;
+    const r = await fetch('/api/auth/delete', { method: 'POST' }).catch(() => null);
+    if (r?.ok) {
+      trackEvent('withdraw', { method: 'kakao' });
+      setAuth((a) => ({ ...a, user: null }));
+      setNotice('탈퇴했어요. 카카오 연결은 카카오 설정에서 끊을 수 있어요.');
+    } else setNotice('탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    setTimeout(() => setNotice(''), 3200);
+  };
   useEffect(() => {
     window.scrollTo(0, 0);
     // 사주 화면(입력·결과)을 벗어나면 입력한 생년월일시를 지움 → 다음엔 처음부터 입력
@@ -58,7 +86,7 @@ export default function Layout() {
       el.href = SITE.url + pathname;
     });
     setHeadTag('meta[name="robots"]', () => Object.assign(document.createElement('meta'), { name: 'robots' }), (el) => {
-      el.content = pathname.startsWith('/result') ? 'noindex,follow' : 'index,follow';
+      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') ? 'noindex,nofollow' : 'index,follow';
     });
   }, [pathname]);
 
@@ -93,6 +121,9 @@ export default function Layout() {
               <div className="user-menu-list" role="menu">
                 <button type="button" role="menuitem" onClick={logout}>
                   로그아웃
+                </button>
+                <button type="button" role="menuitem" className="is-danger" onClick={withdraw}>
+                  회원 탈퇴
                 </button>
               </div>
             )}
