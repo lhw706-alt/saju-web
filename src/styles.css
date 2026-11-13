@@ -1058,6 +1058,7 @@ legend.contact-label { margin-bottom: 12px; }
 .day-score { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-top: 10px; }
 .day-dosa { display: block; width: 104px; height: 78px; }
 .day-dosa svg { display: block; width: 100%; height: 100%; }
+.day-tti-art { width: 96px; height: 102px; }
 .day-score b { font-size: 56px; line-height: 1; font-weight: 600; letter-spacing: -0.04em; color: var(--text); font-variant-numeric: tabular-nums; }
 .day-score b small { margin-left: 3px; font-size: 18px; font-weight: 500; letter-spacing: 0; color: var(--text-2); }
 .day-score-wait { display: grid; place-items: center; width: 108px; height: 96px; }

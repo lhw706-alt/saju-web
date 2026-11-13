@@ -12,6 +12,7 @@ import Markdown from './Markdown.jsx';
 import { FreshLoader } from './LifeReport.jsx';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
 import { computeSaju } from '../lib/saju.js';
+import { zodiacSvg, zodiacMood } from '../brand/zodiacArt.js';
 
 const AXES = ['총운', '재물운', '연애운', '사업운', '건강운', '학업운'];
 const TIMES = ['총운', '오전', '오후', '밤'];
@@ -166,7 +167,8 @@ function useDayPart(input, member, id, date, valid) {
 }
 
 // 점수 + 천둥도사 + 한 줄 요약
-function ScoreHead({ date, data, cur, art, sub }) {
+// artOf(score) → 점수 위에 놓을 그림 SVG (그날 운세 = 천둥도사, 띠 운세 = 내 띠 십이지신)
+function ScoreHead({ date, data, cur, artOf, artClass = "", sub }) {
   const score = data && Number.isFinite(Number(data.score)) ? clamp(data.score, 0, 100) : null;
   return (
     <section className="day-top">
@@ -174,7 +176,7 @@ function ScoreHead({ date, data, cur, art, sub }) {
       <div className="day-score" aria-live="polite">
         {score != null ? (
           <>
-            <span className="day-dosa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaFaceSvg(faceOf(score), art) }} />
+            <span className={`day-dosa ${artClass}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: artOf(score) }} />
             <b>
               {score}
               <small>점</small>
@@ -285,7 +287,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
 
       {date && view === 'day' && (
         <>
-          <ScoreHead date={date} data={data} cur={cur} art={topic} />
+          <ScoreHead date={date} data={data} cur={cur} artOf={(sc) => dosaFaceSvg(faceOf(sc), topic)} />
           <section className="day-body">
             <h2 className="day-sub">분야별 운</h2>
             <Radar scores={data?.scores} />
@@ -314,7 +316,8 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
             date={date}
             data={tti.data}
             cur={ttiCur}
-            art={topic}
+            artClass={animal ? "day-tti-art" : ""}
+            artOf={(sc) => (animal ? zodiacSvg(animal.name, zodiacMood(sc)) : dosaFaceSvg(faceOf(sc), topic))}
             sub={animal ? `${dateTitle(date)} · ${animal.year}년생 ${animal.name}띠(${ANIMAL_BRANCH[animal.name] || ''})` : dateTitle(date)}
           />
           <section className="day-body">
