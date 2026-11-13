@@ -56,6 +56,16 @@ function devFakeLogin() {
           loggedIn = true;
           return send(res, 200, { ok: true, nick });
         }
+        if (path === '/api/auth/email/reset-request') {
+          console.log('[미리보기] 비밀번호 재설정 링크: http://localhost:5179/reset?token=' + 'a'.repeat(64));
+          return send(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/email/reset') {
+          const body = await readBody(req);
+          if (body.token !== 'a'.repeat(64)) return send(res, 400, { error: '링크가 만료됐어요. 비밀번호 찾기를 다시 해 주세요.', expired: true });
+          loggedIn = true;
+          return send(res, 200, { ok: true, nick });
+        }
         if (path === '/api/auth/kakao/login') {
           loggedIn = true;
           const next = url.searchParams.get('next') || '/';

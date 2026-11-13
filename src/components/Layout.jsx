@@ -68,6 +68,8 @@ export default function Layout() {
           : '반가워요! 카카오로 가입했어요.'
         : kind === 'ok'
           ? '로그인했어요.'
+          : kind === 'reset'
+            ? '비밀번호를 새로 정하고 로그인했어요.'
           : kind === 'expired'
             ? '인증 링크가 만료됐거나 이미 쓴 링크예요. 다시 가입해 주세요.'
             : kind === 'exists'
@@ -106,7 +108,7 @@ export default function Layout() {
       el.href = SITE.url + pathname;
     });
     setHeadTag('meta[name="robots"]', () => Object.assign(document.createElement('meta'), { name: 'robots' }), (el) => {
-      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') || pathname.startsWith('/my') ? 'noindex,nofollow' : 'index,follow';
+      el.content = pathname.startsWith('/result') || pathname.startsWith('/admin') || pathname.startsWith('/my') || pathname.startsWith('/reset') ? 'noindex,nofollow' : 'index,follow';
     });
   }, [pathname]);
 

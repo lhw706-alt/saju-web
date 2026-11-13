@@ -1,7 +1,8 @@
 // 카카오·이메일 로그인 (Netlify Function, 서버에서만 실행) — 2026-11-13
 // - /api/auth/email/signup   → 이메일 가입 신청(이메일·비밀번호·닉네임) → 인증 메일(Resend)
 // - /api/auth/email/verify   → 메일 링크: 인증 + 가입 완료 + 로그인 → /?login=new&via=email
-// - /api/auth/email/login    → 이메일·비밀번호 로그인 (비밀번호는 scrypt 해시로만 저장)
+// - /api/auth/email/login    → 이메일·비밀번호 로그인 (비밀번호는 scrypt 해시로만 저장, keep=false 면 자동 로그인 안 함)
+// - /api/auth/email/reset-request → 비밀번호 찾기: 재설정 메일(1시간) / email/reset → 새 비밀번호 저장 + 로그인 (화면 /reset)
 // - /api/auth/kakao/login    → 카카오 인가 화면으로 보냄 (state 쿠키로 위조 요청 방지)
 // - /api/auth/kakao/callback → 인가 코드로 토큰을 받아 회원번호·닉네임만 확인 → 서명한 세션 쿠키 발급 → 원래 화면으로
 // - /api/auth/me             → { enabled, user }  (user: { nick } 또는 null)
@@ -52,23 +53,40 @@ function passwordError(pw) {
   if (!/[A-Za-z]/.test(p) || !/[0-9]/.test(p)) return '비밀번호에 영문과 숫자를 함께 넣어 주세요.';
   return '';
 }
-// 인증 메일 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
-async function sendVerifyMail(to, link) {
+// 메일 보내기 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
+async function sendMail(to, { title, lines, button, link, ignore }) {
   const html = `<!doctype html><html><body style="margin:0;background:#1b1c1e;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
 <div style="max-width:480px;margin:0 auto;padding:40px 24px;color:#f7f7f8">
 <p style="margin:0 0 6px;color:#e2c27a;font-size:14px">사주천문</p>
-<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">이메일 인증을 마쳐 주세요</h1>
-<p style="margin:0 0 24px;color:#c2c4c8;font-size:15px;line-height:1.7">아래 버튼을 누르면 인증이 끝나고 바로 가입돼요.<br>이 링크는 24시간 동안만 쓸 수 있어요.</p>
-<a href="${link}" style="display:inline-block;padding:14px 28px;border-radius:12px;background:#e2c27a;color:#1b1c1e;font-size:16px;font-weight:600;text-decoration:none">이메일 인증하기</a>
-<p style="margin:28px 0 0;color:#878a93;font-size:13px;line-height:1.6">직접 가입하지 않았다면 이 메일은 무시해 주세요. 아무 일도 일어나지 않아요.</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">${title}</h1>
+<p style="margin:0 0 24px;color:#c2c4c8;font-size:15px;line-height:1.7">${lines.join('<br>')}</p>
+<a href="${link}" style="display:inline-block;padding:14px 28px;border-radius:12px;background:#e2c27a;color:#1b1c1e;font-size:16px;font-weight:600;text-decoration:none">${button}</a>
+<p style="margin:28px 0 0;color:#878a93;font-size:13px;line-height:1.6">${ignore}</p>
 </div></body></html>`;
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject: '[사주천문] 이메일 인증을 마쳐 주세요', html }),
+    body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject: `[사주천문] ${title}`, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}`);
 }
+const sendVerifyMail = (to, link) =>
+  sendMail(to, {
+    title: '이메일 인증을 마쳐 주세요',
+    lines: ['아래 버튼을 누르면 인증이 끝나고 바로 가입돼요.', '이 링크는 24시간 동안만 쓸 수 있어요.'],
+    button: '이메일 인증하기',
+    link,
+    ignore: '직접 가입하지 않았다면 이 메일은 무시해 주세요. 아무 일도 일어나지 않아요.',
+  });
+const sendResetMail = (to, link) =>
+  sendMail(to, {
+    title: '비밀번호를 새로 정해 주세요',
+    lines: ['아래 버튼을 눌러 새 비밀번호를 정하면 바로 로그인돼요.', '이 링크는 1시간 동안 한 번만 쓸 수 있어요.'],
+    button: '비밀번호 새로 정하기',
+    link,
+    ignore: '직접 요청하지 않았다면 이 메일은 무시해 주세요. 비밀번호는 그대로예요.',
+  });
+const resetLimited = createRateLimiter(5, 10 * 60_000); // 같은 IP 10분 5번
 
 // ── 사이트 닉네임 (중복 금지 — 나중에 커뮤니티·랭킹에 보일 이름, 2026-11-13) ──
 // 닉네임 주인 목록: Netlify Blobs 'nicknames' (키 = 비교용으로 정규화한 닉네임, 값 = 회원번호)
@@ -198,6 +216,11 @@ export default async (req, context) => {
   const enabled = Boolean(key && secret);
   const redirectUri = `${url.origin}/api/auth/kakao/callback`;
   const path = url.pathname;
+  // 로그인 쿠키. keep(자동 로그인)이면 30일 유지, 아니면 브라우저를 닫으면 사라지는 쿠키(서버 쪽 유효기간 1일)
+  const sessionCookie = (sub, nick, keep = true) => {
+    const value = sign({ sub, nick, keep, exp: Date.now() + (keep ? SESSION_DAYS * 86400000 : 86400000) }, secret);
+    return keep ? setCookie(SESSION, value, SESSION_DAYS * 86400) : `${SESSION}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+  };
 
   if (path === '/api/auth/me') {
     const s = verify(cookies(req)[SESSION], secret);
@@ -275,8 +298,7 @@ export default async (req, context) => {
     const now = new Date().toISOString();
     await users().setJSON(id, { id, provider: 'email', email: p.email, passHash: p.passHash, displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 1 });
     await emails().set(emailKey(p.email), id);
-    const session = sign({ sub: id, nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
-    return redirect('/?login=new&via=email', [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+    return redirect('/?login=new&via=email', [sessionCookie(id, nick)]);
   }
 
   if (path === '/api/auth/email/login') {
@@ -294,8 +316,54 @@ export default async (req, context) => {
     rec.loginCount = (rec.loginCount || 0) + 1;
     await users().setJSON(id, rec);
     const nick = rec.displayNick || '사주천문 회원';
-    const session = sign({ sub: id, nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
-    return json({ ok: true, nick }, 200, [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+    return json({ ok: true, nick }, 200, [sessionCookie(id, nick, body?.keep !== false)]);
+  }
+
+  // 비밀번호 찾기: 가입한 이메일이면 재설정 링크(1시간)를 보냄. 가입 여부는 알려 주지 않음(항상 ok)
+  if (path === '/api/auth/email/reset-request') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (!emailEnabled) return json({ error: '비밀번호 찾기는 준비중이에요.' }, 503);
+    if (resetLimited(ip)) return json({ error: '요청이 많아요. 10분 뒤 다시 시도해 주세요.' }, 429);
+    const body = await readJson();
+    const email = String(body?.email || '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 100) return json({ error: '이메일 주소를 확인해 주세요.', field: 'email' }, 400);
+    const id = await emails().get(emailKey(email));
+    if (id) {
+      const token = randomBytes(32).toString('hex');
+      await pending().setJSON(`reset-${token}`, { id, exp: Date.now() + 3600_000 });
+      try {
+        await sendResetMail(email, `${url.origin}/reset?token=${token}`);
+      } catch (e) {
+        console.error('reset mail failed:', e?.message);
+        await pending().delete(`reset-${token}`);
+        return json({ error: '메일을 보내지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, 502);
+      }
+    }
+    return json({ ok: true });
+  }
+
+  // 새 비밀번호 저장 (POST {token, password}) → 바로 로그인
+  if (path === '/api/auth/email/reset') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    if (!secret) return json({ error: '준비중이에요.' }, 503);
+    const body = await readJson();
+    const token = String(body?.token || '');
+    const p = /^[a-f0-9]{64}$/.test(token) ? await pending().get(`reset-${token}`, { type: 'json' }) : null;
+    if (!p || p.exp < Date.now()) {
+      if (p) await pending().delete(`reset-${token}`);
+      return json({ error: '링크가 만료됐어요. 비밀번호 찾기를 다시 해 주세요.', expired: true }, 400);
+    }
+    const pwErr = passwordError(body?.password);
+    if (pwErr) return json({ error: pwErr, field: 'password' }, 400);
+    const rec = await users().get(p.id, { type: 'json' });
+    await pending().delete(`reset-${token}`);
+    if (!rec) return json({ error: '탈퇴한 계정이에요.', expired: true }, 400);
+    rec.passHash = hashPassword(body.password);
+    rec.lastLoginAt = new Date().toISOString();
+    rec.loginCount = (rec.loginCount || 0) + 1;
+    await users().setJSON(p.id, rec);
+    const nick = rec.displayNick || '사주천문 회원';
+    return json({ ok: true, nick }, 200, [sessionCookie(p.id, nick)]);
   }
 
   if (path === '/api/auth/logout') {
@@ -327,8 +395,7 @@ export default async (req, context) => {
     if (!(await claimNick(s.sub, c.nick, rec.displayNick))) return json({ error: '이미 쓰고 있는 닉네임이에요. 다른 닉네임을 정해 주세요.' }, 409);
     rec.displayNick = c.nick;
     await store.setJSON(s.sub, rec);
-    const session = sign({ sub: s.sub, nick: c.nick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
-    return json({ ok: true, nick: c.nick }, 200, [setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+    return json({ ok: true, nick: c.nick }, 200, [sessionCookie(s.sub, c.nick, s.keep !== false)]);
   }
 
   // 내 사주 정보(생년월일시·성별·태어난 곳)를 계정에 저장(POST {input}) / 삭제(DELETE) — 마이페이지
@@ -413,16 +480,18 @@ export default async (req, context) => {
     if (!enabled) return redirect('/?login=unavailable');
     const state = randomBytes(16).toString('hex');
     const next = safeNext(url.searchParams.get('next'));
+    const keep = url.searchParams.get('keep') === '0' ? '0' : '1'; // 자동 로그인 체크 여부
     const auth = new URL('https://kauth.kakao.com/oauth/authorize');
     auth.searchParams.set('client_id', key);
     auth.searchParams.set('redirect_uri', redirectUri);
     auth.searchParams.set('response_type', 'code');
     auth.searchParams.set('state', state);
-    return redirect(auth.toString(), [setCookie(STATE, `${state}|${next}`, 600)]);
+    return redirect(auth.toString(), [setCookie(STATE, `${state}|${keep}|${next}`, 600)]);
   }
 
   if (path === '/api/auth/kakao/callback') {
-    const [savedState, next = '/'] = (cookies(req)[STATE] || '').split('|');
+    const [savedState, keepFlag, ...rest] = (cookies(req)[STATE] || '').split('|');
+    const next = rest.join('|') || '/';
     const clearState = setCookie(STATE, '', 0);
     const fail = (why) => {
       console.error('kakao login failed:', why);
@@ -460,10 +529,9 @@ export default async (req, context) => {
       } catch (e) {
         console.error('user save failed:', e?.name); // 저장이 안 돼도 로그인은 진행
       }
-      const session = sign({ sub: id, nick: showNick, exp: Date.now() + SESSION_DAYS * 86400000 }, secret);
       const dest = safeNext(next);
       // 화면에서 GA 이벤트(sign_up / login)를 보내도록 표시만 붙임 (개인 정보 없음)
-      return redirect(`${dest}${dest.includes('?') ? '&' : '?'}login=${isNew ? 'new' : 'ok'}`, [clearState, setCookie(SESSION, session, SESSION_DAYS * 86400)]);
+      return redirect(`${dest}${dest.includes('?') ? '&' : '?'}login=${isNew ? 'new' : 'ok'}`, [clearState, sessionCookie(id, showNick, keepFlag !== '0')]);
     } catch (e) {
       return fail(e?.name || 'error');
     }
@@ -472,4 +540,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/admin/users'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/admin/users'] };

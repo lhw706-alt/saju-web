@@ -21,7 +21,10 @@ export function initAnalytics() {
   window.gtag('js', new Date());
   // 첫 페이지 조회는 config 가 보내고, 페이지 이동(SPA)은 GA4 향상된 측정의
   // '브라우저 기록 이벤트 기반 페이지 변경'이 자동 집계한다 (직접 page_view 를 보내면 중복).
-  window.gtag('config', GA_MEASUREMENT_ID);
+  // 비밀번호 재설정 링크(/reset?token=…)의 토큰은 통계로 보내지 않음
+  const resetPage = window.location.pathname.startsWith('/reset');
+  if (resetPage) window.gtag('config', GA_MEASUREMENT_ID, { page_location: `${window.location.origin}/reset` });
+  else window.gtag('config', GA_MEASUREMENT_ID);
 }
 
 export function trackEvent(name, params = {}) {

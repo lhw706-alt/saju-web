@@ -17,7 +17,8 @@ function KakaoSymbol({ size = 22 }) {
 export default function LoginModal({ open, enabled, emailEnabled, onClose, onLoggedIn }) {
   const { pathname, search } = useLocation();
   const panel = useRef(null);
-  const [view, setView] = useState('login'); // login | signup | sent
+  const [view, setView] = useState('login'); // login | signup | sent | find | findSent
+  const [keep, setKeep] = useState(true); // 자동 로그인 (끄면 브라우저를 닫을 때 로그아웃)
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -81,8 +82,15 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
     e.preventDefault();
     if (!EMAIL_RE.test(email.trim())) return setErr({ field: 'email', text: '이메일 주소를 확인해 주세요.' });
     if (!pw) return setErr({ field: 'password', text: '비밀번호를 넣어 주세요.' });
-    const d = await post('/api/auth/email/login', { email, password: pw });
+    const d = await post('/api/auth/email/login', { email, password: pw, keep });
     if (d) onLoggedIn(d.nick);
+  };
+
+  const find = async (e) => {
+    e.preventDefault();
+    if (!EMAIL_RE.test(email.trim())) return setErr({ field: 'email', text: '이메일 주소를 확인해 주세요.' });
+    const d = await post('/api/auth/email/reset-request', { email });
+    if (d) setView('findSent');
   };
 
   const signup = async (e) => {
@@ -104,7 +112,12 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
     </div>
   );
 
-  const title = view === 'signup' ? '이메일로 회원가입' : view === 'sent' ? '메일함을 확인해 주세요' : '로그인';
+  const title = {
+    signup: '이메일로 회원가입',
+    sent: '메일함을 확인해 주세요',
+    find: '아이디 및 비밀번호 찾기',
+    findSent: '메일함을 확인해 주세요',
+  }[view] || '로그인';
 
   return createPortal(
     <div className="contact-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -125,6 +138,16 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
             <form className="login-form" onSubmit={login} noValidate>
               {field('login-email', '이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
               {field('login-pw', '비밀번호', { type: 'password', autoComplete: 'current-password', value: pw, onChange: (e) => setPw(e.target.value) }, 'password')}
+              <div className="login-options">
+                <label className="login-keep">
+                  <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+                  <span className="login-keep-box" aria-hidden="true" />
+                  자동 로그인
+                </label>
+                <button type="button" className="login-find" onClick={() => setView('find')}>
+                  아이디 및 비밀번호 찾기
+                </button>
+              </div>
               {err.text && !err.field && <p className="field-msg">{err.text}</p>}
               <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
                 {busy ? '확인 중…' : '로그인'}
@@ -132,9 +155,9 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
               {!emailEnabled && <p className="login-off-note">이메일 로그인은 준비중이에요.</p>}
             </form>
             <p className="login-switch">
-              처음 오셨어요?
+              아직 회원이 아니신가요?
               <button type="button" className="my-link" onClick={() => setView('signup')}>
-                이메일로 회원가입
+                회원가입
               </button>
             </p>
             <p className="login-or">
@@ -142,7 +165,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
             </p>
             <div className="login-social">
               {enabled ? (
-                <a className="kakao-circle" href={`/api/auth/kakao/login?next=${encodeURIComponent(next)}`} aria-label="카카오로 로그인·회원가입">
+                <a className="kakao-circle" href={`/api/auth/kakao/login?next=${encodeURIComponent(next)}${keep ? '' : '&keep=0'}`} aria-label="카카오로 로그인·회원가입">
                   <KakaoSymbol />
                 </a>
               ) : (
@@ -168,7 +191,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
             </button>
             {!emailEnabled && <p className="login-off-note">이메일 가입은 준비중이에요. 카카오로 가입해 주세요.</p>}
             <p className="login-switch">
-              이미 가입하셨어요?
+              이미 회원이신가요?
               <button type="button" className="my-link" onClick={() => setView('login')}>
                 로그인
               </button>
@@ -182,6 +205,38 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
               <b>{email.trim()}</b>로 인증 메일을 보냈어요.
             </p>
             <p>메일의 <b>이메일 인증하기</b>를 누르면 바로 가입이 끝나요. 링크는 24시간 동안 쓸 수 있어요.</p>
+            <p className="login-hint">메일이 안 보이면 스팸함도 확인해 주세요.</p>
+            <button type="button" className="btn-primary" onClick={onClose}>
+              확인
+            </button>
+          </div>
+        )}
+
+        {view === 'find' && (
+          <form className="login-form" onSubmit={find} noValidate>
+            <p className="login-find-intro">
+              아이디는 가입할 때 쓴 <b>이메일 주소</b>예요. 가입한 이메일을 넣으면 비밀번호를 새로 정할 수 있는 링크를 보내 드려요.
+            </p>
+            {field('find-email', '가입한 이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
+            {err.text && !err.field && <p className="field-msg">{err.text}</p>}
+            <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
+              {busy ? '보내는 중…' : '비밀번호 재설정 메일 받기'}
+            </button>
+            <p className="login-hint">카카오로 가입했다면 비밀번호 없이 카카오 버튼으로 로그인할 수 있어요.</p>
+            <p className="login-switch">
+              <button type="button" className="my-link" onClick={() => setView('login')}>
+                로그인으로 돌아가기
+              </button>
+            </p>
+          </form>
+        )}
+
+        {view === 'findSent' && (
+          <div className="login-sent">
+            <p>
+              <b>{email.trim()}</b>로 가입한 계정이 있으면 비밀번호 재설정 메일을 보냈어요.
+            </p>
+            <p>메일의 <b>비밀번호 새로 정하기</b>를 눌러 주세요. 링크는 1시간 동안 쓸 수 있어요.</p>
             <p className="login-hint">메일이 안 보이면 스팸함도 확인해 주세요.</p>
             <button type="button" className="btn-primary" onClick={onClose}>
               확인

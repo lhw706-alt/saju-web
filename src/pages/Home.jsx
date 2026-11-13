@@ -59,21 +59,21 @@ export default function Home() {
   return (
     <>
       <section className="hero">
-        <div className="hero-mascot">
-          <Suspense fallback={<MascotStill />}>
-            <Mascot3D />
-          </Suspense>
-        </div>
         <h1>
           <span className="visually-hidden">{WORDS.join(', ')}까지 </span>
           <Rotator />
           <br />
-          천둥도사가 바로 풀어 드려요
+          천둥도사가 다정히 풀어 드려요
         </h1>
         <p className="lead">
           생년월일시를 넣으면 여덟 글자(사주 원국)와 오행·대운을 바로 계산하고,
           <br className="pc" /> 영험한 천둥도사가 원국의 어느 글자에서 그렇게 읽었는지 근거와 함께 풀어 드려요.
         </p>
+        <div className="hero-mascot">
+          <Suspense fallback={<MascotStill />}>
+            <Mascot3D />
+          </Suspense>
+        </div>
         {/* 도사의 물음에 답하듯 고르는 바로가기 (지금 볼 수 있는 풀이만) */}
         <ul className="ask-chips" aria-label="궁금한 것 고르기">
           {ASK_CHIPS.map((t) => (

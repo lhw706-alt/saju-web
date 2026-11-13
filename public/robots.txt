@@ -6,5 +6,6 @@ Disallow: /api/
 # 관리자 화면
 Disallow: /admin
 Disallow: /my
+Disallow: /reset
 
 Sitemap: https://xn--z92bt3ho9hczd.com/sitemap.xml
