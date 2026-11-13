@@ -15,7 +15,7 @@ const nickError = (v) => {
   return '';
 };
 
-function KakaoSymbol({ size = 22 }) {
+function KakaoSymbol({ size = 30 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       <path fill="#000" d="M12 3C6.48 3 2 6.58 2 11c0 2.85 1.86 5.35 4.66 6.77l-.95 3.48c-.08.3.26.54.52.37l4.13-2.74c.54.08 1.08.12 1.64.12 5.52 0 10-3.58 10-8S17.52 3 12 3z" />
@@ -193,9 +193,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
                 <span className="kakao-circle is-off" aria-label="카카오 로그인 준비중">
                   <KakaoSymbol />
                 </span>
-              )}
-              <span className="login-social-label">카카오</span>
-            </div>
+              )}            </div>
           </>
         )}
 
