@@ -16,6 +16,7 @@ import Terms from './pages/Terms.jsx';
 import NewYear from './pages/NewYear.jsx';
 import Dict from './pages/Dict.jsx';
 import Tti from './pages/Tti.jsx';
+import NameMatch from './pages/NameMatch.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { loadFonts } from './lib/fonts.js';
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/newyear" element={<NewYear />} />
           <Route path="/dict/:slug?" element={<Dict />} />
           <Route path="/tti" element={<Tti />} />
+          <Route path="/name-match" element={<NameMatch />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/my/:tab?" element={<My />} />
           <Route path="/reset" element={<Reset />} />

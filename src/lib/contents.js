@@ -27,7 +27,7 @@ export const CONTENTS = [
   { id: 'tti', group: 'fortune', title: '오늘의 띠별 운세', desc: '입력 없이 바로 보는 12띠 오늘 운세', glyph: '支', el: 'earth', status: 'live', path: '/tti' },
 
   { id: 'match', group: 'match', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
-  { id: 'namematch', group: 'match', title: '이름 궁합', desc: '이름만으로 재미로 보는 궁합', glyph: '緣', el: 'wood', status: 'hold' },
+  { id: 'namematch', group: 'match', title: '이름 궁합', desc: '이름 두 개로 알아보는 우리 사이의 케미', glyph: '緣', el: 'wood', status: 'live', path: '/name-match' },
 
   { id: 'number', group: 'luck', title: '행운의 번호', desc: '천둥도사가 하루 한 번 뽑아 주는 6개의 숫자', glyph: '數', el: 'water', status: 'live', path: '/lucky' },
   { id: 'blessing', group: 'luck', title: '천생복덕운', desc: '타고난 복을 활용하는 방법', glyph: '福', el: 'earth', status: 'soon' },

@@ -1,4 +1,4 @@
-// /api/reading 스트리밍 호출 (주제 풀이·평생 사주 리포트가 함께 씀)
+// 풀이 스트리밍 호출 (/api/reading: 주제 풀이·평생 사주 리포트 등, /api/name-match: 이름 궁합)
 // onText(지금까지 받은 글) 를 계속 부르고, 끝나면 { text, end, error } 를 돌려준다.
 export const END_MESSAGES = {
   refusal: '이 부분은 풀이를 만들지 못했어요.',
@@ -10,11 +10,20 @@ const END_RE = /\n*\[\[END:(\w+)\]\]\s*$/;
 
 // partner: 궁합일 때 상대 생년월일시
 // date: 하루 운세의 보는 날 (YYYY-MM-DD)
-export async function streamReading({ input, topic, signal, onText, partner = null, date = null }) {
-  const res = await fetch('/api/reading', {
+export function streamReading({ input, topic, signal, onText, partner = null, date = null }) {
+  return streamPost('/api/reading', { input, topic, ...(partner ? { partner } : {}), ...(date ? { date } : {}) }, signal, onText);
+}
+
+// 이름 궁합 (/api/name-match): 두 이름·관계·부분(name1|name2)
+export function streamNameMatch({ me, partner, relation, part, signal, onText }) {
+  return streamPost('/api/name-match', { me, partner, relation, part }, signal, onText);
+}
+
+async function streamPost(url, body, signal, onText) {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ input, topic, ...(partner ? { partner } : {}), ...(date ? { date } : {}) }),
+    body: JSON.stringify(body),
     signal,
   });
   if (!res.ok || !res.body) {
