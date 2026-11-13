@@ -20,6 +20,7 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypt
 import { getStore } from '@netlify/blobs';
 import { createRateLimiter } from '../lib/guard.mjs';
 import { computeSaju, SajuInputError } from '../../src/lib/saju.js';
+import { passwordOk } from '../../src/lib/password.js';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -47,11 +48,9 @@ function checkPassword(pw, stored) {
   const b = Buffer.from(hash, 'base64');
   return a.length === b.length && timingSafeEqual(a, b);
 }
+// 비밀번호 규칙은 화면과 같은 src/lib/password.js (영문/숫자/특수문자 중 2가지, 8~32자 공백 없음, 같은 글자 3번 연속 금지)
 function passwordError(pw) {
-  const p = String(pw || '');
-  if (p.length < 8 || p.length > 64) return '비밀번호는 8~64자로 정해 주세요.';
-  if (!/[A-Za-z]/.test(p) || !/[0-9]/.test(p)) return '비밀번호에 영문과 숫자를 함께 넣어 주세요.';
-  return '';
+  return passwordOk(pw) ? '' : '비밀번호 조건을 모두 맞춰 주세요.';
 }
 // 메일 보내기 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
 async function sendMail(to, { title, lines, button, link, ignore }) {

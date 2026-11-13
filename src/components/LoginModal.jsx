@@ -3,8 +3,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
+import PasswordInput from './PasswordInput.jsx';
+import { passwordOk } from '../lib/password.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// 닉네임 규칙 (서버 cleanNick 과 같음)
+const nickError = (v) => {
+  const n = v.replace(/\s+/g, ' ').trim();
+  if ([...n].length < 2 || [...n].length > 12) return '닉네임은 2~12자로 정해 주세요.';
+  if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ._\-~♡★☆]+$/u.test(n)) return '한글·영문·숫자와 . _ - ~ ♡ ★ 만 쓸 수 있어요.';
+  return '';
+};
 
 function KakaoSymbol({ size = 22 }) {
   return (
@@ -26,6 +35,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
   const [suggest, setSuggest] = useState('천둥의 별빛 7');
   const [err, setErr] = useState({ field: '', text: '' });
   const [busy, setBusy] = useState(false);
+  const [emailBlurred, setEmailBlurred] = useState(false); // 이메일 칸을 한 번 벗어난 뒤부터 형식 안내
 
   useEffect(() => {
     if (!open) return undefined;
@@ -52,6 +62,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
     setPw('');
     setPw2('');
     setErr({ field: '', text: '' });
+    setEmailBlurred(false);
     if (view !== 'signup') return;
     setNick('');
     fetch('/api/auth/nickname/suggest', { cache: 'no-store' })
@@ -63,7 +74,16 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
 
   if (!open) return null;
   const next = `${pathname}${search.replace(/[?&]login=\w+/, '')}`;
-  const fieldErr = (f) => (err.field === f ? err.text : '');
+  // 입력하는 동안 바로 보여 주는 안내 (회원가입 화면). 서버가 돌려준 오류가 있으면 그걸 먼저
+  const live =
+    view === 'signup'
+      ? {
+          email: emailBlurred && email.trim() && !EMAIL_RE.test(email.trim()) ? '이메일 주소 형식을 확인해 주세요.' : '',
+          password2: pw2 && pw !== pw2 ? '비밀번호가 서로 달라요.' : '',
+          nick: nick.trim() ? nickError(nick) : '',
+        }
+      : {};
+  const fieldErr = (f) => (err.field === f ? err.text : live[f] || '');
 
   const post = async (url, body) => {
     setBusy(true);
@@ -96,8 +116,9 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
   const signup = async (e) => {
     e.preventDefault();
     if (!EMAIL_RE.test(email.trim())) return setErr({ field: 'email', text: '이메일 주소를 확인해 주세요.' });
-    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) return setErr({ field: 'password', text: '비밀번호는 영문과 숫자를 섞어 8자 이상으로 정해 주세요.' });
+    if (!passwordOk(pw)) return setErr({ field: 'password', text: '비밀번호 조건을 모두 맞춰 주세요.' });
     if (pw !== pw2) return setErr({ field: 'password2', text: '비밀번호가 서로 달라요.' });
+    if (nick.trim() && nickError(nick)) return setErr({ field: 'nick', text: nickError(nick) });
     const d = await post('/api/auth/email/signup', { email, password: pw, nick: nick.trim() || suggest });
     if (d) setView('sent');
   };
@@ -137,7 +158,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
           <>
             <form className="login-form" onSubmit={login} noValidate>
               {field('login-email', '이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
-              {field('login-pw', '비밀번호', { type: 'password', autoComplete: 'current-password', value: pw, onChange: (e) => setPw(e.target.value) }, 'password')}
+              <PasswordInput id="login-pw" label="비밀번호" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} error={fieldErr('password')} />
               <div className="login-options">
                 <label className="login-keep">
                   <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
@@ -180,9 +201,17 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
 
         {view === 'signup' && (
           <form className="login-form" onSubmit={signup} noValidate>
-            {field('su-email', '이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
-            {field('su-pw', '비밀번호', { type: 'password', autoComplete: 'new-password', value: pw, onChange: (e) => setPw(e.target.value), placeholder: '영문+숫자 8자 이상' }, 'password')}
-            {field('su-pw2', '비밀번호 확인', { type: 'password', autoComplete: 'new-password', value: pw2, onChange: (e) => setPw2(e.target.value) }, 'password2')}
+            {field('su-email', '이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), onBlur: () => setEmailBlurred(true), placeholder: 'you@example.com' }, 'email')}
+            <PasswordInput id="su-pw" label="비밀번호" rules value={pw} onChange={(e) => setPw(e.target.value)} error={err.field === 'password' ? err.text : ''} placeholder="비밀번호 입력" />
+            <PasswordInput
+              id="su-pw2"
+              label="비밀번호 확인"
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+              error={fieldErr('password2')}
+              placeholder="한 번 더 입력"
+              okText={pw2 && pw === pw2 && passwordOk(pw) ? '비밀번호가 같아요.' : ''}
+            />
             {field('su-nick', '닉네임', { value: nick, maxLength: 12, onChange: (e) => setNick(e.target.value), placeholder: suggest }, 'nick')}
             <p className="login-hint">비워 두면 회색 닉네임으로 가입돼요. 닉네임은 다른 회원과 겹칠 수 없어요.</p>
             {err.text && !err.field && <p className="field-msg">{err.text}</p>}
@@ -246,11 +275,11 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
 
         {view === 'signup' && (
           <p className="login-note">
-            가입하면{' '}
+            가입 전에{' '}
             <Link to="/privacy" onClick={onClose}>
               개인정보 처리방침
             </Link>
-            에 동의한 것으로 봐요. 이메일은 가입·로그인에만 써요.
+            을 확인해 주세요. 이메일은 가입·로그인에만 써요.
           </p>
         )}
       </div>

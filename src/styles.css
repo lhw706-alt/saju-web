@@ -785,6 +785,24 @@ legend.contact-label { margin-bottom: 12px; }
 .login-form .btn-primary { margin-top: 4px; }
 .login-form .btn-primary:disabled { opacity: 0.5; cursor: default; }
 .login-hint { margin: -4px 0 0; font-size: 14px; color: var(--muted); }
+/* 비밀번호 입력칸: 눈 버튼 + 입력하는 동안 규칙 확인 목록 */
+.pw-wrap { position: relative; }
+.pw-input { padding-right: 48px; }
+.pw-eye { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; transition: color 0.15s ease; }
+.pw-eye:hover { color: var(--text); }
+.pw-rules { margin-top: 2px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--line-soft); background: var(--bg); }
+.pw-meter { height: 4px; border-radius: 4px; background: rgba(112, 115, 124, 0.24); overflow: hidden; margin-bottom: 10px; }
+.pw-meter span { display: block; height: 100%; width: 0; border-radius: inherit; transition: width 0.25s ease, background 0.25s ease; }
+.pw-meter.is-1 span { width: 33%; background: var(--danger); }
+.pw-meter.is-2 span { width: 66%; background: #f5a623; }
+.pw-meter.is-3 span { width: 100%; background: var(--primary); }
+.pw-rules ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.pw-rules li { display: flex; align-items: baseline; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--muted); transition: color 0.15s ease; }
+.pw-rules li > span[aria-hidden] { width: 12px; flex: none; text-align: center; }
+.pw-rules li.is-bad { color: var(--danger); }
+.pw-rules li.is-ok { color: var(--primary); }
+.field-ok { margin: 0; font-size: 14px; color: var(--primary); letter-spacing: var(--ls-label); }
+
 /* 비밀번호 아래: 왼쪽 자동 로그인 · 오른쪽 아이디 및 비밀번호 찾기 */
 .login-options { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: -2px; }
 .login-keep { position: relative; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); cursor: pointer; user-select: none; }

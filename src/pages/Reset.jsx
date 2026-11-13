@@ -2,6 +2,8 @@
 // 토큰은 읽자마자 주소창에서 지움(방문 기록·통계에 남지 않게). 저장 성공하면 로그인된 채로 메인으로.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput.jsx';
+import { passwordOk } from '../lib/password.js';
 
 export default function Reset() {
   const [token] = useState(() => new URLSearchParams(window.location.search).get('token') || '');
@@ -17,7 +19,7 @@ export default function Reset() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) return setErr({ field: 'password', text: '비밀번호는 영문과 숫자를 섞어 8자 이상으로 정해 주세요.' });
+    if (!passwordOk(pw)) return setErr({ field: 'password', text: '비밀번호 조건을 모두 맞춰 주세요.' });
     if (pw !== pw2) return setErr({ field: 'password2', text: '비밀번호가 서로 달라요.' });
     setBusy(true);
     setErr({ field: '', text: '' });
@@ -46,16 +48,16 @@ export default function Reset() {
         </div>
       ) : (
         <form className="admin-login card" onSubmit={submit} noValidate>
-          <label className="contact-label" htmlFor="reset-pw">
-            새 비밀번호
-          </label>
-          <input id="reset-pw" className={`contact-input${msg('password') ? ' is-error' : ''}`} type="password" autoComplete="new-password" placeholder="영문+숫자 8자 이상" value={pw} onChange={(e) => setPw(e.target.value)} />
-          {msg('password') && <p className="field-msg">{msg('password')}</p>}
-          <label className="contact-label" htmlFor="reset-pw2">
-            새 비밀번호 확인
-          </label>
-          <input id="reset-pw2" className={`contact-input${msg('password2') ? ' is-error' : ''}`} type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
-          {msg('password2') && <p className="field-msg">{msg('password2')}</p>}
+          <PasswordInput id="reset-pw" label="새 비밀번호" rules value={pw} onChange={(e) => setPw(e.target.value)} error={msg('password')} placeholder="비밀번호 입력" />
+          <PasswordInput
+            id="reset-pw2"
+            label="새 비밀번호 확인"
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            error={msg('password2') || (pw2 && pw !== pw2 ? '비밀번호가 서로 달라요.' : '')}
+            placeholder="한 번 더 입력"
+            okText={pw2 && pw === pw2 && passwordOk(pw) ? '비밀번호가 같아요.' : ''}
+          />
           {err.text && !err.field && <p className="field-msg">{err.text}</p>}
           <button type="submit" className="btn-primary" disabled={busy}>
             {busy ? '저장 중…' : '저장하고 로그인'}
