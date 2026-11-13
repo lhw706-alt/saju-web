@@ -734,13 +734,9 @@ legend.contact-label { margin-bottom: 12px; }
 .my-empty p { margin: 0; color: var(--text-2); }
 .my-empty .btn-primary.inline { margin-top: 12px; }
 .my-hello { display: flex; align-items: center; gap: 14px; }
-.my-avatar { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--primary-line); }
+.my-avatar { position: relative; display: block; flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: #1b1f3a; }
 .my-hello b { display: block; font-size: 18px; font-weight: 600; }
 .my-hello span { font-size: 14px; color: var(--muted); }
-.my-info { margin: 18px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.my-info div { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); }
-.my-info dt { font-size: 14px; color: var(--muted); }
-.my-info dd { margin: 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .my-title { margin-top: 36px; }
 .my-none { margin: 0; padding: 16px; border-radius: var(--r-md); background: var(--bg-2); color: var(--muted); font-size: 14px; }
 .my-actions { display: flex; gap: 8px; }
@@ -750,22 +746,19 @@ legend.contact-label { margin-bottom: 12px; }
 .my-action.is-danger:hover { border-color: rgba(255, 99, 99, 0.5); }
 .my .saved-item { background: var(--bg-2); border: 1px solid var(--line-soft); }
 .my .saved-item:hover { background: #26272b; }
-@media (max-width: 420px) {
-  .my-info div { padding: 10px 12px; }
-  .my-info dd { font-size: 14px; }
-}
 /* 마이페이지: 천동이 프로필 · 내 사주 정보 · 약한 탈퇴 버튼 */
-.my-avatar { background: #1b1f3a; overflow: hidden; }
-.my-birth { margin-top: 4px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.my-birth .saved-text b { font-size: 17px; }
+/* 천동이를 조금 키우고 아래로 내려 몸이 동그라미 아래 끝까지 차게 (잘린 밑부분이 안 보이게) */
+.my-avatar .logo-symbol { position: absolute; left: 50%; bottom: -14%; width: 120% !important; height: 120% !important; transform: translateX(-50%); }
+.my-birth { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.my-birth-info { display: grid; gap: 3px; min-width: 0; }
+.my-birth-label { font-size: 14px; color: var(--primary); font-weight: 500; }
+.my-birth-info b { font-size: 17px; font-weight: 500; }
+.my-birth-info > span:last-child:not(.my-birth-label) { font-size: 14px; color: var(--muted); }
 .my-birth-actions { display: flex; align-items: center; gap: 4px; }
 .my-birth-actions .btn-primary.inline { margin: 0 6px 0 0; height: 44px; padding: 0 20px; font-size: 15px; }
-.my-birth-empty { display: grid; justify-items: start; }
-.my-birth-empty p { margin: 0; color: var(--text-2); }
-.my-birth-empty .btn-primary.inline { margin-top: 4px; height: 46px; font-size: 15px; }
 .my-link { padding: 8px 10px; border: 0; background: none; color: var(--text-2); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .my-link:hover { color: var(--text); }
-.my-edit { display: grid; gap: 6px; justify-items: center; margin-top: 4px; }
+.my-edit { display: grid; gap: 6px; justify-items: center; margin-top: 12px; }
 .my-edit .steps { width: 100%; }
 .my-msg { margin: 10px 0 0; font-size: 14px; color: var(--primary); }
 .my-action.is-danger { border-color: transparent; font-weight: 400; }

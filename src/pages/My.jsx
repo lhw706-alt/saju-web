@@ -6,12 +6,6 @@ import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import { loadPresets, removePreset, saveInput, markFresh, clearTopic } from '../lib/storage.js';
 
-const fmt = (iso) => {
-  if (!iso) return '-';
-  const d = new Date(iso);
-  const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
-};
 const presetMain = (p) => `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
 const presetSub = (p) => {
   const city = CITIES.find((c) => c.id === p.city)?.name || '';
@@ -95,55 +89,53 @@ export default function My() {
             <span>카카오로 로그인했어요</span>
           </div>
         </div>
-        <dl className="my-info">
-          <div>
-            <dt>가입한 날</dt>
-            <dd>{fmt(p.joinedAt)}</dd>
-          </div>
-          <div>
-            <dt>마지막 로그인</dt>
-            <dd>{fmt(p.lastLoginAt)}</dd>
-          </div>
-          <div>
-            <dt>방문 횟수</dt>
-            <dd>{p.loginCount ? `${p.loginCount}번` : '-'}</dd>
-          </div>
-        </dl>
+        {/* 가입일·방문 횟수 대신 내 사주 정보 (계정에 저장 — 다른 기기에서도 그대로) */}
+        <div className="my-birth">
+          {editing ? (
+            <div className="my-birth-info">
+              <span className="my-birth-label">내 사주 정보</span>
+              <span>아래에서 입력하고 저장해 주세요.</span>
+            </div>
+          ) : p.birth ? (
+            <>
+              <div className="my-birth-info">
+                <span className="my-birth-label">내 사주 정보</span>
+                <b>{presetMain(p.birth)}</b>
+                <span>{presetSub(p.birth)}</span>
+              </div>
+              <div className="my-birth-actions">
+                <button type="button" className="btn-primary inline" onClick={() => view(p.birth)}>
+                  내 사주 보기
+                </button>
+                <button type="button" className="my-link" onClick={() => setEditing(true)}>
+                  수정
+                </button>
+                <button type="button" className="my-link" onClick={deleteBirth}>
+                  삭제
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="my-birth-info">
+                <span className="my-birth-label">내 사주 정보</span>
+                <span>생년월일과 태어난 시각을 등록하면 다른 기기에서도 바로 내 사주를 볼 수 있어요.</span>
+              </div>
+              <div className="my-birth-actions">
+                <button type="button" className="btn-primary inline" onClick={() => setEditing(true)}>
+                  내 정보 등록하기
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      <h2 className="section-title my-title">
-        내 사주 정보 <small>계정에 저장돼서 다른 기기에서도 바로 볼 수 있어요</small>
-      </h2>
-      {editing ? (
+      {editing && (
         <div className="my-edit">
           <StepForm initial={p.birth || undefined} showSaved={false} submitLabel="저장하기" onSubmit={saveBirth} />
           <button type="button" className="my-link" onClick={() => setEditing(false)}>
             취소
-          </button>
-        </div>
-      ) : p.birth ? (
-        <div className="my-birth card">
-          <div className="saved-text">
-            <b>{presetMain(p.birth)}</b>
-            <span>{presetSub(p.birth)}</span>
-          </div>
-          <div className="my-birth-actions">
-            <button type="button" className="btn-primary inline" onClick={() => view(p.birth)}>
-              내 사주 보기
-            </button>
-            <button type="button" className="my-link" onClick={() => setEditing(true)}>
-              수정
-            </button>
-            <button type="button" className="my-link" onClick={deleteBirth}>
-              삭제
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="my-birth card my-birth-empty">
-          <p>내 생년월일과 태어난 시각을 등록하면 언제든 바로 내 사주를 볼 수 있어요.</p>
-          <button type="button" className="btn-primary inline" onClick={() => setEditing(true)}>
-            내 정보 등록하기
           </button>
         </div>
       )}
