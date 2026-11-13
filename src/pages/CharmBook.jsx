@@ -143,13 +143,6 @@ export default function CharmBook({ embedded = false }) {
         부적 {FORTUNES.length}장을 모두 모으면 도감이 완성돼요.
       </div>
 
-      <ul className="book-rules">
-        <li>오늘의 운세에서 하루에 한 장씩 부적을 펼칠 수 있어요.</li>
-        <li>아직 못 모은 부적이 더 잘 나와요. 같은 부적이 또 나오면 받은 횟수가 늘어요.</li>
-        <li>모은 부적을 누르면 그날의 운세 글을 다시 볼 수 있어요.</li>
-        <li>{auth.user ? '모은 부적은 계정에도 저장돼 다른 기기에서도 이어져요.' : '로그인하지 않으면 이 브라우저에만 남아요.'}</li>
-      </ul>
-
       {!embedded && (
         <MemberCta
           place="charms"
