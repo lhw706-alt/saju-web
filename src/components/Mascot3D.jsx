@@ -297,6 +297,33 @@ export function buildCheondong() {
 }
 
 // ── 행운의 번호 화면 소품 (2026-11-14) ──
+// 네잎클로버: 손에 쥔 줄기 + 하트 잎 네 장 (행운의 번호 화면)
+export function buildClover() {
+  const g = new THREE.Group();
+  const leafMat = new THREE.MeshPhysicalMaterial({ color: '#3fa651', roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35, sheen: 0.15, sheenColor: new THREE.Color('#b8f0a0'), emissive: '#0d3314', emissiveIntensity: 0.12 });
+  const stemMat = new THREE.MeshStandardMaterial({ color: '#3f8f4a', roughness: 0.6 });
+  const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.06, 0.45, 0.02), new THREE.Vector3(0.02, 0.95, 0.06)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 24, 0.035, 10, false), stemMat));
+  const heart = new THREE.Shape();
+  heart.moveTo(0, 0);
+  heart.bezierCurveTo(-0.28, 0.12, -0.32, 0.46, -0.15, 0.5);
+  heart.bezierCurveTo(-0.05, 0.52, 0, 0.44, 0, 0.38);
+  heart.bezierCurveTo(0, 0.44, 0.05, 0.52, 0.15, 0.5);
+  heart.bezierCurveTo(0.32, 0.46, 0.28, 0.12, 0, 0);
+  const leafGeo = new THREE.ExtrudeGeometry(heart, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 24 });
+  const head = new THREE.Group();
+  [0, 1, 2, 3].forEach((i) => {
+    const leaf = new THREE.Mesh(leafGeo, leafMat);
+    leaf.rotation.z = (i * Math.PI) / 2 + Math.PI / 4;
+    head.add(leaf);
+  });
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), stemMat));
+  head.position.set(0.02, 0.97, 0.07);
+  g.add(head);
+  g.userData.head = head;
+  return g;
+}
+
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -444,7 +471,7 @@ function createFace() {
   return { texture, draw };
 }
 
-// prop: 'lotto' 면 로또 공을 준비하고 더 크게 둥둥 (행운의 번호 화면. 네잎클로버는 머리에 겹쳐 보여 2026-11-14 사용자 지시로 뺌).
+// prop: 'lotto' 면 행운의 번호 화면: 네잎클로버를 들고(머리와 안 겹치게 바깥으로), 오행 빛글자 대신 3D 로또 공이 늘 둘레를 돎. 더 크게 둥둥.
 // mode: 'idle' | 'drawing'(번호 고르는 중: 눈 뜨고 들썩이며 로또 공이 둘레를 빙글빙글) | 'done'(폴짝)
 export default function Mascot3D({ className = '', interactive = true, prop = null, mode = 'idle' }) {
   const hostRef = useRef(null);
@@ -496,9 +523,16 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     const m = buildCheondong();
     const lucky = prop === 'lotto';
     let balls = null;
+    let clover = null;
     if (lucky) {
       balls = buildLottoBalls();
       m.root.add(balls);
+      // 클로버는 오른손에서 바깥쪽으로 비스듬히 들어 머리·몸과 겹치지 않게 (2026-11-14 사용자 지시)
+      clover = buildClover();
+      clover.position.set(1.08, -0.46, 0.5);
+      clover.rotation.set(0.15, -0.35, -0.62);
+      clover.scale.setScalar(0.78);
+      m.char.add(clover);
     }
     scene.add(m.root);
     scene.add(m.floor);
@@ -557,6 +591,7 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     let lastMode = modeRef.current;
     let spinAngle = 0;
     let ballShow = 0;
+    let ballSpin = 0;
 
     const tick = () => {
       raf = requestAnimationFrame(tick);
@@ -613,26 +648,28 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
       m.aura.material.opacity = 0.75 + pulse * 0.25 * s;
       m.aura.scale.setScalar(5.0 + pulse * 0.4 * s);
       spinAngle += dt * 0.28 * s;
-      // 로또 공: 번호 고르는 동안 나타나 빠르게 돌고, 끝나면 사라짐
+      // 로또 공: 행운의 번호 화면에선 오행 빛글자 대신 늘 천천히 돌고, 번호 고르는 동안엔 빠르게 (2026-11-14 사용자 지시)
       if (balls) {
-        ballShow += ((drawing ? 1 : 0) - ballShow) * (drawing ? 0.12 : 0.06);
-        balls.visible = ballShow > 0.01;
+        ballShow += (1 - ballShow) * 0.06;
+        ballSpin += dt * (drawing ? 3.4 : 0.45) * s;
         balls.children.forEach((b) => {
           const { angle: ba, height: bh, phase: bp } = b.userData;
-          const a = ba + t * 3.2 * s;
+          const a = ba + ballSpin;
           const rr = 2.0 + Math.sin(t * 2 + bp) * 0.15 * s;
           b.position.set(Math.cos(a) * rr, bh + Math.sin(t * 3 + bp) * 0.18 * s, Math.sin(a) * rr * 0.7);
           b.material.opacity = ballShow;
-          b.scale.setScalar(0.62 * (0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.08)); // 앞쪽 공은 조금 크게
+          b.scale.setScalar(0.56 * (0.4 + ballShow * 0.6) * (0.92 + (Math.sin(a) + 1) * 0.08)); // 앞쪽 공은 조금 크게
         });
       }
+      if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;
+      m.spirits.visible = !balls; // 행운의 번호 화면에선 오행 빛글자 숨김
       const n = m.spirits.children.length;
       m.spirits.children.forEach((sp, k) => {
         const { angle, height, phase } = sp.userData;
         const a = angle + spinAngle;
         sp.position.set(Math.cos(a) * 1.9, height + Math.sin(t * 1.2 + phase) * 0.12 * s, Math.sin(a) * 1.25);
         const wave = Math.max(0, Math.cos(t * 1.4 - (k / n) * Math.PI * 2));
-        sp.material.opacity = (0.7 + wave * 0.3) * (1 - ballShow); // 로또 공이 돌 땐 빛글자는 숨김
+        sp.material.opacity = 0.7 + wave * 0.3;
         sp.scale.setScalar(0.64 + wave * 0.16 * s);
       });
       m.crescent.rotation.z = -0.55 + Math.sin(t * 1.0) * 0.06 * s;
