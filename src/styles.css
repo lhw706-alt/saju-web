@@ -768,3 +768,5 @@ legend.contact-label { margin-bottom: 12px; }
 .my-msg { margin: 10px 0 0; font-size: 14px; color: var(--primary); }
 .my-action.is-danger { border-color: transparent; font-weight: 400; }
 .my-action.is-danger:hover { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.saved-load.is-static { cursor: default; }
+.my .saved-item:has(.is-static):hover { background: var(--bg-2); }

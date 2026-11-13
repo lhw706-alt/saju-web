@@ -4,7 +4,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { CITIES } from '../lib/saju.js';
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
-import { loadPresets, removePreset, saveInput, markFresh, clearTopic } from '../lib/storage.js';
+import { loadPresets, removePreset } from '../lib/storage.js';
 
 const presetMain = (p) => `${p.year}.${p.month}.${p.day} · ${p.gender === 'male' ? '남성' : '여성'}`;
 const presetSub = (p) => {
@@ -49,13 +49,6 @@ export default function My() {
     } else setBirthMsg('지우지 못했어요. 잠시 뒤 다시 시도해 주세요.');
   };
 
-  // 저장된 정보로 바로 사주 보기
-  const view = (p) => {
-    clearTopic();
-    saveInput(p);
-    markFresh();
-    navigate('/result');
-  };
 
   if (!auth.ready) return <section className="my" />;
 
@@ -151,13 +144,13 @@ export default function My() {
         <ul className="saved-list">
           {presets.map((x) => (
             <li key={presetMain(x) + presetSub(x)} className="saved-item">
-              <button type="button" className="saved-load" onClick={() => view(x)}>
+              {/* 마이페이지에선 보기만 (사주 보기 버튼 없음) — 지우기만 가능 */}
+              <div className="saved-load is-static">
                 <span className="saved-text">
                   <b>{presetMain(x)}</b>
                   <span>{presetSub(x)}</span>
                 </span>
-                <span className="saved-go">사주 보기</span>
-              </button>
+              </div>
               <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => setPresets(removePreset(x))}>
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
