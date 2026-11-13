@@ -77,7 +77,7 @@ export default function Result() {
   if (params.get('v') === 'day') {
     return (
       <>
-        <DayReport key={JSON.stringify(input)} input={input} member={member} initial={params.get('t') || 'today'} />
+        <DayReport key={JSON.stringify([input, params.get('d')])} input={input} member={member} initial={params.get('t') || 'today'} pickedDate={params.get('d')} />
         <MemberCta place="day" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
         <ResultShare kakao={{ title: '천둥도사가 본 나의 하루 운세', description: '오늘 일진과 내 사주로 본 하루 운세예요. 나도 볼까요?', button: '내 운세 보기' }} />
         <div className="report-bottom">

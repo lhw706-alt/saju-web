@@ -205,18 +205,26 @@ function EndNotice({ cur, retry }) {
   );
 }
 
+// 지정일로 볼 수 있는 날인지 (오늘 ~ 1년 뒤)
+export const dayInRange = (ymd) => {
+  if (typeof ymd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
+  const d = new Date();
+  d.setDate(d.getDate() + 365);
+  return ymd >= ymdOf() && ymd <= ymdOf(d);
+};
 const dateTitle = (ymd) => {
   const [y, m, d] = ymd.split('-').map(Number);
   return `${m}월 ${d}일 ${WEEK[new Date(y, m - 1, d).getDay()]}요일`;
 };
 const ANIMAL_BRANCH = { 쥐: '子', 소: '丑', 호랑이: '寅', 토끼: '卯', 용: '辰', 뱀: '巳', 말: '午', 양: '未', 원숭이: '申', 닭: '酉', 개: '戌', 돼지: '亥' };
 
-export default function DayReport({ input, member = false, initial = 'today' }) {
+// pickedDate: 지정일 운세에서 입력 화면(/start)에서 고른 날 (주소 &d=YYYY-MM-DD). 있으면 날짜 칸 없이 바로 풀이
+export default function DayReport({ input, member = false, initial = 'today', pickedDate = null }) {
   const topic = DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today';
   const label = DAY_TOPICS.find((t) => t.id === topic).label;
   const [view, setView] = useState('day'); // 위쪽 탭: 'day'(그날 운세) | 'tti'(띠 운세)
   const [picked, setPicked] = useState('');
-  const [pickedFor, setPickedFor] = useState(null);
+  const [pickedFor, setPickedFor] = useState(() => (topic === 'date' && dayInRange(pickedDate) ? pickedDate : null));
   const [time, setTime] = useState('총운');
 
   const date = dayTopicDate(topic, pickedFor);
@@ -261,7 +269,7 @@ export default function DayReport({ input, member = false, initial = 'today' }) 
         ))}
       </nav>
 
-      {topic === 'date' && (
+      {topic === 'date' && !pickedFor && (
         <form
           className="day-pick card"
           onSubmit={(e) => {

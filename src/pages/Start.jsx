@@ -8,6 +8,8 @@ import { guestCanView, markGuestView, pairKey } from '../lib/history.js';
 import { isDayTopic } from '../lib/topics.js';
 import { presetMain } from '../lib/presetText.js';
 import { ShareButtons } from '../components/ShareRow.jsx';
+import { dayInRange } from '../components/DayReport.jsx';
+import { ymdOf } from '../lib/topics.js';
 
 // 콘텐츠를 고른 뒤 생년월일시를 넣는 화면 (메인에서는 입력 폼을 뺐다).
 // 입력은 한 항목씩 순서대로 묻는 단계형(StepForm). 궁합은 나 → 상대 두 번 입력.
@@ -21,6 +23,15 @@ export default function Start() {
   const [me, setMe] = useState(null); // 궁합: 먼저 입력한 내 정보
   const [invite, setInvite] = useState(null); // 궁합 초대 링크 토큰 (상대가 직접 입력)
   const [inviting, setInviting] = useState(false);
+  // 지정일 운세: 운세를 볼 날을 이 화면에서 고름 (2026-11-14 사용자 지시 — 결과 화면에서 고르지 않게)
+  const isPick = topic?.id === 'date';
+  const [day, setDay] = useState('');
+  const [dayErr, setDayErr] = useState(false);
+  const maxDay = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 365);
+    return ymdOf(d);
+  })();
   useEffect(() => {
     if (!auth.user) return setMine(null);
     fetch('/api/auth/me?full=1', { cache: 'no-store' })
@@ -68,13 +79,19 @@ export default function Start() {
       navigate('/result?v=match');
       return;
     }
+    if (isPick && !dayInRange(day)) {
+      setDayErr(true);
+      document.getElementById('start-day')?.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (!guestOk(input)) return;
     trackEvent('saju_submit', { time_known: input.timeKnown ? 'yes' : 'no' }); // 생년월일·성별은 보내지 않음
     saveInput(input);
     markFresh(); // 결과 화면에서 천둥도사 로딩을 한 번 보여 줌
     const t = peekTopic();
     // 평생 사주는 리포트 화면, 오늘·내일·지정일 운세는 하루 운세 화면
-    navigate(t === 'overall' ? '/result?v=life' : isDayTopic(t) ? `/result?v=day&t=${t}` : '/result');
+    navigate(t === 'overall' ? '/result?v=life' : isDayTopic(t) ? `/result?v=day&t=${t}${isPick ? `&d=${day}` : ''}` : '/result');
   };
 
   return (
@@ -128,7 +145,34 @@ export default function Start() {
         </>
       ) : (
         <>
-          <p className="start-lead">생년월일시를 알려 주면 천둥도사가 여덟 글자를 펼쳐 풀어 드려요.</p>
+          <p className="start-lead">{isPick ? '운세를 볼 날과 생년월일시를 알려 주면 천둥도사가 그날의 기운을 풀어 드려요.' : '생년월일시를 알려 주면 천둥도사가 여덟 글자를 펼쳐 풀어 드려요.'}</p>
+          {isPick && (
+            <div className={`day-pick card start-day${dayErr && !dayInRange(day) ? ' is-error' : ''}`}>
+              <label htmlFor="start-day" className="day-pick-label">
+                운세를 볼 날 <small>오늘부터 1년 안의 날을 고를 수 있어요</small>
+              </label>
+              <span className="input">
+                <input
+                  id="start-day"
+                  type="date"
+                  min={ymdOf()}
+                  max={maxDay}
+                  value={day}
+                  onChange={(e) => {
+                    setDay(e.target.value);
+                    setDayErr(false);
+                  }}
+                  aria-invalid={dayErr && !dayInRange(day)}
+                  aria-describedby={dayErr ? 'start-day-err' : undefined}
+                />
+              </span>
+              {dayErr && !dayInRange(day) && (
+                <p id="start-day-err" className="start-day-err" role="alert">
+                  운세를 볼 날을 먼저 골라 주세요.
+                </p>
+              )}
+            </div>
+          )}
           <StepForm mine={mine} onSubmit={onSubmit} />
         </>
       )}

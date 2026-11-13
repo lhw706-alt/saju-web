@@ -1084,3 +1084,9 @@ legend.contact-label { margin-bottom: 12px; }
 .my-chart-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 14px; font-size: 17px; font-weight: 600; color: var(--text); }
 .my-chart-title small { width: 100%; font-size: 14px; font-weight: 400; color: var(--muted); }
 .my-chart-title small b { font-family: ChosunSm, serif; font-weight: 600; }
+
+/* 지정일 운세: 입력 화면에서 날짜 고르기 (2026-11-14) */
+.start-day { margin: 0 0 16px; }
+.start-day .input input { padding-right: 14px; color-scheme: dark; }
+.start-day.is-error .input input { border-color: var(--danger); }
+.start-day-err { margin: 0; font-size: 14px; color: var(--danger); }
