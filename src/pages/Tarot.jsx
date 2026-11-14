@@ -243,8 +243,14 @@ export default function Tarot() {
               )}
               {reading.status !== 'loading' && (
                 <div className="tarot-after">
-                  <button type="button" className="btn-primary" onClick={again}>
-                    다시 뽑기
+                  {/* 다시 뽑기: 타로 카드 톤(보라 바탕·금 테두리·카드 아이콘) — 2026-11-14 사용자 지시로 금색 덩어리 버튼 대신 */}
+                  <button type="button" className="tarot-again" onClick={again}>
+                    <span className="tarot-count-ic n3" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    카드 다시 섞기
                   </button>
                   <p className="tarot-note">타로는 지금의 마음을 비춰 보는 재미 콘텐츠예요. 중요한 결정은 스스로 판단해 주세요.</p>
                 </div>
