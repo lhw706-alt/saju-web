@@ -8,6 +8,7 @@ import ContactModal from './ContactModal.jsx';
 import LoginModal from './LoginModal.jsx';
 import UserMenu from './UserMenu.jsx';
 import BokchaLink from './BokchaLink.jsx';
+import AllMenu from './AllMenu.jsx';
 import { syncLocalToAccount } from '../lib/history.js';
 import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
@@ -26,6 +27,7 @@ function setHeadTag(selector, create, update) {
 export default function Layout() {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
+  const [allMenu, setAllMenu] = useState(false); // 전체 메뉴 창
   const [contact, setContact] = useState(false);
   const closeContact = useCallback(() => setContact(false), []);
   // 로그인 상태 (카카오 로그인 — 서버 /api/auth/me). enabled: 서버에 카카오 키가 설정됐는지
@@ -179,7 +181,7 @@ export default function Layout() {
                 if (pathname === '/') document.getElementById(g.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             >
-              {g.label}
+              {g.nav || g.label}
             </Link>
           ))}
           {/* 별마루 (2026-11-15 사용자 지시: GNB 진입, 조금 특별하게 — 반짝이는 별 + 금빛 글자) */}
@@ -189,6 +191,13 @@ export default function Layout() {
             </svg>
             <span>별마루</span>
           </Link>
+          {/* 전체 메뉴: 모든 콘텐츠를 묶음별로 한눈에 (2026-11-15 GNB 압축) */}
+          <button type="button" className="nav-all" onClick={() => setAllMenu(true)} aria-haspopup="dialog" aria-label="전체 메뉴 열기">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+            </svg>
+            <span className="nav-all-text">전체</span>
+          </button>
         </nav>
         {/* 복채(복주머니) + 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         <div className="header-actions">
@@ -235,6 +244,7 @@ export default function Layout() {
         </p>
       </footer>
       <ConfirmHost />
+      {allMenu && <AllMenu onClose={() => setAllMenu(false)} notify={showNotice} />}
       <ContactModal
         open={contact}
         onClose={closeContact}

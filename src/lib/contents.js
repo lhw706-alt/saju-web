@@ -7,12 +7,11 @@
 // glyph 는 카드 상징 한자, el 은 상징 색(오행).
 import { NEXT_YEAR } from './topics.js';
 
+// 2026-11-15 사용자 지시로 GNB 압축: 5묶음 → 3묶음 (궁합은 사주로, 풀이(타로 등)는 운세로). label = 메인 카드 묶음 제목, nav = 상단 메뉴 글자
 export const GROUPS = [
-  { id: 'saju', label: '사주' },
-  { id: 'fortune', label: '운세' },
-  { id: 'match', label: '궁합' },
-  { id: 'luck', label: '행운' },
-  { id: 'ask', label: '풀이' },
+  { id: 'saju', label: '사주·궁합', nav: '사주' },
+  { id: 'fortune', label: '운세·타로', nav: '운세' },
+  { id: 'luck', label: '행운', nav: '행운' },
 ];
 
 export const CONTENTS = [
@@ -27,8 +26,8 @@ export const CONTENTS = [
 
   { id: 'tti', group: 'fortune', title: '오늘의 띠별 운세', desc: '입력 없이 바로 보는 12띠 오늘 운세', glyph: '支', el: 'earth', status: 'live', path: '/tti' },
 
-  { id: 'match', group: 'match', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
-  { id: 'namematch', group: 'match', title: '이름 궁합', desc: '이름 두 개로 알아보는 우리 사이의 케미', glyph: '緣', el: 'wood', status: 'live', path: '/name-match' },
+  { id: 'match', group: 'saju', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
+  { id: 'namematch', group: 'saju', title: '이름 궁합', desc: '이름 두 개로 알아보는 우리 사이의 케미', glyph: '緣', el: 'wood', status: 'live', path: '/name-match' },
 
   { id: 'byeolmaru', group: 'luck', title: '별마루', desc: '밤하늘 마당을 걸으며 별을 헤아리고 쉬어 가기', glyph: '星', el: 'water', status: 'live', path: '/byeolmaru' },
   { id: 'number', group: 'luck', title: '행운의 번호', desc: '천둥도사가 하루 한 번 뽑아 주는 6개의 숫자', glyph: '數', el: 'water', status: 'live', path: '/lucky' },
@@ -38,12 +37,12 @@ export const CONTENTS = [
   { id: 'charm', group: 'luck', title: '행운의 부적', desc: '지금 나에게 필요한 행운을 펼치기', glyph: '符', el: 'fire', status: 'live', path: '/talisman' },
   { id: 'sal', group: 'luck', title: '살풀이', desc: '원국의 살(煞), 겁내지 않고 이해하기', glyph: '解', el: 'metal', status: 'hold' },
 
-  { id: 'ask', group: 'ask', title: '천둥도사에게 묻기', desc: '내 사주로 궁금한 걸 물어봐요', glyph: '問', el: 'water', status: 'soon' },
-  { id: 'dream', group: 'ask', title: '꿈해몽', desc: '해몽 풀이에 내 사주를 더해서', glyph: '夢', el: 'water', status: 'soon' },
-  { id: 'tarot', group: 'ask', title: '타로', desc: '카드를 골라 천둥도사에게 묻기', glyph: '牌', el: 'metal', status: 'live', path: '/tarot' },
-  { id: 'psych', group: 'ask', title: '심리풀이', desc: '몇 가지 질문으로 보는 지금 내 마음', glyph: '心', el: 'fire', status: 'soon' },
-  { id: 'name', group: 'ask', title: '이름풀이', desc: '내 이름에 담긴 뜻과 기운', glyph: '名', el: 'wood', status: 'hold' },
-  { id: 'face', group: 'ask', title: '관상', desc: '얼굴에 적힌 운명 알아보기', glyph: '相', el: 'earth', status: 'hold' },
+  { id: 'ask', group: 'fortune', title: '천둥도사에게 묻기', desc: '내 사주로 궁금한 걸 물어봐요', glyph: '問', el: 'water', status: 'soon' },
+  { id: 'dream', group: 'fortune', title: '꿈해몽', desc: '해몽 풀이에 내 사주를 더해서', glyph: '夢', el: 'water', status: 'soon' },
+  { id: 'tarot', group: 'fortune', title: '타로', desc: '카드를 골라 천둥도사에게 묻기', glyph: '牌', el: 'metal', status: 'live', path: '/tarot' },
+  { id: 'psych', group: 'fortune', title: '심리풀이', desc: '몇 가지 질문으로 보는 지금 내 마음', glyph: '心', el: 'fire', status: 'soon' },
+  { id: 'name', group: 'fortune', title: '이름풀이', desc: '내 이름에 담긴 뜻과 기운', glyph: '名', el: 'wood', status: 'hold' },
+  { id: 'face', group: 'fortune', title: '관상', desc: '얼굴에 적힌 운명 알아보기', glyph: '相', el: 'earth', status: 'hold' },
 ];
 
 export const SOON_MESSAGE = {

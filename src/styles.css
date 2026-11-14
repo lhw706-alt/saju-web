@@ -2517,3 +2517,29 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 @media (prefers-reduced-motion: reduce) { .nav-bm span, .nav-bm-star { animation: none; } .nav-bm span { background-position: 50% 0; } }
 @media (max-width: 559px) { .nav a { padding: 0 8px; } .nav a.nav-bm { gap: 3px; } }
 @media (max-width: 340px) { .nav a { padding: 0 6px; font-size: 14px; } }
+
+/* GNB 압축 + 전체 메뉴 (2026-11-15) */
+.nav-all { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 10px; border: 0; border-radius: 10px; background: none; color: var(--text-2); font: inherit; font-size: 15px; font-weight: 600; letter-spacing: var(--ls-body); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.nav-all:hover { color: var(--text); background: var(--track); }
+.all-menu-overlay { z-index: 115; }
+.all-menu { width: min(92vw, 560px); max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 0 20px 18px; border-radius: 20px; background: #212225; border: 1px solid rgba(255, 255, 255, 0.08); }
+.all-menu .contact-head { position: sticky; top: 0; z-index: 1; padding: 18px 0 8px; background: #212225; }
+.all-menu-group { margin-top: 10px; }
+.all-menu-group h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--primary); }
+.all-menu-group ul { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.all-menu-group li button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.all-menu-group li button:hover .all-menu-text b { color: var(--primary); }
+.all-menu-group li button.is-soon { opacity: 0.55; }
+.all-menu-glyph { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: rgba(226, 194, 122, 0.1); color: #F3E4BF; font-family: 'ChosunSm', serif; font-size: 17px; }
+.all-menu-text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.all-menu-text b { font-size: 15px; font-weight: 600; }
+.all-menu-text small { font-size: 13px; color: rgba(194, 196, 200, 0.85); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.all-menu-tag { flex: none; padding: 1px 7px; border-radius: 6px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-style: normal; font-size: 12px; font-weight: 500; }
+.all-menu-tag.is-soon { background: rgba(255, 255, 255, 0.06); color: rgba(206, 208, 212, 0.86); }
+@media (max-width: 559px) {
+  .nav { justify-content: space-between; }
+  .nav a, .nav-all { padding: 0 10px; }
+  .nav-all-text { display: none; }
+  .all-menu-overlay { align-items: flex-end; padding: 0; }
+  .all-menu { width: 100%; max-height: calc(100dvh - 24px); border-radius: 20px 20px 0 0; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+}
