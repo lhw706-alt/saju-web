@@ -5,7 +5,6 @@ import { GROUPS, CONTENTS, SOON_MESSAGE } from '../lib/contents.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
 import { PRICE_COIN } from '../lib/wallet.js';
 import { PriceTag } from './BokchaLink.jsx';
-import ByeolmaruBanner from './ByeolmaruBanner.jsx';
 
 // 카드 그림은 한 번만 만들어 둠
 const ART = Object.fromEntries(CONTENTS.map((c) => [c.id, dosaArtSvg(c.id)]));
@@ -24,7 +23,7 @@ export default function ContentCards({ onOpen }) {
 
   return (
     <div className="contents">
-      {GROUPS.map((g, gi) => [
+      {GROUPS.map((g) => (
         <section key={g.id} id={g.id} className="content-group">
           <h2 className="section-title">{g.label}</h2>
           <ul className="content-grid">
@@ -53,10 +52,8 @@ export default function ContentCards({ onOpen }) {
               </li>
             ))}
           </ul>
-        </section>,
-        // 첫 묶음 다음(메인 가운데)에 별마루 배너 (2026-11-15 사용자 지시)
-        gi === 0 && <ByeolmaruBanner key="bm-banner" onOpen={() => click(CONTENTS.find((c) => c.id === 'byeolmaru'))} />,
-      ])}
+        </section>
+      ))}
       <div className="toast-wrap" role="status" aria-live="polite">
         {toast && (
           <p key={toast.key} className="toast">

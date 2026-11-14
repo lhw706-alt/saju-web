@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
 import ContentCards from '../components/ContentCards.jsx';
+import MoonGate from '../components/MoonGate.jsx';
 import { saveTopic } from '../lib/storage.js';
 import { TOPICS, NEXT_YEAR } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
@@ -79,6 +80,8 @@ export default function Home() {
           <Suspense fallback={<MascotStill />}>
             <Mascot3D />
           </Suspense>
+          {/* 별마루 입장: 천동이 오른쪽에 떠 있는 판화 달 (2026-11-15 사용자 지시) */}
+          <MoonGate onEnter={() => { trackEvent('content_click', { content: 'byeolmaru', from: 'hero_moon' }); navigate('/byeolmaru'); }} />
         </div>
         {/* 도사의 물음에 답하듯 고르는 바로가기 (지금 볼 수 있는 풀이만) */}
         <ul className="ask-chips" aria-label="궁금한 것 고르기">
