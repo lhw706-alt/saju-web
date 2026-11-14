@@ -2,12 +2,16 @@
 // 화면: 밤하늘(떠다니는 최근 소원) + 현황 → [내 소원 띄우기] → 작성 창(100자·종류·공개 범위) → 하늘로 올라가는 연출
 //      → 소원 구경하기(최신·인기·종류, 응원·신고) · 내 소원 보관함(전체·이루어진·진행 중, 이루어졌어요·삭제, 30일 다시 보기 안내).
 // 서버 /api/wish*(netlify/functions/auth.mjs), 규칙 src/lib/wish.js. 다른 사람에게는 익명으로만 보임. 이모지 대신 글래스 아이콘.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { WISH_CATS, WISH_MAX, WISH_DAILY, wishCat, wishProblem } from '../lib/wish.js';
 import GlassIcon, { LineIcon } from '../components/GlassIcon.jsx';
 import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import { trackEvent } from '../lib/analytics.js';
+import { dosaArtSvg } from '../brand/dosaArt.js';
+
+// 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
+const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 
 // 소원 종류 → 행운의 부적 종류
 export const WISH_TO_TALISMAN = { love: 'love', money: 'money', career: 'career', health: 'health', study: 'study', etc: 'luck' };
@@ -180,7 +184,7 @@ export default function Wish() {
     loadFeed();
   };
 
-  const floating = (feed || []).slice(0, 6);
+  const floating = (feed || []).slice(0, 4); // 천동이 양옆에만
   const mineList = (mine || []).filter((w) => (mineFilter === 'all' ? true : mineFilter === 'done' ? w.done : !w.done));
   const doneCount = (mine || []).filter((w) => w.done).length;
 
@@ -196,6 +200,11 @@ export default function Wish() {
             </span>
           ))}
           {floating.length === 0 && [0, 1, 2, 3].map((i) => <span key={i} className={`wish-lantern l${i}`} />)}
+        </div>
+        <div className="wish-stage">
+          <Suspense fallback={<span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('wish') }} />}>
+            <Mascot3D prop="stars" mode={launch ? 'drawing' : 'idle'} />
+          </Suspense>
         </div>
         <div className="wish-hero-text">
           <p className="nm-kicker">소원빌기</p>

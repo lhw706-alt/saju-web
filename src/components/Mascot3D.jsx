@@ -391,6 +391,39 @@ export function buildNameCharms() {
   return g;
 }
 
+// 소원빌기 화면 소품 (2026-11-14): 천동이 둘레를 도는 빛나는 3D 금빛 별 + 번짐
+export function buildWishStars() {
+  const g = new THREE.Group();
+  const star = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 0.22 : 0.095;
+    const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    if (i === 0) star.moveTo(x, y);
+    else star.lineTo(x, y);
+  }
+  star.closePath();
+  const geo = new THREE.ExtrudeGeometry(star, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.03, bevelSegments: 6 });
+  geo.center();
+  const gold = new THREE.MeshPhysicalMaterial({ color: '#ffd77a', roughness: 0.25, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1, emissive: '#e8a93a', emissiveIntensity: 0.55 });
+  const pale = new THREE.MeshPhysicalMaterial({ color: '#fff4d6', roughness: 0.3, clearcoat: 1, emissive: '#f0d595', emissiveIntensity: 0.5 });
+  const glowMap = radial([[0, 'rgba(255,225,150,0.9)'], [0.3, 'rgba(255,205,120,0.35)'], [1, 'rgba(0,0,0,0)']]);
+  const heights = [1.0, 0.3, -0.35, 0.7, -0.05, 1.15, 0.45, -0.5];
+  for (let i = 0; i < 8; i++) {
+    const item = new THREE.Group();
+    const mesh = new THREE.Mesh(geo, i % 3 === 1 ? pale : gold);
+    mesh.scale.setScalar(i % 2 ? 0.75 : 1);
+    item.add(mesh);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowMap, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    glow.scale.setScalar(i % 2 ? 0.7 : 0.95);
+    item.add(glow);
+    item.userData = { angle: (i / 8) * Math.PI * 2, height: heights[i], phase: i * 0.9, spin: 1.4 + (i % 3) * 0.3, twinkle: glow };
+    g.add(item);
+  }
+  return g;
+}
+
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -591,9 +624,13 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     scene.add(glowLight);
 
     const m = buildCheondong();
-    const lucky = prop === 'lotto' || prop === 'names'; // 행운의 번호·이름 궁합: 더 크게 둥둥 + 둘레를 도는 소품
+    const lucky = prop === 'lotto' || prop === 'names' || prop === 'stars'; // 행운의 번호·이름 궁합·소원빌기: 더 크게 둥둥 + 둘레를 도는 소품
     let balls = null;
     let clover = null;
+    if (prop === 'stars') {
+      balls = buildWishStars();
+      m.root.add(balls);
+    }
     if (prop === 'names') {
       balls = buildNameCharms();
       m.root.add(balls);
@@ -735,6 +772,11 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
           if (b.userData.spin) {
             b.rotation.y = Math.sin(t * b.userData.spin + bp) * 0.6 * s;
             b.rotation.z = Math.sin(t * 0.8 + bp) * 0.15 * s;
+          }
+          if (b.userData.twinkle) {
+            const tw = 0.75 + 0.25 * Math.sin(t * 3 + bp * 2);
+            b.userData.twinkle.material.opacity = tw * s + (1 - s);
+            b.rotation.y = t * b.userData.spin * s; // 별은 빙글빙글
           }
         });
       }
