@@ -37,7 +37,12 @@ function Rotator() {
 const ASK_CHIPS = ['overall', 'newyear', 'love', 'money', 'career']
   .map((id) => TOPICS.find((t) => t.id === id))
   .filter(Boolean)
-  .map((t) => (t.id === 'overall' ? { ...t, label: '평생 사주' } : t));
+  .map((t) => (t.id === 'overall' ? { ...t, label: '평생 사주' } : t))
+  // 2026-11-14 사용자 지시: 행운 뽑기·소원도 칩으로 (입력 없이 바로 그 화면)
+  .concat([
+    { id: 'number', label: '행운의 번호', path: '/lucky' },
+    { id: 'wish', label: '소원 빌기', path: '/wish' },
+  ]);
 
 export default function Home() {
   const navigate = useNavigate();
@@ -80,7 +85,7 @@ export default function Home() {
         <ul className="ask-chips" aria-label="궁금한 것 고르기">
           {ASK_CHIPS.map((t) => (
             <li key={t.id}>
-              <button type="button" className="ask-chip" onClick={() => openContent({ id: `chip_${t.id}`, title: t.label, topic: t.id })}>
+              <button type="button" className="ask-chip" onClick={() => openContent(t.path ? { id: `chip_${t.id}`, title: t.label, path: t.path } : { id: `chip_${t.id}`, title: t.label, topic: t.id })}>
                 {t.label}
               </button>
             </li>

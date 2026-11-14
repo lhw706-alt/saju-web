@@ -40,7 +40,6 @@ function WishCard({ w, member, onCheer, onReport }) {
     <li className={`wish-card${w.done ? ' is-done' : ''}`}>
       <div className="wish-card-top">
         <span className="wish-cat">
-          <LineIcon kind={w.cat === 'etc' ? 'luck' : w.cat} size={15} />
           {c?.label}
         </span>
         {w.done && <span className="wish-done-tag">이루어졌어요</span>}
@@ -51,13 +50,12 @@ function WishCard({ w, member, onCheer, onReport }) {
         <span className="wish-anon">{w.mine ? '나의 소원' : '익명의 소원'}</span>
         {!w.mine && (
           <button type="button" className={`wish-cheer${w.cheered ? ' on' : ''}`} onClick={() => onCheer(w)} aria-pressed={!!w.cheered}>
-            <LineIcon kind="luck" size={15} />
             {w.cheered ? '응원했어요' : '소원 응원하기'} <b>{w.cheers}</b>
           </button>
         )}
         {w.mine && (
           <span className="wish-cheer is-static">
-            <LineIcon kind="luck" size={15} /> 응원 <b>{w.cheers}</b>
+            응원 <b>{w.cheers}</b>
           </span>
         )}
         {member && !w.mine && (
@@ -295,7 +293,6 @@ export default function Wish() {
                 {openTop === w.id && !w.mine && (
                   <div className="wish-top-act">
                     <button type="button" className={`wish-cheer${w.cheered ? ' on' : ''}`} onClick={() => cheer(w)} aria-pressed={!!w.cheered}>
-                      <LineIcon kind="luck" size={15} />
                       {w.cheered ? '응원했어요' : '소원 응원하기'}
                     </button>
                   </div>
@@ -398,7 +395,6 @@ export default function Wish() {
                   <li key={w.id} className={`wish-mine-item card${w.done ? ' is-done' : ''}`}>
                     <div className="wish-card-top">
                       <span className="wish-cat">
-                        <LineIcon kind={w.cat === 'etc' ? 'luck' : w.cat} size={15} />
                         {wishCat(w.cat)?.label}
                       </span>
                       <span className={`wish-state${w.done ? ' is-done' : ''}`}>{w.done ? '이루어졌어요' : '진행 중'}</span>
@@ -500,9 +496,10 @@ export default function Wish() {
             <h2 id="wish-launch-title">당신의 소원이 하늘에 도착했어요</h2>
             <p>{launch.pub ? '다른 사람들도 당신의 소원을 응원할 수 있어요.' : '나만 보는 소원으로 고이 띄웠어요.'}</p>
             <div className="wish-launch-btns">
+              {/* 2026-11-14 사용자 지시: 꽉 찬 금색 버튼 대신 얇은 테두리, 아래는 배경 없는 글자 링크 */}
               <button
                 type="button"
-                className="btn-primary"
+                className="wish-launch-main"
                 onClick={() => {
                   setLaunch(null);
                   setTab('feed');
@@ -510,7 +507,7 @@ export default function Wish() {
               >
                 다른 사람의 소원 구경하기
               </button>
-              <button type="button" className="btn-ghost" onClick={() => navigate(`/talisman?k=${WISH_TO_TALISMAN[launch.cat] || 'luck'}`)}>
+              <button type="button" className="wish-launch-link" onClick={() => navigate(`/talisman?k=${WISH_TO_TALISMAN[launch.cat] || 'luck'}`)}>
                 이 소원에 어울리는 부적 보기
               </button>
             </div>

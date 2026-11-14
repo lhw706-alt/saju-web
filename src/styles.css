@@ -1844,3 +1844,26 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .badge-grid .badge-prog { font-size: 13px; font-weight: 600; color: var(--primary); }
 @media (max-width: 400px) { .badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .badge-grid li { align-content: start; }
+/* 소원 도착 화면 버튼·카드 아이콘 정리 (2026-11-14 사용자 지시) */
+.wish-launch-main { width: 100%; height: 50px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 12px; background: none; color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.wish-launch-main:hover { border-color: #fff; background: rgba(255, 255, 255, 0.06); }
+.wish-launch-link { height: 40px; border: 0; background: none; color: rgba(232, 233, 236, 0.75); font: inherit; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); cursor: pointer; }
+.wish-launch-link:hover { color: #fff; }
+.wish-cat { gap: 0; }
+.wish-cheer { gap: 4px; }
+
+/* 오늘의 질문 2차 (2026-11-14 사용자 지시: 'AI 디자인' 같은 상자 대신) — 한 줄씩 목록, 고르면 글자 아래 가는 막대와 % */
+.poll-opts { grid-template-columns: 1fr; gap: 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.poll-opts li { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.poll-opts button { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 6px 12px; min-height: 0; padding: 14px 2px; border: 0; border-radius: 0; background: none; overflow: visible; }
+.poll-opts button:hover:not(:disabled) { border: 0; }
+.poll-opts button:hover:not(:disabled) .poll-label { color: var(--primary); }
+.poll-opts button.is-mine { border: 0; }
+.poll-label { grid-column: 1; grid-row: 1; font-size: 16px; }
+.poll-pct { grid-column: 2; grid-row: 1; font-size: 15px; }
+.poll-bar { position: static; grid-column: 1 / -1; grid-row: 2; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); }
+.poll-opts button.is-mine .poll-bar { background: var(--primary); }
+.poll-opts button.is-mine .poll-label { color: var(--text); font-weight: 600; }
+.poll-opts:not(.is-voted) button::after { content: '›'; grid-column: 2; grid-row: 1; font-size: 20px; line-height: 1; color: rgba(255, 255, 255, 0.35); }
+@media (max-width: 400px) { .poll-opts { grid-template-columns: 1fr; } }
+.poll-opts.is-voted { margin-bottom: 0; } .poll-opts li:last-child { border-bottom: 0; } .poll { padding-bottom: 0; } .poll-foot { margin-bottom: 14px; }
