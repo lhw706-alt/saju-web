@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
-import { loadPresets, savePreset, removePreset } from '../lib/storage.js';
-import { presetMain, presetSub } from '../lib/presetText.js';
+import { loadPresets, savePreset } from '../lib/storage.js';
+import SavedPresets from './SavedPresets.jsx';
 
 // 저장된 정보 한 줄: 큰 글씨(생년월일·성별) / 작은 글씨(양음력·시각·지역) — src/lib/presetText.js
 
@@ -61,11 +61,7 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
     setStep(3);
   };
   // 이 브라우저에 기억해 둔 지난 입력: 목록에서 줄을 누르면 바로 불러오기, ✕ 로 지우기 (2명까지 보이고 나머지는 더 보기)
-  const [presets, setPresets] = useState(loadPresets);
-  const [showAll, setShowAll] = useState(false);
-  const key = (x) => presetMain(x) + presetSub(x);
-  const others = mine ? presets.filter((x) => key(x) !== key(mine)) : presets; // 내 정보와 같은 줄은 한 번만
-  const shown = showAll ? others : others.slice(0, 2);
+  const [presets] = useState(loadPresets);
   const finish = (data) => {
     savePreset(data); // 입력을 마치면 이 브라우저에 바로 기억 (불러오기용)
     onSubmit(data);
@@ -73,7 +69,6 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
   const applyPreset = (x) => {
     if (check(x)) onSubmit(x); // 불러오면 바로 결과로
   };
-  const deletePreset = (x) => setPresets(removePreset(x));
 
   const submit = (e) => {
     e.preventDefault();
@@ -96,52 +91,7 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
 
       <div className="step" key={step}>
 
-        {step === 0 && showSaved && (others.length > 0 || mine) && (
-          <div className="saved">
-            <div className="saved-head">
-              <h2 className="saved-title">입력했던 정보를 불러올 수 있어요</h2>
-              <p className="saved-note">최근 5명까지 기억해요</p>
-            </div>
-            {mine && (
-              <button type="button" className="saved-mine" aria-pressed="true" onClick={() => applyPreset(mine)}>
-                <span className="saved-mine-badge">내 정보</span>
-                <span className="saved-text">
-                  <b>{presetMain(mine)}</b>
-                  <span>{presetSub(mine)}</span>
-                </span>
-                <span className="saved-mine-go">이 정보로 보기</span>
-              </button>
-            )}
-            {others.length > 0 && (
-            <ul className="saved-list">
-              {shown.map((x) => (
-                <li key={presetMain(x) + presetSub(x)} className="saved-item">
-                  <button type="button" className="saved-load" onClick={() => applyPreset(x)}>
-                    <span className="saved-text">
-                      <b>{presetMain(x)}</b>
-                      <span>{presetSub(x)}</span>
-                    </span>
-                    <span className="saved-go">불러오기</span>
-                  </button>
-                  <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => deletePreset(x)}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            )}
-            {others.length > 2 && (
-              <button type="button" className="saved-more" onClick={() => setShowAll((v) => !v)}>
-                {showAll ? '접기' : `${others.length - 2}명 더 보기`}
-              </button>
-            )}
-            <p className="saved-or">
-              <span>또는 새로 입력해요</span>
-            </p>
-          </div>
-        )}
+        {step === 0 && showSaved && (presets.length > 0 || mine) && <SavedPresets mine={mine} onPick={applyPreset} />}
 
         <h2 className="step-q">{QUESTIONS[step]}</h2>
 

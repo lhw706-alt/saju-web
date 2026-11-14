@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
-import Select from './Select.jsx';
 import { GlossaryProvider } from './Glossary.jsx';
 import { splitSections } from './NewYearMonthly.jsx';
 import { fmtCredits } from '../lib/wallet.js';
@@ -63,6 +62,7 @@ export default function PaidRecords() {
   const [err, setErr] = useState('');
   const [open, setOpen] = useState(null);
   const [who, setWho] = useState('all');
+  const [onlyMe, setOnlyMe] = useState(false); // 나만 보기 토글
 
   useEffect(() => {
     fetch('/api/records', { cache: 'no-store' })
@@ -77,13 +77,17 @@ export default function PaidRecords() {
 
   const labelOf = (r) => (r.kind === 'tarot' ? '타로' : r.who || '이전 기록');
   // 거르기: 전체 · 나 · 사람별 · 타로
-  const options = useMemo(() => {
-    const people = [...new Set((list || []).filter((r) => r.kind !== 'tarot').map(labelOf))].sort((a, b) => (a === '나' ? -1 : b === '나' ? 1 : a.localeCompare(b)));
-    const hasTarot = (list || []).some((r) => r.kind === 'tarot');
-    return [{ value: 'all', label: '전체' }, ...people.map((p) => ({ value: p, label: p })), ...(hasTarot ? [{ value: '타로', label: '타로' }] : [])];
+  // 사람 유형별 카드 (2026-11-15 사용자 지시: 드롭다운 대신) — 전체 · 나 · 1990년생 · 여성 … · 타로, 카드마다 기록 수
+  const groups = useMemo(() => {
+    const count = {};
+    (list || []).forEach((r) => (count[labelOf(r)] = (count[labelOf(r)] || 0) + 1));
+    const order = (a) => (a === '나' ? 0 : a === '타로' ? 3 : a === '이전 기록' ? 2 : 1);
+    const names = Object.keys(count).sort((a, b) => order(a) - order(b) || a.localeCompare(b));
+    return [{ id: 'all', label: '전체', n: (list || []).length }, ...names.map((k) => ({ id: k, label: k, n: count[k] }))];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
-  const shown = (list || []).filter((r) => who === 'all' || labelOf(r) === who);
+  const active = onlyMe ? '나' : who;
+  const shown = (list || []).filter((r) => active === 'all' || labelOf(r) === active);
 
   const remove = async (id) => {
     if (!(await askConfirm({ title: '이 풀이 기록을 지울까요?', message: '지운 기록은 되돌릴 수 없어요.', ok: '지우기' }))) return;
@@ -98,12 +102,27 @@ export default function PaidRecords() {
       <section aria-labelledby="rec-title">
         <div className="rec-head">
           <h2 id="rec-title">풀이 기록</h2>
-          {list && list.length > 0 && options.length > 2 && (
-            <span className="sel-compact">
-              <Select ariaLabel="누구의 풀이인지 거르기" value={who} onChange={setWho} options={options} />
-            </span>
+          {list && list.length > 0 && (
+            <label className="toggle">
+              <input type="checkbox" role="switch" checked={onlyMe} onChange={(e) => setOnlyMe(e.target.checked)} />
+              <span className="toggle-track" aria-hidden="true">
+                <span className="toggle-knob" />
+              </span>
+              <span className="toggle-label">나만 보기</span>
+            </label>
           )}
         </div>
+        {list && list.length > 0 && groups.length > 2 && !onlyMe && (
+          <div className="rec-groups" role="tablist" aria-label="누구의 풀이인지">
+            {groups.map((g) => (
+              <button key={g.id} type="button" role="tab" aria-selected={who === g.id} className={`rec-group${who === g.id ? ' on' : ''}`} onClick={() => setWho(g.id)}>
+                <span>{g.label}</span>
+                <b>{g.n}</b>
+              </button>
+            ))}
+          </div>
+        )}
+        {onlyMe && shown.length === 0 && <p className="rec-empty">내 사주 정보로 본 풀이가 아직 없어요. 마이페이지 ‘내 사주 정보’에 등록한 정보로 보면 여기에 모여요.</p>}
         {err && <p className="rec-empty">{err}</p>}
         {!err && list === null && <p className="rec-empty">불러오는 중이에요…</p>}
         {list && list.length === 0 && (

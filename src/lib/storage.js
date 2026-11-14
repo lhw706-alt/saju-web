@@ -125,6 +125,20 @@ export function savePreset(input) {
     /* 무시 */
   }
 }
+// 목록의 한 사람 정보를 고침 (자리는 그대로) — 입력 화면 불러오기의 연필 버튼 (2026-11-15)
+export function updatePreset(oldInput, next) {
+  try {
+    const list = loadPresets();
+    const i = list.findIndex((x) => presetId(x) === presetId(oldInput));
+    const rest = list.filter((x, j) => j !== i && presetId(x) !== presetId(next));
+    if (i < 0) rest.unshift(next);
+    else rest.splice(Math.min(i, rest.length), 0, next);
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(rest.slice(0, MAX_PRESETS)));
+    return rest.slice(0, MAX_PRESETS);
+  } catch {
+    return loadPresets();
+  }
+}
 export function removePreset(input) {
   try {
     const list = loadPresets().filter((x) => presetId(x) !== presetId(input));

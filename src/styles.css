@@ -2183,3 +2183,74 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .rec-tabs button { flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); background: none; color: rgba(220, 222, 228, 0.85); font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
 .rec-tabs button.on { border-color: transparent; background: #ECE6D8; color: #1B1C1E; font-weight: 600; }
 .rec-body .rec-sec-title { margin: 10px 0 6px; }
+
+/* 불러오기 카드 3칸 + 연필 수정 (2026-11-15 사용자 지시) */
+.saved-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.saved-card { position: relative; border-radius: 14px; background: var(--bg); border: 1px solid transparent; transition: background 0.15s ease, border-color 0.15s ease; }
+.saved-card:hover { background: #26272b; }
+.saved-card.is-mine { border-color: rgba(226, 194, 122, 0.55); background: rgba(226, 194, 122, 0.07); }
+.saved-card.is-editing { border-color: var(--primary); }
+.saved-card-main { display: grid; align-content: start; gap: 3px; width: 100%; min-height: 84px; padding: 14px 34px 12px 14px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.saved-card-main b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.saved-card-main span { font-size: 14px; color: rgba(194, 196, 200, 0.85); font-variant-numeric: tabular-nums; }
+.saved-card-main .saved-card-badge { justify-self: start; margin-bottom: 2px; padding: 1px 7px; border-radius: 6px; background: rgba(226, 194, 122, 0.16); color: var(--primary); font-size: 12px; font-weight: 500; }
+.saved-card-edit { position: absolute; top: 8px; right: 6px; display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 8px; background: none; color: rgba(194, 196, 200, 0.75); cursor: pointer; }
+.saved-card-edit:hover, .saved-card-edit[aria-expanded="true"] { color: var(--primary); background: rgba(255, 255, 255, 0.06); }
+.saved-edit { display: grid; gap: 12px; margin-top: 4px; padding: 16px; border-radius: 14px; background: var(--bg); }
+.saved-edit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.saved-edit-label { flex: none; width: 76px; font-size: 14px; color: rgba(194, 196, 200, 0.85); }
+.saved-seg { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); }
+.saved-seg button { height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: none; color: rgba(220, 222, 228, 0.85); font: inherit; font-size: 14px; cursor: pointer; }
+.saved-seg button.on { background: #ECE6D8; color: #1B1C1E; font-weight: 600; }
+.saved-leap { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--text-2); }
+.saved-num { display: inline-flex; align-items: center; gap: 4px; width: 92px; height: 40px; padding: 0 10px; }
+.saved-num.sm { width: 66px; }
+.saved-num input { width: 100%; min-width: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px; outline: none; }
+.saved-num em { font-style: normal; font-size: 14px; color: var(--muted); }
+.saved-hour, .saved-city { min-width: 130px; }
+.saved-edit-actions { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.saved-edit-actions button { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.saved-edit-del { margin-right: auto; background: none; color: rgba(194, 196, 200, 0.7); padding: 0 4px !important; font-weight: 400 !important; text-decoration: underline; text-underline-offset: 3px; }
+.saved-edit-cancel { background: rgba(255, 255, 255, 0.07); color: rgba(220, 222, 228, 0.9); }
+.saved-edit-save { margin-left: 0; background: #ECE6D8; color: #1B1C1E; }
+.saved-edit-actions .saved-edit-cancel:first-child { margin-left: auto; }
+@media (max-width: 559px) {
+  .saved-grid { gap: 6px; }
+  .saved-card-main { min-height: 76px; padding: 12px 26px 10px 10px; }
+  .saved-card-main b { font-size: 14px; }
+  .saved-card-main span { font-size: 13px; }
+  .saved-card-edit { top: 4px; right: 2px; width: 28px; height: 28px; }
+  .saved-edit-label { width: 100%; }
+}
+
+/* 하늘의 소원 카드: 누르면 펼침 (2026-11-15) */
+button.wish-float { font: inherit; font-size: 13px; text-align: left; cursor: pointer; pointer-events: auto; }
+.wish-float .wish-float-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wish-float .wish-float-offer { flex: none; gap: 3px; }
+.wish-float .wish-float-offer b { font-size: 12px; }
+.wish-float.is-open { z-index: 6; max-width: min(86%, 420px); white-space: normal; border-color: rgba(240, 213, 149, 0.6); background: linear-gradient(145deg, rgba(40, 38, 60, 0.92), rgba(28, 28, 44, 0.92)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 26px rgba(226, 194, 122, 0.3); animation-play-state: paused; transition: max-width 0.25s ease; }
+.wish-float.is-open .wish-float-text { white-space: normal; overflow: visible; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
+.wish-float.f3.is-open, .wish-float.f5.is-open { left: auto; }
+/* 풀이 기록 항목 탭: 스크롤 없이 한 번에 모두 (2026-11-15) */
+.rec-tabs { flex-wrap: wrap; overflow: visible; padding-bottom: 4px; }
+/* 풀이 글 속 용어: 누를 수 있다는 게 보이게 금빛 글자 + 밑줄 (2026-11-15 사용자 지시) */
+.md-term { color: #EBCB86; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: rgba(235, 203, 134, 0.85); text-decoration-thickness: 1.5px; text-underline-offset: 4px; border-radius: 3px; }
+.md-term:hover, .md-term:focus-visible { color: #F6DFA6; background: rgba(226, 194, 122, 0.12); text-decoration-style: solid; }
+
+/* 토글 스위치 (디자인 시스템 — 금빛 켜짐) */
+.toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle-track { position: relative; width: 40px; height: 24px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); transition: background 0.18s ease; }
+.toggle-knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); transition: transform 0.18s ease; }
+.toggle input:checked + .toggle-track { background: var(--primary); }
+.toggle input:checked + .toggle-track .toggle-knob { transform: translateX(16px); }
+.toggle input:focus-visible + .toggle-track { outline: 2px solid var(--primary); outline-offset: 2px; }
+.toggle-label { font-size: 14px; color: rgba(220, 222, 228, 0.9); }
+/* 풀이 기록 사람 유형 카드 */
+.rec-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 12px 0 6px; }
+.rec-group { display: grid; gap: 4px; justify-items: start; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); background: var(--bg); color: rgba(220, 222, 228, 0.9); font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+.rec-group span { font-size: 13px; }
+.rec-group b { font-size: 20px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.rec-group:hover { background: #26272b; }
+.rec-group.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.08); }
+.rec-group.on b { color: var(--primary); }

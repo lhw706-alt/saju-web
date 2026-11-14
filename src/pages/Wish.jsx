@@ -37,6 +37,25 @@ const api = async (url, opts = {}) => {
   return { ok: !!r?.ok, status: r?.status || 0, data: d || {} };
 };
 
+// 하늘에 떠 있는 소원 카드 (2026-11-15 사용자 지시): 누르면 말줄임 없이 길게 펼쳐지고, 5.5초 뒤나 다시 누르면 원래대로. 넣은 금전도 표시
+function SkyWish({ w, i }) {
+  const [open, setOpen] = useState(false);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const toggle = () => {
+    clearTimeout(timer.current);
+    if (open) return setOpen(false);
+    setOpen(true);
+    timer.current = setTimeout(() => setOpen(false), 5500);
+  };
+  return (
+    <button type="button" className={`wish-float f${i}${open ? ' is-open' : ''}`} onClick={toggle} aria-expanded={open} aria-label={`소원: ${w.text}`}>
+      {w.offer > 0 && <PriceTag n={w.offer} size={13} className="wish-float-offer" />}
+      <span className="wish-float-text">{w.text}</span>
+    </button>
+  );
+}
+
 // 숫자가 0부터 올라가며 나타남 (0.9초)
 function CountUp({ n }) {
   const [v, setV] = useState(0);
@@ -266,12 +285,10 @@ export default function Wish() {
   return (
     <article className="wish">
       <section className="wish-hero">
-        <div className="wish-sky" aria-hidden="true">
-          <span className="wish-moon" />
+        <div className="wish-sky">
+          <span className="wish-moon" aria-hidden="true" />
           {floating.map((w, i) => (
-            <span key={w.id} className={`wish-float f${i}`}>
-              {w.text.length > 18 ? `${w.text.slice(0, 18)}…` : w.text}
-            </span>
+            <SkyWish key={w.id} w={w} i={i} />
           ))}
           {floating.length === 0 && [0, 1, 2, 3].map((i) => <span key={i} className={`wish-lantern l${i}`} />)}
         </div>
@@ -313,19 +330,7 @@ export default function Wish() {
         </button>
       </nav>
 
-      {tab === 'feed' && pinned.length > 0 && (
-        <section className="wish-pin" aria-labelledby="wish-pin-title">
-          <h2 id="wish-pin-title" className="wish-pin-title">
-            {pinned.some((w) => w.offer > 0) ? '가장 깊은 정성이 담긴 소원' : '가장 최근 하늘에 닿은 소원'}
-          </h2>
-          <ul className="wish-pin-list">
-            {pinned.map((w, i) => (
-              <WishCard key={w.id} w={w} member={member} onCheer={cheer} onReport={report} rank={i + 1} />
-            ))}
-          </ul>
-        </section>
-      )}
-
+      {/* 맨 위 강조 3개(정성이 담긴 소원)는 2026-11-15 사용자 지시로 뺌 — 서버 pinned 는 남겨 둠, 나중에 다시 넣을 수 있음 */}
       {tab === 'feed' && top.length > 0 && (
         <section className="wish-top" aria-labelledby="wish-top-title">
           <div className="wish-top-head">
@@ -398,7 +403,7 @@ export default function Wish() {
             </div>
           ) : (
             <ul className="wish-list">
-              {feed.filter((w) => !pinned.some((p) => p.id === w.id)).map((w) => (
+              {feed.map((w) => (
                 <WishCard key={w.id} w={w} member={member} onCheer={cheer} onReport={report} />
               ))}
             </ul>
