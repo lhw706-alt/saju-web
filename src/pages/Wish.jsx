@@ -274,7 +274,6 @@ export default function Wish() {
               </button>
               {WISH_CATS.map((c) => (
                 <button key={c.id} type="button" className={cat === c.id ? 'on' : ''} aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>
-                  <LineIcon kind={c.id === 'etc' ? 'luck' : c.id} size={14} />
                   {c.label}
                 </button>
               ))}
@@ -420,25 +419,25 @@ export default function Wish() {
             <p className="wish-count">
               실명·연락처 같은 개인정보는 적지 말아 주세요 <span>{text.trim().length}/{WISH_MAX}</span>
             </p>
-            <p className="nm-label">소원 공개 설정</p>
-            <div className="wish-vis" role="radiogroup" aria-label="공개 설정">
+            {/* 공개 범위: 담백한 두 칸 선택 + 한 줄 설명 (2026-11-14 사용자 지시) */}
+            <p className="nm-label">공개 범위</p>
+            <div className="wish-seg" role="radiogroup" aria-label="공개 범위">
               <button type="button" role="radio" aria-checked={pub} className={pub ? 'on' : ''} onClick={() => setPub(true)}>
-                <b>전체 공개</b>
-                <span>다른 사람도 내 소원을 볼 수 있어요 (이름 없이 익명으로)</span>
+                전체 공개
               </button>
               <button type="button" role="radio" aria-checked={!pub} className={!pub ? 'on' : ''} onClick={() => setPub(false)}>
-                <b>나만 보기</b>
-                <span>다른 사람에게 공개되지 않아요</span>
+                나만 보기
               </button>
             </div>
+            <p className="wish-seg-desc">{pub ? '다른 사람도 볼 수 있어요. 이름 없이 익명으로 보여요.' : '나만 볼 수 있어요. 다른 사람에게는 보이지 않아요.'}</p>
             {err && (
               <p className="nm-err" role="alert">
                 {err}
               </p>
             )}
-            <div className="nm-submit">
-              <LiquidMetalButton type="submit" label={sending ? '띄우는 중…' : '하늘에 소원 띄우기'} width={220} disabled={sending || left <= 0} />
-            </div>
+            <button type="submit" className="btn-primary wish-submit" disabled={sending || left <= 0}>
+              {sending ? '띄우는 중…' : '하늘에 소원 띄우기'}
+            </button>
           </form>
         </div>
       )}

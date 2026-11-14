@@ -1681,3 +1681,16 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 /* 푸터 사업자 정보 (2026-11-14) */
 .footer-biz { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 14px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.7); }
 .footer-biz span { white-space: nowrap; }
+
+/* 소원 쓰기 창·목록 담백하게 (2026-11-14 사용자 지시) */
+.wish-compose .wish-textarea:focus { box-shadow: none; }
+.wish-seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+.wish-seg button { height: 40px; border: 0; border-radius: 9px; background: none; color: var(--text-2); font: inherit; font-size: 15px; cursor: pointer; }
+.wish-seg button.on { background: rgba(255, 255, 255, 0.12); color: var(--text); font-weight: 600; }
+.wish-seg-desc { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+.wish-submit { width: 100%; margin: 14px 0 0; }
+.wish-cats button { padding: 0 14px; }
+.wish-listbar { margin-top: 10px; font-size: 15px; color: var(--text); }
+.wish-listbar > span { font-weight: 600; }
+.wish-listbar .wish-sort button { font-size: 15px; padding: 4px 0; }
+.wish-listbar .wish-sort button + button::before { margin: 0 10px; }
