@@ -18,6 +18,7 @@ import Dict from './pages/Dict.jsx';
 import Tti from './pages/Tti.jsx';
 import NameMatch from './pages/NameMatch.jsx';
 import Wish from './pages/Wish.jsx';
+import Byeolmaru from './pages/Byeolmaru.jsx';
 import Talisman from './pages/Talisman.jsx';
 import Tarot from './pages/Tarot.jsx';
 import Wallet from './pages/Wallet.jsx';
@@ -48,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/tti" element={<Tti />} />
           <Route path="/name-match" element={<NameMatch />} />
           <Route path="/wish" element={<Wish />} />
+          <Route path="/byeolmaru" element={<Byeolmaru />} />
           <Route path="/talisman" element={<Talisman />} />
           <Route path="/tarot" element={<Tarot />} />
           <Route path="/wallet" element={<Wallet />} />
