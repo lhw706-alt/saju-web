@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'rea
 import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import CharmBook from './CharmBook.jsx';
+import BadgeBoard from '../components/BadgeBoard.jsx';
 import ChartTable from '../components/ChartTable.jsx';
 import { GlossaryProvider, Help } from '../components/Glossary.jsx';
 import { computeSaju, ELEMENT_KO } from '../lib/saju.js';
@@ -18,6 +19,7 @@ import { presetMain, presetSub, birthDateText, genderText, ageText } from '../li
 const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
+  { id: 'badges', label: '내 배지', to: '/my/badges' },
   { id: 'charms', label: '부적 도감', to: '/my/charms' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
@@ -447,6 +449,12 @@ export default function My() {
         )}
       </div>
         </>
+      )}
+
+      {tab === 'badges' && (
+      <div className="my-sec card">
+        <BadgeBoard />
+      </div>
       )}
 
       {tab === 'charms' && (

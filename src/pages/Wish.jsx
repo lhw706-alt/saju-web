@@ -79,6 +79,9 @@ export default function Wish() {
   const [cat, setCat] = useState('');
   const [feed, setFeed] = useState(null);
   const [stats, setStats] = useState({ total: 0, today: 0 });
+  const [top, setTop] = useState([]); // 이번 주 응원 많이 받은 소원 TOP 5
+  const [week, setWeek] = useState(null);
+  const [openTop, setOpenTop] = useState(null);
   const [mine, setMine] = useState(null);
   const [left, setLeft] = useState(WISH_DAILY);
   const [mineFilter, setMineFilter] = useState('all');
@@ -119,6 +122,8 @@ export default function Wish() {
     if (r.ok) {
       setFeed(r.data.wishes || []);
       setStats(r.data.stats || { total: 0, today: 0 });
+      setTop(r.data.top || []);
+      setWeek(r.data.week || null);
     } else setFeed([]);
   }, [sort, cat]);
   const loadMine = useCallback(async () => {
@@ -134,6 +139,10 @@ export default function Wish() {
   useEffect(() => {
     loadFeed();
   }, [loadFeed]);
+  useEffect(() => {
+    if (top.length) trackEvent('ranking_view', { place: 'wish_top' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [top.length > 0]);
   useEffect(() => {
     loadMine();
   }, [loadMine]);
@@ -186,6 +195,7 @@ export default function Wish() {
     if (!r.ok) return notify(r.data.error || '응원하지 못했어요.', 'negative');
     trackEvent('wish_cheer');
     setFeed((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
+    setTop((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
   };
   const report = async (w) => {
     if (!window.confirm('이 소원을 신고할까요? 신고가 쌓이면 하늘에서 내려가요.')) return;
@@ -263,6 +273,38 @@ export default function Wish() {
           내 소원 보관함
         </button>
       </nav>
+
+      {tab === 'feed' && top.length > 0 && (
+        <section className="wish-top" aria-labelledby="wish-top-title">
+          <div className="wish-top-head">
+            <h2 id="wish-top-title">이번 주 가장 많이 응원받은 소원</h2>
+            {week && (
+              <span>
+                {week.start.slice(5).replace('-', '.')} – {week.end.slice(5).replace('-', '.')}
+              </span>
+            )}
+          </div>
+          <ol className="wish-top-list">
+            {top.map((w, i) => (
+              <li key={w.id} className={openTop === w.id ? 'is-open' : ''}>
+                <button type="button" className="wish-top-row" onClick={() => setOpenTop(openTop === w.id ? null : w.id)} aria-expanded={openTop === w.id}>
+                  <span className="wish-top-rank">{i + 1}</span>
+                  <span className="wish-top-text">“{w.text}”</span>
+                  <span className="wish-top-n">응원 {w.cheers}</span>
+                </button>
+                {openTop === w.id && !w.mine && (
+                  <div className="wish-top-act">
+                    <button type="button" className={`wish-cheer${w.cheered ? ' on' : ''}`} onClick={() => cheer(w)} aria-pressed={!!w.cheered}>
+                      <LineIcon kind="luck" size={15} />
+                      {w.cheered ? '응원했어요' : '소원 응원하기'}
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {tab === 'feed' && (
         <section className="wish-feed">
@@ -360,6 +402,7 @@ export default function Wish() {
                         {wishCat(w.cat)?.label}
                       </span>
                       <span className={`wish-state${w.done ? ' is-done' : ''}`}>{w.done ? '이루어졌어요' : '진행 중'}</span>
+                      {w.weekRank && <span className="wish-rank-tag">이번 주 {w.weekRank}위</span>}
                       {!w.pub && <span className="wish-private">나만 보기</span>}
                       {w.hidden && <span className="wish-private">신고로 숨겨짐</span>}
                     </div>

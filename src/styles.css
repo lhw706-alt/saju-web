@@ -1784,3 +1784,63 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .tarot-again .tarot-count-ic { width: 44px; height: 40px; transform: scale(0.82); }
 
 .tarot-left { margin: 10px 0 0; font-size: 13px; color: var(--text-2); text-align: center; }
+
+/* 오늘의 운세 투표 (2026-11-14) — 얇은 선·글자 계층, 고르면 막대가 차오름 */
+.poll { margin: 28px 0 8px; padding: 20px 0 6px; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.poll-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.poll-kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--primary); }
+.poll-date { font-size: 13px; color: var(--text-2); }
+.poll-q { margin: 6px 0 14px; font-family: var(--title); font-size: clamp(20px, 5vw, 24px); font-weight: 400; color: var(--text); word-break: keep-all; }
+.poll-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.poll-opts button { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 50px; padding: 0 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; background: rgba(255, 255, 255, 0.02); color: var(--text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; transition: border-color 0.2s; }
+.poll-opts button:hover:not(:disabled) { border-color: rgba(226, 194, 122, 0.6); }
+.poll-opts button:disabled { cursor: default; }
+.poll-bar { position: absolute; inset: 0 auto 0 0; background: rgba(255, 255, 255, 0.07); transition: width 0.7s cubic-bezier(0.3, 0.7, 0.3, 1); }
+.poll-opts button.is-mine { border-color: var(--primary); }
+.poll-opts button.is-mine .poll-bar { background: rgba(226, 194, 122, 0.18); }
+.poll-label, .poll-pct { position: relative; }
+.poll-label small { margin-left: 6px; font-size: 13px; color: var(--primary); }
+.poll-pct { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.poll-opts.is-voted button:not(.is-mine) .poll-pct { color: var(--text-2); }
+.poll-foot { margin: 10px 0 12px; font-size: 13px; color: var(--text-2); }
+.poll-opts.is-voted { margin-bottom: 14px; }
+@media (max-width: 400px) { .poll-opts { grid-template-columns: 1fr; } }
+
+/* 이번 주 소원 TOP 5 (2026-11-14) — 순위 숫자·소원 글·응원 수, 얇은 줄 목록 */
+.wish-top { margin-top: 22px; }
+.wish-top-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.wish-top-head h2 { margin: 0; font-family: var(--title); font-size: 19px; font-weight: 400; color: var(--text); }
+.wish-top-head span { font-size: 13px; color: rgba(220, 222, 228, 0.6); }
+.wish-top-list { margin: 12px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.wish-top-list li { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.wish-top-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; padding: 14px 2px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.wish-top-rank { font-family: Georgia, serif; font-size: 20px; color: var(--primary); text-align: center; }
+.wish-top-list li:nth-child(n + 4) .wish-top-rank { color: rgba(220, 222, 228, 0.6); }
+.wish-top-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 15px; line-height: 1.6; word-break: keep-all; }
+.wish-top-list li.is-open .wish-top-text { -webkit-line-clamp: unset; }
+.wish-top-n { font-size: 14px; font-weight: 600; color: var(--primary); white-space: nowrap; }
+.wish-top-act { display: flex; justify-content: flex-end; padding: 0 2px 14px; }
+.wish-top-act .wish-cheer { margin-left: 0; }
+.wish-rank-tag { padding: 2px 8px; border-radius: 999px; background: rgba(226, 194, 122, 0.14); color: var(--primary); font-size: 13px; }
+
+/* 내 배지 (2026-11-14) — 레벨·연속 방문·금빛 한자 원판 */
+.badge-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.badge-lv { font-family: Georgia, serif; font-size: 14px; color: var(--primary); }
+.badge-title { margin: 2px 0 0; font-family: var(--title); font-size: 24px; font-weight: 400; color: var(--text); }
+.badge-sub { margin: 4px 0 0; font-size: 14px; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.badge-streak { display: grid; justify-items: end; flex: none; }
+.badge-streak b { font-size: 30px; font-weight: 600; line-height: 1.1; color: var(--primary); font-variant-numeric: tabular-nums; }
+.badge-streak span { font-size: 13px; color: rgba(206, 208, 212, 0.86); }
+.badge-levelbar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 14px 0 4px; }
+.badge-levelbar i { height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); }
+.badge-levelbar i.on { background: var(--primary); }
+.badge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 10px; margin: 20px 0 0; padding: 0; list-style: none; }
+.badge-grid li { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.badge-medal { width: 68px; height: 68px; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4)); }
+.badge-grid li:not(.is-earned) .badge-medal { filter: none; opacity: 0.8; }
+.badge-grid b { margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--text); }
+.badge-grid li:not(.is-earned) b { color: rgba(206, 208, 212, 0.86); }
+.badge-grid span { font-size: 13px; line-height: 1.45; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.badge-grid .badge-prog { font-size: 13px; font-weight: 600; color: var(--primary); }
+@media (max-width: 400px) { .badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.badge-grid li { align-content: start; }

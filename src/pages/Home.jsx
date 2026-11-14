@@ -1,3 +1,4 @@
+import PollCard from '../components/PollCard.jsx';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
@@ -87,6 +88,7 @@ export default function Home() {
         </ul>
       </section>
 
+      <PollCard place="home" />
       <ContentCards onOpen={openContent} />
 
     </>
