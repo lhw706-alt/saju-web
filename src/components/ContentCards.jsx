@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { GROUPS, CONTENTS, SOON_MESSAGE } from '../lib/contents.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
+import { PRICE_TAGS } from '../lib/wallet.js';
 
 // 카드 그림은 한 번만 만들어 둠
 const ART = Object.fromEntries(CONTENTS.map((c) => [c.id, dosaArtSvg(c.id)]));
@@ -31,7 +32,7 @@ export default function ContentCards({ onOpen }) {
               <li key={c.id}>
                 <button type="button" className={`content-card el-${c.el}${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
                   <span className="content-text">
-                    <span className={`content-badge${c.status === 'live' ? ' is-live' : ''}`}>{c.status === 'live' ? '무료' : '준비중'}</span>
+                    <span className={`content-badge${c.status === 'live' ? (PRICE_TAGS[c.id] ? ' is-paid' : ' is-live') : ''}`}>{c.status === 'live' ? PRICE_TAGS[c.id] || '무료' : '준비중'}</span>
                     <strong>{c.title}</strong>
                     <span>{c.desc}</span>
                   </span>

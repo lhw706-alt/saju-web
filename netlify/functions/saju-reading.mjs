@@ -9,7 +9,7 @@ import { computeSaju, chartSummary, dayLuck, dayLuckSummary, SajuInputError } fr
 import { topicById, TOPIC_FORMAT, ttiYears } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 import { sessionOf } from '../lib/session.mjs';
-import { purchaseKey, owned } from '../lib/wallet.mjs';
+import { purchaseKey, owned, getRecord, putRecord, newyearRecordId } from '../lib/wallet.mjs';
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
 const TIME_LIMIT_MS = 55_000;
@@ -77,11 +77,14 @@ export default async (req, context) => {
     day = dayLuck(chart, ymd);
   }
 
-  // 유료 주제(신년운세 월별 상세): 이 회원이 이 사람·이 해 상품을 샀는지 확인 (2026-11-14)
+  // 유료 주제(신년운세 한 해 흐름·월별 상세, 2026-11-15 처음부터 유료): 이 회원이 이 사람·이 해 상품을 샀는지 확인
+  let paidRec = null;
   if (topic.paid) {
     const s = sessionOf(req);
-    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
-    if (!(await owned(purchaseKey(s.sub, topic.paid, body?.input, String(new Date().getFullYear() + 1))))) return json({ error: '먼저 복채로 열어 주세요.', reason: 'not_owned' }, 402);
+    if (!s) return json({ error: '신년운세는 복채로 볼 수 있어요. 로그인해 주세요.', login: true }, 401);
+    const pkey = purchaseKey(s.sub, topic.paid, body?.input, String(new Date().getFullYear() + 1));
+    if (!(await owned(pkey))) return json({ error: '먼저 복채로 열어 주세요.', reason: 'not_owned' }, 402);
+    paidRec = { uid: s.sub, id: newyearRecordId(pkey) };
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -117,7 +120,8 @@ ${topic.format || TOPIC_FORMAT}`;
 
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (t) => { try { controller.enqueue(encoder.encode(t)); } catch { /* 방문자가 연결을 끊음 */ } };
+      let full = '';
+      const send = (t) => { full += t; try { controller.enqueue(encoder.encode(t)); } catch { /* 방문자가 연결을 끊음 */ } };
       const abort = new AbortController();
       const timer = setTimeout(() => abort.abort(), TIME_LIMIT_MS);
       req.signal?.addEventListener('abort', () => abort.abort()); // 방문자가 창을 닫으면 생성도 멈춤
@@ -135,6 +139,16 @@ ${topic.format || TOPIC_FORMAT}`;
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') send(event.delta.text);
         }
         const final = await ms.finalMessage();
+        if (paidRec && final.stop_reason === 'end_turn' && full.trim()) {
+          // 마이페이지 '풀이 기록': 같은 사람·같은 해 신년운세 한 건에 부분(newyear·nym1·nym2)을 모음
+          const prev = (await getRecord(paidRec.uid, paidRec.id)) || {};
+          await putRecord(paidRec.uid, paidRec.id, {
+            kind: 'newyear',
+            year: chart.nextSeun.year,
+            at: prev.at || new Date().toISOString(),
+            parts: { ...(prev.parts || {}), [topic.id]: full },
+          }).catch(() => {});
+        }
         if (final.stop_reason === 'refusal') send('\n\n[[END:refusal]]');
         else if (final.stop_reason === 'max_tokens') send('\n\n[[END:truncated]]');
       } catch (error) {

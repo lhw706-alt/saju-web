@@ -1,16 +1,16 @@
 // 타로 풀이 (/api/tarot, 2026-11-14) — 뽑은 카드(1장 또는 3장, 정/역방향)·궁금한 분야·질문(선택)으로 천둥도사가 풀이를 스트리밍.
-// 질문은 풀이에만 쓰고 저장·로그하지 않음. 카드는 화면에서 고르지만 서버가 번호·중복·장수를 다시 확인.
+// 질문은 로그하지 않고, 다 받은 풀이와 함께 회원 본인의 '풀이 기록'(Blobs records)에만 저장. 카드는 화면에서 고르지만 서버가 번호·중복·장수를 다시 확인.
 import Anthropic from '@anthropic-ai/sdk';
 import { tarotById, TAROT_TOPICS, TAROT_SPREADS, TAROT_Q_MAX } from '../../src/lib/tarot.js';
 import { wishProblem } from '../../src/lib/wish.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 import { sessionOf } from '../lib/session.mjs';
 import { getStore } from '@netlify/blobs';
-import { spend, refundSpend } from '../lib/wallet.mjs';
+import { spend, refundSpend, putRecord, recordId } from '../lib/wallet.mjs';
 import { PRICES } from '../../src/lib/wallet.js';
 
-// 하루 2번 (2026-11-14 사용자 지시 — 풀이 비용). 회원은 회원번호, 비회원은 접속 IP 로 셈. KST 자정에 다시 2번.
-export const TAROT_DAILY = 2;
+// 2026-11-15 사용자 지시: 타로는 처음부터 유료(한 장 10천·세 장 15천, 회원만). 하루 횟수 제한은 없앴고,
+// 'tarot-count' 는 활동 배지(타로 본 횟수) 셈용으로만 남김.
 const kstDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const whoKey = (req, context) => {
   const s = sessionOf(req);
@@ -37,8 +37,7 @@ export default async (req, context) => {
   const countKey = `${whoKey(req, context)}/${kstDay()}`;
   // 오늘 남은 횟수 (화면이 카드를 섞기 전에 물어봄)
   if (req.method === 'GET') {
-    const used = Number(await store.get(countKey).catch(() => 0)) || 0;
-    return json({ left: Math.max(0, TAROT_DAILY - used), daily: TAROT_DAILY, prices: { three: PRICES.tarot3.credits, extra: PRICES.tarotExtra.credits } });
+    return json({ prices: { one: PRICES.tarot1.credits, three: PRICES.tarot3.credits } });
   }
   if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
   if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처예요.' }, 403);
@@ -58,26 +57,23 @@ export default async (req, context) => {
   if (q.length > TAROT_Q_MAX) return json({ error: `질문은 ${TAROT_Q_MAX}자까지 적을 수 있어요.` }, 400);
   if (q && q.length >= 2 && wishProblem(q)) return json({ error: wishProblem(q) }, 400);
 
-  // 복채 (2026-11-14): 세 장 = 15천(무료 횟수와 별개), 한 장은 하루 무료 2번 · 그 뒤로는 한 번에 10천. 복채는 회원만.
+  // 복채: 한 장 10천 · 세 장 15천, 회원만
   const used = Number(await store.get(countKey).catch(() => 0)) || 0;
   const three = spread.pos.length === 3;
-  const price = three ? PRICES.tarot3 : used >= TAROT_DAILY ? PRICES.tarotExtra : null;
+  const price = three ? PRICES.tarot3 : PRICES.tarot1;
   const member = sessionOf(req);
-  if (price && !member) return json({ error: three ? '세 장 펼침은 복채로 볼 수 있어요. 로그인해 주세요.' : `타로는 하루에 ${TAROT_DAILY}번까지 무료예요. 로그인하면 복채로 더 볼 수 있어요.`, reason: 'login', login: true, need: price.credits }, 401);
-  if (price && body?.pay !== true) return json({ error: `${price.label}에 복채 ${price.credits}천이 들어요.`, reason: 'pay_required', need: price.credits }, 402);
+  if (!member) return json({ error: '타로는 복채로 볼 수 있어요. 로그인해 주세요.', reason: 'login', login: true, need: price.credits }, 401);
+  if (body?.pay !== true) return json({ error: `${price.label}에 복채 ${price.credits}천이 들어요.`, reason: 'pay_required', need: price.credits }, 402);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
 
-  let paidRef = null;
-  if (price) {
-    paidRef = `tarot-${Date.now().toString(36)}`;
-    const sp = await spend(member.sub, price.credits, price.label, paidRef);
-    if (!sp.ok) return json({ error: '복채가 모자라요. 충전한 뒤 다시 시도해 주세요.', reason: 'no_credit', need: price.credits, balance: sp.balance }, 402);
-  }
-  if (!three || !price) await store.set(countKey, String(used + 1)); // 무료 한 장·추가 한 장은 하루 횟수로 셈 (세 장은 따로)
+  const paidRef = `tarot-${Date.now().toString(36)}`;
+  const sp = await spend(member.sub, price.credits, price.label, paidRef);
+  if (!sp.ok) return json({ error: '복채가 모자라요. 충전한 뒤 다시 시도해 주세요.', reason: 'no_credit', need: price.credits, balance: sp.balance }, 402);
+  await store.set(countKey, String(used + 1)); // 배지용 셈
 
   const lines = picked.map((p, i) => `- ${spread.pos[i]}: ${p.card.ko}(${p.card.en}) ${p.rev ? '역방향' : '정방향'} — 핵심어: ${p.rev ? p.card.rev : p.card.up}`).join('\n');
   const one = spread.pos.length === 1;
@@ -97,7 +93,9 @@ ${one ? '' : '## 세 장을 이어 보면\n(3~4문장. 흐름이 어떻게 이�
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      let full = '';
       const send = (t) => {
+        full += t;
         try {
           controller.enqueue(encoder.encode(t));
         } catch {
@@ -116,6 +114,19 @@ ${one ? '' : '## 세 장을 이어 보면\n(3~4문장. 흐름이 어떻게 이�
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') send(event.delta.text);
         }
         const final = await ms.finalMessage();
+        if (final.stop_reason === 'end_turn' && full.trim()) {
+          // 마이페이지 '풀이 기록'에 남김 (회원 본인만 봄, 탈퇴하면 지움)
+          await putRecord(member.sub, recordId(), {
+            kind: 'tarot',
+            at: new Date().toISOString(),
+            topic: topic.label,
+            spread: picked.length,
+            cards: picked.map((p, i) => ({ id: p.card.id, rev: p.rev, name: p.card.ko, pos: spread.pos[i] })),
+            question: q,
+            text: full,
+            credits: price.credits,
+          }).catch(() => {});
+        }
         if (final.stop_reason === 'refusal') {
           if (paidRef) await refundSpend(member.sub, price.credits, `${price.label} 돌려받음`, paidRef).catch(() => {});
           send('\n\n[[END:refusal]]');

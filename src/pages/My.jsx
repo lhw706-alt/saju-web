@@ -6,6 +6,7 @@ import { LogoSymbol } from '../components/Logo.jsx';
 import StepForm from '../components/StepForm.jsx';
 import CharmBook from './CharmBook.jsx';
 import BadgeBoard from '../components/BadgeBoard.jsx';
+import PaidRecords from '../components/PaidRecords.jsx';
 import ChartTable from '../components/ChartTable.jsx';
 import { GlossaryProvider, Help } from '../components/Glossary.jsx';
 import { computeSaju, ELEMENT_KO } from '../lib/saju.js';
@@ -19,6 +20,7 @@ import { presetMain, presetSub, birthDateText, genderText, ageText } from '../li
 const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
+  { id: 'records', label: '풀이 기록', to: '/my/records' },
   { id: 'badges', label: '내 배지', to: '/my/badges' },
   { id: 'wallet', label: '복채', to: '/wallet' },
   { id: 'charms', label: '부적 도감', to: '/my/charms' },
@@ -450,6 +452,12 @@ export default function My() {
         )}
       </div>
         </>
+      )}
+
+      {tab === 'records' && (
+      <div className="my-sec card">
+        <PaidRecords />
+      </div>
       )}
 
       {tab === 'badges' && (

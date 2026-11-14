@@ -84,7 +84,7 @@ export default function Wallet() {
   return (
     <section className="wallet">
       <h1 className="start-title">복채 충전</h1>
-      <p className="start-lead">복채로 타로 세 장 펼침, 신년운세 월별 상세 리포트 같은 깊은 풀이를 볼 수 있어요.</p>
+      <p className="start-lead">복채로 타로와 신년운세를 볼 수 있어요. 본 풀이는 마이페이지 '풀이 기록'에 남아요.</p>
 
       <div className="wallet-balance">
         <span>내 복채</span>

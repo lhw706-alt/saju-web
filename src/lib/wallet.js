@@ -8,10 +8,12 @@ export const PACKAGES = [
 ];
 export const packageById = (id) => PACKAGES.find((p) => p.id === id) || null;
 
-// 쓰는 곳 (2026-11-14): 타로 세 장 펼침 · 하루 무료 횟수 넘긴 타로 · 신년운세 월별 상세 리포트
+// 쓰는 곳 (2026-11-15 사용자 지시: 타로·신년운세는 처음부터 유료)
 export const PRICES = {
+  tarot1: { credits: 10, label: '타로 한 장' },
   tarot3: { credits: 15, label: '타로 세 장 펼침' },
-  tarotExtra: { credits: 10, label: '타로 한 번 더 (하루 무료 2번 이후)' },
-  newyearMonth: { credits: 40, label: '신년운세 월별 상세 리포트' },
+  newyearMonth: { credits: 40, label: '신년운세 (한 해 흐름 + 월별 상세)' },
 };
+// 메인 카드 배지에 적는 가격 (contents.js id → 글자)
+export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}천부터`, newyear: `${PRICES.newyearMonth.credits}천` };
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;

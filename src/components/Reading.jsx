@@ -3,6 +3,8 @@ import { TOPICS, isDayTopic, dayTopicDate, ymdOf } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
+import NewYearMonthly from './NewYearMonthly.jsx';
+import { PRICE_TAGS } from '../lib/wallet.js';
 
 const END_MESSAGES = {
   refusal: '이 주제는 풀이를 만들지 못했어요. 다른 주제를 골라 주세요.',
@@ -12,7 +14,7 @@ const END_MESSAGES = {
 };
 
 // member: 로그인 회원이면 풀이를 계정 내역에도 저장. 같은 정보·주제로 본 적 있으면 새로 만들지 않고 그대로 보여 줌
-export default function Reading({ input, initialTopic = null, member = false }) {
+export default function Reading({ input, initialTopic = null, member = false, openLogin }) {
   const [topic, setTopic] = useState(null);
   const [results, setResults] = useState({}); // 풀이 키(주제 id, 하루 운세는 '주제@날짜') -> { text, status, end, error }
   const [picked, setPicked] = useState(''); // 지정일 운세: 입력칸의 날짜
@@ -38,6 +40,7 @@ export default function Reading({ input, initialTopic = null, member = false }) 
   const keyOf = (id, date) => (isDayTopic(id) ? (date ? `${id}@${date}` : null) : id);
   const run = async (id, pickDate = null) => {
     setTopic(id);
+    if (id === 'newyear') return; // 신년운세는 유료(복채) — NewYearMonthly 가 결제 확인 뒤 직접 받음 (2026-11-15)
     const date = isDayTopic(id) ? dayTopicDate(id, pickDate) : null;
     if (isDayTopic(id) && !date) return; // 지정일 운세: 날짜부터 고르기
     const rk = keyOf(id, date);
@@ -130,6 +133,7 @@ export default function Reading({ input, initialTopic = null, member = false }) 
             onClick={() => run(t.id)}
           >
             <strong>{t.label}</strong>
+            {t.paid && <em className="topic-price">{PRICE_TAGS.newyear}</em>}
             <span>{t.desc}</span>
           </button>
         ))}
@@ -161,7 +165,9 @@ export default function Reading({ input, initialTopic = null, member = false }) 
         </form>
       )}
 
-      {cur && (
+      {topic === 'newyear' && <NewYearMonthly input={input} member={member} openLogin={openLogin} />}
+
+      {cur && topic !== 'newyear' && (
         <article className="reading-body card" aria-live="polite" aria-busy={cur.status === 'loading'}>
           {cur.status === 'loading' && !cur.text && (
             <div className="loading">

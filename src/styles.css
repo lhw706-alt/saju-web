@@ -1928,3 +1928,32 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .nym-month h3 { margin: 0 0 6px; font-family: var(--title); font-size: 18px; font-weight: 400; color: var(--primary); }
 .nym-month p { font-size: 15px; line-height: 1.8; }
 @media (max-width: 559px) { .nym-btn { width: 100%; } }
+
+/* 복채 유료 표시 (2026-11-15: 타로·신년운세 처음부터 유료) */
+.content-badge.is-paid { background: rgba(255, 255, 255, 0.07); color: var(--primary); }
+.topic-price { display: inline-block; margin-left: 6px; font-style: normal; font-size: 13px; font-weight: 500; color: var(--primary); }
+.ny-price { margin: 4px 0 0; font-size: 15px; color: var(--primary); }
+.nym.is-open { margin-top: 8px; border-top: 0; padding-top: 4px; }
+.nym-title { margin: 18px 0 8px; font-family: var(--title); font-size: 21px; font-weight: 400; color: var(--primary); }
+.nym.is-open > p, .nym.is-open > .md p { font-size: 15px; line-height: 1.8; }
+
+/* 마이페이지 풀이 기록 (2026-11-15) */
+.rec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.rec-head h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.rec-head a { font-size: 14px; color: var(--text-2); }
+.rec-list { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.rec-item { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.rec-row { display: flex; width: 100%; align-items: center; gap: 12px; padding: 14px 2px; background: none; border: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.rec-kind { flex: none; min-width: 52px; font-size: 13px; color: var(--primary); }
+.rec-main { flex: 1; min-width: 0; }
+.rec-title { display: block; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-sub { display: block; margin-top: 2px; font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.rec-arrow { flex: none; font-size: 13px; color: rgba(194, 196, 200, 0.8); transition: transform 0.2s; }
+.rec-item.on .rec-arrow { transform: rotate(180deg); }
+.rec-body { padding: 0 2px 18px; }
+.rec-body h3 { margin: 16px 0 6px; font-family: var(--title); font-size: 17px; font-weight: 400; color: var(--primary); }
+.rec-body p { font-size: 15px; line-height: 1.8; }
+.rec-q { margin: 0 0 4px; font-size: 14px; color: var(--text-2); }
+.rec-cards { margin: 0; font-size: 14px; color: var(--text-2); }
+.rec-del { margin-top: 14px; padding: 0; background: none; border: 0; font: inherit; font-size: 14px; color: rgba(194, 196, 200, 0.8); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.rec-empty { margin: 18px 0 4px; font-size: 15px; line-height: 1.7; color: var(--text-2); }

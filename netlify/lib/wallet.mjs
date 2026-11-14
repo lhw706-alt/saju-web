@@ -40,3 +40,22 @@ export function purchaseKey(uid, item, input, extra = '') {
 }
 export const owned = async (key) => Boolean(await purchases().get(key).catch(() => null));
 export const markOwned = (key, info) => purchases().setJSON(key, { ...info, at: new Date().toISOString() });
+
+// 유료 풀이 기록 (2026-11-15 사용자 지시 — 마이페이지 '풀이 기록'). Blobs 'records', 키 = u/회원번호/기록id.
+// 타로는 볼 때마다 한 건(id = 시간 역순), 신년운세는 산 상품 한 건(id = ny-사람·해 해시)에 한 해 흐름·월별 글을 모음. 회원 탈퇴하면 지움.
+const records = () => getStore({ name: 'records', consistency: 'strong' });
+export const recordId = () => `${(9e15 - Date.now()).toString(36)}-${Math.random().toString(36).slice(2, 6)}`; // 최신이 먼저 나열되게
+export const putRecord = (uid, id, rec) => records().setJSON(`u/${uid}/${id}`, rec);
+export const getRecord = (uid, id) => records().get(`u/${uid}/${id}`, { type: 'json' }).catch(() => null);
+export async function listRecords(uid, limit = 50) {
+  const { blobs } = await records().list({ prefix: `u/${uid}/` });
+  const out = await Promise.all(blobs.map(async (b) => ({ id: b.key.split('/').pop(), ...((await records().get(b.key, { type: 'json' }).catch(() => null)) || {}) })));
+  return out.filter((r) => r.kind).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, limit);
+}
+export const deleteRecord = (uid, id) => records().delete(`u/${uid}/${id}`);
+export async function deleteAllRecords(uid) {
+  const { blobs } = await records().list({ prefix: `u/${uid}/` });
+  await Promise.all(blobs.map((b) => records().delete(b.key)));
+}
+// 신년운세 기록 id — 산 상품 키의 해시 부분을 그대로 씀 (같은 사람·같은 해면 같은 기록)
+export const newyearRecordId = (pkey) => `ny-${pkey.split('/').pop()}`;

@@ -32,7 +32,7 @@ import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/l
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
 import { PACKAGES, packageById, PRICES } from '../../src/lib/wallet.js';
-import { walletOf, credit, spend, purchaseKey, owned, markOwned } from '../lib/wallet.mjs';
+import { walletOf, credit, spend, purchaseKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -702,6 +702,21 @@ export default async (req, context) => {
   // POST /api/pay/order {pkg}  → 주문 만들기 { orderId, amount, orderName, customerKey } — Blobs 'orders'(키 = 주문번호, 5년 보관)
   // POST /api/pay/confirm {paymentKey, orderId, amount} → 금액 확인 후 토스 승인 API → 복채 적립 (같은 주문은 한 번만)
   // POST /api/wallet/owned {item, input} · /api/wallet/buy {item, input} → 신년운세 월별 상세처럼 사람·해마다 한 번 사는 상품
+  // ── 유료 풀이 기록 (2026-11-15) ── GET /api/records → { records } · DELETE /api/records {id} (회원, 마이페이지 '풀이 기록')
+  if (path === '/api/records') {
+    const s = secret ? verify(cookies(req)[SESSION], secret) : null;
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
+    if (req.method === 'GET') return json({ records: await listRecords(s.sub) });
+    if (req.method === 'DELETE') {
+      const id = String((await readJson())?.id || '');
+      if (!/^[a-z0-9_-]{4,60}$/i.test(id)) return json({ error: '잘못된 요청이에요.' }, 400);
+      await deleteRecord(s.sub, id);
+      return json({ ok: true });
+    }
+    return json({ error: '잘못된 요청이에요.' }, 405);
+  }
+
   if (path === '/api/wallet' || path.startsWith('/api/pay/') || path.startsWith('/api/wallet/')) {
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
     const payOn = Boolean(process.env.TOSS_SECRET_KEY);
@@ -1050,6 +1065,7 @@ export default async (req, context) => {
       const pur = getStore({ name: 'purchases', consistency: 'strong' });
       const { blobs: pk } = await pur.list({ prefix: `u/${s.sub}/` });
       await Promise.all(pk.map((b) => pur.delete(b.key)));
+      await deleteAllRecords(s.sub).catch(() => {}); // 유료 풀이 기록
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });
@@ -1175,4 +1191,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records'] };
