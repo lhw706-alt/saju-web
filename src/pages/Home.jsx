@@ -74,7 +74,7 @@ export default function Home() {
         </h1>
         <p className="lead">
           생년월일시만 넣으면 사주 여덟 글자를 바로 계산하고,
-          <br /> 천둥도사가 근거와 함께 쉽게 풀어 드려요.
+          <br className="br-desk" /> 천둥도사가 근거와 함께 쉽게 풀어 드려요.
         </p>
         <div className="hero-mascot">
           <Suspense fallback={<MascotStill />}>

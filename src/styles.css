@@ -1867,3 +1867,22 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .poll-opts:not(.is-voted) button::after { content: '›'; grid-column: 2; grid-row: 1; font-size: 20px; line-height: 1; color: rgba(255, 255, 255, 0.35); }
 @media (max-width: 400px) { .poll-opts { grid-template-columns: 1fr; } }
 .poll-opts.is-voted { margin-bottom: 0; } .poll-opts li:last-child { border-bottom: 0; } .poll { padding-bottom: 0; } .poll-foot { margin-bottom: 14px; }
+
+/* 모바일 최적화 2차 (2026-11-14) */
+@media (max-width: 559px) {
+  .br-desk { display: none; } /* 메인 설명: 강제 줄바꿈 없이 자연스럽게 */
+  .lucky-page { padding-top: 16px; }
+  /* 카드 속 만세력(마이페이지): 안쪽 여백 줄여 좁은 화면에서 머리글이 상자에 붙지 않게 */
+  .my-chart .chart { padding: 12px 6px; }
+  .my-sec { padding-left: 16px; padding-right: 16px; }
+  /* 떠 있는 부적이 맨 아래 버튼을 덜 가리게 조금 작게 */
+  .fortune-fab__charm { width: 36px; height: 49px; }
+  /* 누르기 쉬운 크기 (최소 44px) */
+  .poll-opts button { min-height: 52px; }
+  .wish-cats button, .tarot-opts button { min-height: 40px; }
+}
+@media (max-width: 380px) {
+  .chart-row { grid-template-columns: 58px repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .term.chart-col-btn { font-size: 13px; }
+  .tarot-title, .nm-title, .wish-title { font-size: 23px; }
+}
