@@ -278,13 +278,13 @@ function Skeleton() {
 // member: 로그인 회원이면 풀이를 계정 내역에도 저장하고, 전에 본 풀이를 서버에서 찾아 씀
 // 평생 사주는 2026-11-15 사용자 지시로 처음부터 유료(50금전) — 산 회원만 LifeReportBody 를 봄
 export default function LifeReport({ chart, input, member = false, openLogin }) {
-  // 천둥도사 로딩 (2026-11-15 사용자 지시로 되살림): 입력을 막 마치고 들어오면 한 번, 결제하고 열면 첫 내용이 보일 때까지
-  const [intro, setIntro] = useState(peekFresh);
+  // 천둥도사 로딩 (2026-11-15 사용자 지시): 유료라서 들어올 때(결제 카드 앞)는 안 나오고, 금전을 내고 열 때 한 번만 — 첫 내용이 보일 때까지.
+  // 이미 산 사람이 막 입력을 마치고 들어오면 풀이를 받는 동안 한 번.
+  const [fresh] = useState(peekFresh);
   const [bought, setBought] = useState(false);
   useEffect(() => clearFresh(), []);
   return (
     <>
-    {intro && <DosaLoader ready onDone={() => setIntro(false)} />}
     <PaidGate
       onBought={() => setBought(true)}
       item="life"
@@ -295,7 +295,7 @@ export default function LifeReport({ chart, input, member = false, openLogin }) 
       desc={`${chart.dayMaster.ko}${ELEMENT_KO[chart.dayMaster.element]} 일간으로 태어난 내 사주를, 천둥도사가 처음부터 끝까지 한 편의 리포트로 풀어 드려요.`}
       points={['한눈에 보는 내 사주 요약', '타고난 성향과 기질', '재물·직업·연애·건강', '10년마다 바뀌는 대운 흐름 그래프']}
     >
-      <LifeReportBody chart={chart} input={input} member={member} loader={bought} />
+      <LifeReportBody chart={chart} input={input} member={member} loader={bought || fresh} />
     </PaidGate>
     </>
   );

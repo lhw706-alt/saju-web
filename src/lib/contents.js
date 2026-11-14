@@ -18,7 +18,7 @@ export const GROUPS = [
 export const CONTENTS = [
   { id: 'free', group: 'saju', title: '무료 사주', desc: '내 사주의 핵심만 가볍게, 무료로', glyph: '福', el: 'wood', status: 'live', topic: 'free' },
   { id: 'life', group: 'saju', title: '평생 사주', desc: '타고난 성향부터 10년마다 바뀌는 대운까지', glyph: '命', el: 'earth', status: 'live', topic: 'overall' },
-  { id: 'newyear', group: 'saju', title: `${NEXT_YEAR} 신년운세`, desc: '한 해의 흐름과 계절마다 운', glyph: '新', el: 'fire', status: 'live', topic: 'newyear', path: '/newyear' },
+  { id: 'newyear', group: 'saju', title: `${NEXT_YEAR} 신년운세`, desc: '한 해의 흐름과 계절마다 운', glyph: '新', el: 'fire', status: 'live', topic: 'newyear', path: '/newyear', bubble: '지금 가장 인기' },
   { id: 'tojeong', group: 'saju', title: '토정비결', desc: '144괘로 보는 한 해와 달마다 운', glyph: '卦', el: 'earth', status: 'soon' },
 
   { id: 'today', group: 'fortune', title: '오늘의 운세', desc: '오늘 일진과 내 원국이 만나는 하루', glyph: '今', el: 'wood', status: 'live', topic: 'today' },

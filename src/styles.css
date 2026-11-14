@@ -2333,3 +2333,12 @@ button.wish-float { font: inherit; font-size: 13px; text-align: left; cursor: po
 .rec-group[aria-selected="true"] b { color: var(--primary); }
 .wish-float { gap: 10px; }
 .wish-float .wish-float-offer { padding-right: 8px; border-right: 1px solid rgba(255, 255, 255, 0.22); }
+
+/* 메인 카드 말풍선 (2026-11-15 사용자 지시: 신년운세에 '인기' 툴팁) */
+.content-grid li.has-bubble { position: relative; }
+.card-bubble { position: absolute; z-index: 2; top: -14px; right: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px 6px 7px; border-radius: 999px; background: linear-gradient(135deg, #E8513F, #F08A3C); color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 6px 16px rgba(232, 81, 63, 0.35); pointer-events: none; animation: bubble-bob 2.4s ease-in-out infinite; }
+.card-bubble b { padding: 1px 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.22); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.card-bubble::after { content: ''; position: absolute; bottom: -5px; right: 26px; width: 10px; height: 10px; background: #EE7E3D; transform: rotate(45deg); border-radius: 2px; }
+@keyframes bubble-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (max-width: 559px) { .card-bubble { top: -12px; right: 10px; font-size: 12px; padding: 5px 9px 5px 6px; } .card-bubble b { font-size: 10px; } }
+@media (prefers-reduced-motion: reduce) { .card-bubble { animation: none; } }

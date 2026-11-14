@@ -10,7 +10,7 @@ import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import Markdown from './Markdown.jsx';
 import { announceBalance, PriceTag } from './BokchaLink.jsx';
 import { DosaLoader } from './LifeReport.jsx';
-import { peekFresh, clearFresh } from '../lib/storage.js';
+import { clearFresh } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { askConfirm, showAlert } from './ConfirmHost.jsx';
 
@@ -34,7 +34,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   // 천둥도사 로딩 (2026-11-15 사용자 지시): 입력을 막 마치고 들어왔을 때, 그리고 결제·열기 뒤 실제 풀이가 보일 때까지
-  const [loader, setLoader] = useState(() => peekFresh());
+  const [loader, setLoader] = useState(false); // 결제 카드 앞에서는 안 나옴 — load() 가 켬
   const [loaderKey, setLoaderKey] = useState(0);
   useEffect(() => clearFresh(), []);
 
@@ -103,7 +103,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
   const loading = PARTS.some((id) => parts[id]?.status === 'loading');
   const failed = PARTS.map((id) => parts[id]).find((p) => p?.status === 'error' || (p?.status === 'done' && p.end && p.end !== 'refusal'));
 
-  const ready = state.owned === false || (parts.newyear?.text || '').replace(/```json[\s\S]*?```/g, '').trim().length > 60 || months.length > 0 || Boolean(failed);
+  const ready = (parts.newyear?.text || '').replace(/```json[\s\S]*?```/g, '').trim().length > 60 || months.length > 0 || Boolean(failed);
   const loaderEl = loader ? <DosaLoader key={loaderKey} ready={ready} maxMs={50000} onDone={() => setLoader(false)} /> : null;
 
   if (!open)

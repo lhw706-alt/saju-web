@@ -12,6 +12,7 @@ import Select from '../components/Select.jsx';
 import { PriceTag, CoinIcon, announceBalance } from '../components/BokchaLink.jsx';
 import { WISH_OFFERS, WISH_OFFER_MAX, fmtCredits } from '../lib/wallet.js';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
+import { createPortal } from 'react-dom';
 
 // 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -489,7 +490,7 @@ export default function Wish() {
       )}
 
       {/* 작성 창 (휴대폰에선 아래쪽 시트 — 모바일 모달 규칙 그대로) */}
-      {compose && (
+      {compose && createPortal(
         <div className="contact-overlay" onMouseDown={(e) => e.target === e.currentTarget && setCompose(false)}>
           <form className="contact wish-compose" role="dialog" aria-modal="true" aria-labelledby="wish-compose-title" ref={panel} onSubmit={submit}>
             <div className="contact-head">
@@ -574,10 +575,10 @@ export default function Wish() {
             </button>
           </form>
         </div>
-      )}
+      , document.body)}
 
       {/* 하늘로 올라가는 연출 */}
-      {launch && (
+      {launch && createPortal(
         <div className="wish-launch" role="dialog" aria-modal="true" aria-labelledby="wish-launch-title">
           <div className="wish-launch-stars" aria-hidden="true">
             {Array.from({ length: 18 }, (_, i) => (
@@ -608,7 +609,7 @@ export default function Wish() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </article>
   );
 }

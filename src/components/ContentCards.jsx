@@ -30,7 +30,14 @@ export default function ContentCards({ onOpen }) {
             {CONTENTS.filter((c) => c.group === g.id)
               .sort((a, b) => (a.status === 'live' ? 0 : 1) - (b.status === 'live' ? 0 : 1)) // 쓸 수 있는 콘텐츠를 준비중보다 앞에 (2026-11-14 사용자 지시, 같은 상태끼리는 contents.js 순서)
               .map((c) => (
-              <li key={c.id}>
+              <li key={c.id} className={c.bubble ? 'has-bubble' : undefined}>
+                {/* 카드 위 말풍선 (contents.js bubble, 2026-11-15 사용자 지시: 신년운세 강조) */}
+                {c.bubble && c.status === 'live' && (
+                  <span className="card-bubble" aria-hidden="true">
+                    <b>HOT</b>
+                    {c.bubble}
+                  </span>
+                )}
                 <button type="button" className={`content-card el-${c.el}${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
                   <span className="content-text">
                     {c.status === 'live' && PRICE_COIN[c.id] ? (
