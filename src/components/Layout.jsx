@@ -182,6 +182,13 @@ export default function Layout() {
               {g.label}
             </Link>
           ))}
+          {/* 별마루 (2026-11-15 사용자 지시: GNB 진입, 조금 특별하게 — 반짝이는 별 + 금빛 글자) */}
+          <Link to="/byeolmaru" className={`nav-bm${pathname === '/byeolmaru' ? ' on' : ''}`} aria-label="별마루 — 밤하늘 마당에 들어가기">
+            <svg className="nav-bm-star" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 1.5l2.2 7.3 7.3 2.2-7.3 2.2L12 22.5l-2.2-9.3L2.5 11l7.3-2.2z" fill="currentColor" />
+            </svg>
+            <span>별마루</span>
+          </Link>
         </nav>
         {/* 복채(복주머니) + 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         <div className="header-actions">
