@@ -17,6 +17,7 @@ import { loadPresets, removePreset, saveInput, savePartner, savePartnerName } fr
 import { copyText, displayLink } from '../lib/share.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
+import SavedPresets from '../components/SavedPresets.jsx';
 
 // 마이페이지 탭 (주소 /my, /my/saju, /my/charms, /my/support). 풀이 내역 탭은 2026-11-13 사용자 지시로 뺌 (풀이 기억하기 기능은 유지). 세로로 길어지지 않게 기능별로 나눔 (2026-11-13)
 const MY_TABS = [
@@ -431,27 +432,8 @@ export default function My() {
         <h2 className="my-sec-title">
           저장된 사주 정보 <small>이 브라우저에 최근 5명까지 기억해요</small>
         </h2>
-        {presets.length === 0 ? (
-          <p className="my-sec-note">아직 저장된 정보가 없어요. 사주를 보면 자동으로 기억해요.</p>
-        ) : (
-          <ul className="saved-list">
-            {presets.map((x) => (
-              <li key={presetMain(x) + presetSub(x)} className="saved-item">
-                <div className="saved-load is-static">
-                  <span className="saved-text">
-                    <b>{presetMain(x)}</b>
-                    <span>{presetSub(x)}</span>
-                  </span>
-                </div>
-                <button type="button" className="saved-del" aria-label={`${presetMain(x)} 지우기`} onClick={() => setPresets(removePreset(x))}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* 입력 화면 불러오기와 같은 카드 UI — 카드나 연필을 누르면 수정·삭제 (2026-11-15 사용자 지시) */}
+        <SavedPresets key={presets.length} mine={null} manage />
       </div>
         </>
       )}

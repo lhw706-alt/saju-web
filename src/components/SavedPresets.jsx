@@ -139,14 +139,15 @@ function EditPanel({ value, isMine, onSave, onDelete, onCancel }) {
 }
 
 // mine: 계정에 등록한 내 사주 정보(없으면 null), onPick: 그 정보로 바로 결과
-export default function SavedPresets({ mine: mineProp, onPick }) {
+// manage: 마이페이지용 — 카드를 누르면 수정 칸이 열리고, 제목·안내만 바뀜(입력 화면과 같은 카드 UI, 2026-11-15)
+export default function SavedPresets({ mine: mineProp, onPick, manage = false, title, note }) {
   const [presets, setPresets] = useState(loadPresets);
   const [mine, setMine] = useState(mineProp);
   useEffect(() => setMine(mineProp), [mineProp]); // 로그인 정보가 늦게 오면 맞춰 줌
   const [editing, setEditing] = useState(null); // 'mine' | 카드 key
   const others = mine ? presets.filter((x) => keyOf(x) !== keyOf(mine)) : presets;
   const cards = [...(mine ? [{ ...mine, _mine: true }] : []), ...others];
-  if (!cards.length) return null;
+  if (!cards.length) return manage ? <p className="my-sec-note">아직 저장된 정보가 없어요. 사주를 보면 자동으로 기억해요.</p> : null;
   const cur = editing === 'mine' ? mine : others.find((x) => keyOf(x) === editing);
 
   const saveEdit = async (data) => {
@@ -169,16 +170,18 @@ export default function SavedPresets({ mine: mineProp, onPick }) {
 
   return (
     <div className="saved">
-      <div className="saved-head">
-        <h2 className="saved-title">입력했던 정보를 불러올 수 있어요</h2>
-        <p className="saved-note">입력을 마치면 최근 5명까지 자동으로 기억해요</p>
-      </div>
+      {!manage && (
+        <div className="saved-head">
+          <h2 className="saved-title">{title || '입력했던 정보를 불러올 수 있어요'}</h2>
+          <p className="saved-note">{note || '입력을 마치면 최근 5명까지 자동으로 기억해요'}</p>
+        </div>
+      )}
       <ul className="saved-grid">
         {cards.map((x) => {
           const k = x._mine ? 'mine' : keyOf(x);
           return (
             <li key={k} className={`saved-card${x._mine ? ' is-mine' : ''}${editing === k ? ' is-editing' : ''}`}>
-              <button type="button" className="saved-card-main" onClick={() => onPick(x)} aria-label={`${presetMain(x)} ${presetSub(x)} 정보로 보기`}>
+              <button type="button" className="saved-card-main" onClick={() => (manage ? setEditing(editing === k ? null : k) : onPick(x))} aria-label={manage ? `${presetMain(x)} 정보 수정` : `${presetMain(x)} ${presetSub(x)} 정보로 보기`}>
                 {x._mine && <span className="saved-card-badge">내 정보</span>}
                 <b>{dateLine(x)}</b>
                 <span>{timeLine(x)}</span>
@@ -191,9 +194,11 @@ export default function SavedPresets({ mine: mineProp, onPick }) {
         })}
       </ul>
       {cur && <EditPanel key={editing} value={cur} isMine={editing === 'mine'} onSave={saveEdit} onDelete={del} onCancel={() => setEditing(null)} />}
-      <p className="saved-or">
-        <span>또는 새로 입력해요</span>
-      </p>
+      {!manage && (
+        <p className="saved-or">
+          <span>또는 새로 입력해요</span>
+        </p>
+      )}
     </div>
   );
 }

@@ -63,6 +63,9 @@ export default function FreeReport({ chart, input, member, image }) {
   const sorted = [...ELEMENTS].sort((a, b) => chart.elements[b] - chart.elements[a]);
   const strong = sorted[0];
   const missing = ELEMENTS.filter((e) => chart.elements[e] === 0);
+  const pillars = ['year', 'month', 'day', 'hour'].map((k) => chart.pillars[k]).filter(Boolean);
+  const yang = pillars.reduce((n, p) => n + (p.stemYang ? 1 : 0) + (p.branchYang ? 1 : 0), 0);
+  const total = pillars.length * 2;
   const { data, body } = parse(st.text);
   const go = (topic, path) => {
     trackEvent('content_click', { content: topic, from: 'free_saju' });
@@ -96,6 +99,25 @@ export default function FreeReport({ chart, input, member, image }) {
           <li>
             <span>비어 있는 기운</span>
             <b>{missing.length ? missing.map((e) => `${PLAIN[e]}(${ELEMENT_HANJA[e]})`).join('·') : '없어요'}</b>
+          </li>
+          <li>
+            <span>
+              태어난 날(일주) <Help term="일주" />
+            </span>
+            <b>
+              {chart.pillars.day.stem}
+              {chart.pillars.day.branch} 일주
+            </b>
+          </li>
+          <li>
+            <span>띠</span>
+            <b>{chart.animal}띠</b>
+          </li>
+          <li>
+            <span>음양</span>
+            <b>
+              양 {yang} · 음 {total - yang}
+            </b>
           </li>
           {data?.color && (
             <li>

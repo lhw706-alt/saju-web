@@ -112,7 +112,6 @@ export default function Result() {
     const dm = chart.dayMaster;
     return (
       <GlossaryProvider>
-        <FreshLoader />
         <section className="ny-result">
           <p className="eyebrow">{NEXT_YEAR} 신년운세</p>
           <h1 className="ny-result-title">

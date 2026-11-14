@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
 import { GlossaryProvider } from './Glossary.jsx';
+import Select from './Select.jsx';
 import { splitSections } from './NewYearMonthly.jsx';
 import { fmtCredits } from '../lib/wallet.js';
 import { trackEvent } from '../lib/analytics.js';
@@ -21,7 +22,7 @@ const JSON_BLOCK = /```json[\s\S]*?```/g;
 function sectionsOf(r) {
   const p = r.parts || {};
   if (r.kind === 'life') return ['life1', 'life2', 'life3', 'life4'].flatMap((id) => splitSections((p[id] || '').replace(JSON_BLOCK, '')));
-  return [...(p.newyear ? [{ title: '한 해의 흐름', text: p.newyear.replace(JSON_BLOCK, '') }] : []), ...splitSections(p.nym1), ...splitSections(p.nym2)];
+  return [...(p.newyear ? [{ title: '한 해의 흐름', text: p.newyear.replace(JSON_BLOCK, '') }] : []), ...splitSections(p.nym1), ...splitSections(p.nym2)].map((m) => ({ ...m, title: m.title.replace(/^\d{4}년\s*/, '') }));
 }
 
 function Body({ r }) {
@@ -62,7 +63,7 @@ export default function PaidRecords() {
   const [err, setErr] = useState('');
   const [open, setOpen] = useState(null);
   const [who, setWho] = useState('all');
-  const [onlyMe, setOnlyMe] = useState(false); // 나만 보기 토글
+  const [kind, setKind] = useState('all'); // 콘텐츠 거르기 (드롭다운)
 
   useEffect(() => {
     fetch('/api/records', { cache: 'no-store' })
@@ -81,13 +82,20 @@ export default function PaidRecords() {
   const groups = useMemo(() => {
     const count = {};
     (list || []).forEach((r) => (count[labelOf(r)] = (count[labelOf(r)] || 0) + 1));
-    const order = (a) => (a === '나' ? 0 : a === '타로' ? 3 : a === '이전 기록' ? 2 : 1);
-    const names = Object.keys(count).sort((a, b) => order(a) - order(b) || a.localeCompare(b));
-    return [{ id: 'all', label: '전체', n: (list || []).length }, ...names.map((k) => ({ id: k, label: k, n: count[k] }))];
+    delete count['타로']; // 타로는 사람 구분이 없어 콘텐츠 드롭다운으로
+    const order = (a) => (a === '이전 기록' ? 2 : 1);
+    const names = Object.keys(count).filter((k) => k !== '나').sort((a, b) => order(a) - order(b) || a.localeCompare(b));
+    // '나만 보기'는 카드로 (2026-11-15 사용자 지시) — 늘 두 번째 자리
+    return [{ id: 'all', label: '전체', n: (list || []).length }, { id: '나', label: '나만 보기', n: count['나'] || 0 }, ...names.map((k) => ({ id: k, label: k, n: count[k] }))];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
-  const active = onlyMe ? '나' : who;
-  const shown = (list || []).filter((r) => active === 'all' || labelOf(r) === active);
+  const KINDS = [
+    { value: 'all', label: '전체' },
+    { value: 'newyear', label: '신년운세' },
+    { value: 'life', label: '평생 사주' },
+    { value: 'tarot', label: '타로' },
+  ];
+  const shown = (list || []).filter((r) => (who === 'all' || labelOf(r) === who) && (kind === 'all' || r.kind === kind));
 
   const remove = async (id) => {
     if (!(await askConfirm({ title: '이 풀이 기록을 지울까요?', message: '지운 기록은 되돌릴 수 없어요.', ok: '지우기' }))) return;
@@ -103,16 +111,12 @@ export default function PaidRecords() {
         <div className="rec-head">
           <h2 id="rec-title">풀이 기록</h2>
           {list && list.length > 0 && (
-            <label className="toggle">
-              <input type="checkbox" role="switch" checked={onlyMe} onChange={(e) => setOnlyMe(e.target.checked)} />
-              <span className="toggle-track" aria-hidden="true">
-                <span className="toggle-knob" />
-              </span>
-              <span className="toggle-label">나만 보기</span>
-            </label>
+            <span className="sel-compact">
+              <Select ariaLabel="콘텐츠별로 거르기" value={kind} onChange={setKind} options={KINDS} />
+            </span>
           )}
         </div>
-        {list && list.length > 0 && groups.length > 2 && !onlyMe && (
+        {list && list.length > 0 && (
           <div className="rec-groups" role="tablist" aria-label="누구의 풀이인지">
             {groups.map((g) => (
               <button key={g.id} type="button" role="tab" aria-selected={who === g.id} className={`rec-group${who === g.id ? ' on' : ''}`} onClick={() => setWho(g.id)}>
@@ -122,7 +126,7 @@ export default function PaidRecords() {
             ))}
           </div>
         )}
-        {onlyMe && shown.length === 0 && <p className="rec-empty">내 사주 정보로 본 풀이가 아직 없어요. 마이페이지 ‘내 사주 정보’에 등록한 정보로 보면 여기에 모여요.</p>}
+        {list && list.length > 0 && shown.length === 0 && <p className="rec-empty">{who === '나' ? '내 사주 정보로 본 풀이가 아직 없어요. 마이페이지 ‘내 사주 정보’에 등록한 정보로 보면 여기에 모여요.' : '이 조건에 맞는 기록이 없어요.'}</p>}
         {err && <p className="rec-empty">{err}</p>}
         {!err && list === null && <p className="rec-empty">불러오는 중이에요…</p>}
         {list && list.length === 0 && (
@@ -157,9 +161,11 @@ export default function PaidRecords() {
                   {on && (
                     <>
                       <Body r={r} />
-                      <button type="button" className="rec-del" onClick={() => remove(r.id)}>
-                        이 기록 지우기
-                      </button>
+                      <div className="rec-del-row">
+                        <button type="button" className="rec-del" onClick={() => remove(r.id)}>
+                          이 기록 지우기
+                        </button>
+                      </div>
                     </>
                   )}
                 </li>

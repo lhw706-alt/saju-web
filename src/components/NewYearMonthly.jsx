@@ -9,6 +9,8 @@ import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import Markdown from './Markdown.jsx';
 import { announceBalance, PriceTag } from './BokchaLink.jsx';
+import { DosaLoader } from './LifeReport.jsx';
+import { peekFresh, clearFresh } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { askConfirm, showAlert } from './ConfirmHost.jsx';
 
@@ -31,9 +33,15 @@ export default function NewYearMonthly({ input, member, openLogin }) {
   const [parts, setParts] = useState({});
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
+  // 천둥도사 로딩 (2026-11-15 사용자 지시): 입력을 막 마치고 들어왔을 때, 그리고 결제·열기 뒤 실제 풀이가 보일 때까지
+  const [loader, setLoader] = useState(() => peekFresh());
+  const [loaderKey, setLoaderKey] = useState(0);
+  useEffect(() => clearFresh(), []);
 
   const load = async () => {
     setOpen(true);
+    setLoader(true);
+    setLoaderKey((k) => k + 1);
     const memo = localParts(input, KEY);
     const have = Object.fromEntries(PARTS.filter((id) => memo[id]).map((id) => [id, { text: memo[id], status: 'done' }]));
     let todo = PARTS.filter((id) => !have[id]);
@@ -89,14 +97,19 @@ export default function NewYearMonthly({ input, member, openLogin }) {
     load();
   };
 
-  const months = useMemo(() => ['nym1', 'nym2'].flatMap((id) => splitSections(parts[id]?.text)), [parts]);
+  // 월 제목은 연도 없이 '1월'처럼 (2026-11-15 사용자 지시)
+  const months = useMemo(() => ['nym1', 'nym2'].flatMap((id) => splitSections(parts[id]?.text)).map((m) => ({ ...m, title: m.title.replace(/^\d{4}년\s*/, '') })), [parts]);
   const year = parts.newyear;
   const loading = PARTS.some((id) => parts[id]?.status === 'loading');
   const failed = PARTS.map((id) => parts[id]).find((p) => p?.status === 'error' || (p?.status === 'done' && p.end && p.end !== 'refusal'));
 
+  const ready = state.owned === false || (parts.newyear?.text || '').replace(/```json[\s\S]*?```/g, '').trim().length > 60 || months.length > 0 || Boolean(failed);
+  const loaderEl = loader ? <DosaLoader key={loaderKey} ready={ready} maxMs={50000} onDone={() => setLoader(false)} /> : null;
+
   if (!open)
     return (
       <section className="nym" aria-labelledby="nym-title">
+        {loaderEl}
         <div className="nym-head">
           <div>
             <p className="nym-kicker">{fmtCredits(price)}</p>
@@ -117,6 +130,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
 
   return (
     <section className="nym is-open" aria-labelledby="nym-title" aria-live="polite">
+      {loaderEl}
       <h2 id="nym-title" className="nym-title">{NEXT_YEAR}년 한 해의 흐름</h2>
       {year?.text ? <Markdown text={year.text} /> : year?.status === 'loading' && <p className="hint">천둥도사가 한 해의 흐름을 읽고 있어요…</p>}
       <h2 className="nym-title">{NEXT_YEAR}년 월별 상세</h2>

@@ -75,7 +75,8 @@ const LOADER_STEPS = [
 ];
 const WAIT_LINES = ['하늘의 기운이 모여드는구나…', '여덟 글자를 하나씩 짚어 보는 중이란다…', '기운의 흐름을 따라가 보자꾸나…', '거의 다 보이는구나…'];
 const LOADER_ART = LOADER_STEPS.map((s) => dosaFaceSvg(s.face, 'life'));
-export function DosaLoader({ onDone, ready = true }) {
+// maxMs: 아무리 늦어도 이 시간이 지나면 닫음. 기다리는 동안 진행 막대(점점 차오름)·경과 초를 보여 줘 멈춘 게 아님을 알림 (2026-11-15)
+export function DosaLoader({ onDone, ready = true, maxMs = 25000 }) {
   const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const k = reduce ? 0.4 : 1;
   const [step, setStep] = useState(0);
@@ -83,13 +84,20 @@ export function DosaLoader({ onDone, ready = true }) {
   const [out, setOut] = useState(false);
   const [minDone, setMinDone] = useState(false);
   const [capped, setCapped] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
   useEffect(() => {
-    const timers = [setTimeout(() => setStep((s) => Math.max(s, 1)), 900 * k), setTimeout(() => setMinDone(true), 1500 * k), setTimeout(() => setCapped(true), 25000)];
+    const timers = [setTimeout(() => setStep((s) => Math.max(s, 1)), 900 * k), setTimeout(() => setMinDone(true), 1500 * k), setTimeout(() => setCapped(true), maxMs)];
+    const t0 = Date.now();
+    const tick = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 250);
+    timers.push(tick);
     const iv = setInterval(() => setWait((w) => Math.min(w + 1, WAIT_LINES.length - 1)), 2600);
     return () => {
-      timers.forEach(clearTimeout);
+      timers.forEach((t) => {
+        clearTimeout(t);
+        clearInterval(t);
+      });
       clearInterval(iv);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,6 +122,14 @@ export function DosaLoader({ onDone, ready = true }) {
         <i />
         <i />
       </span>
+      {elapsed >= 2 && (
+        <div className="dosa-progress" aria-hidden="true">
+          <span className="dosa-progress-bar">
+            <i style={{ width: `${finish ? 100 : Math.min(94, Math.round(100 * (1 - Math.exp(-elapsed / 14))))}%` }} />
+          </span>
+          <span className="dosa-progress-txt">{finish ? '다 됐어요' : `천둥도사가 풀이를 쓰는 중 · ${elapsed}초`}</span>
+        </div>
+      )}
     </div>
   );
 }

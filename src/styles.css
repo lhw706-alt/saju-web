@@ -2319,3 +2319,17 @@ button.wish-float { font: inherit; font-size: 13px; text-align: left; cursor: po
 .free-tag { flex: none; padding: 2px 8px; border-radius: 6px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-style: normal; font-size: 13px; font-weight: 500; }
 .free-next-row .price-tag { display: inline-flex; flex: none; gap: 4px; }
 .free-next-row .price-tag b { font-size: 15px; }
+
+/* 2026-11-15 11차 */
+.dosa-progress { display: grid; justify-items: center; gap: 8px; width: min(260px, 70vw); margin-top: 18px; }
+.dosa-progress-bar { position: relative; width: 100%; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.dosa-progress-bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, #C9A75A, #F2D894); transition: width 0.4s ease; }
+.dosa-progress-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent); transform: translateX(-100%); animation: dosa-shine 1.4s ease-in-out infinite; }
+@keyframes dosa-shine { to { transform: translateX(100%); } }
+.dosa-progress-txt { font-size: 13px; color: rgba(220, 222, 228, 0.75); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .dosa-progress-bar::after { animation: none; } }
+.rec-del-row { display: flex; justify-content: flex-end; margin: 22px 0 6px; }
+.rec-del-row .rec-del { margin: 0; }
+.rec-group[aria-selected="true"] b { color: var(--primary); }
+.wish-float { gap: 10px; }
+.wish-float .wish-float-offer { padding-right: 8px; border-right: 1px solid rgba(255, 255, 255, 0.22); }
