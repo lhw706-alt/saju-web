@@ -118,13 +118,13 @@ export default function Terms() {
 
       <h2>제12조 (문의와 분쟁 해결)</h2>
       <p>
-        서비스 이용에 관한 문의는 '문의하기'나 이메일(damoapick@gmail.com)로 할 수 있어요. 서비스와 이용자 사이의 분쟁은 서로 성실히 협의해
+        서비스 이용에 관한 문의는 '문의하기'나 전화({SITE.business.phone})·이메일({SITE.business.email})로 할 수 있어요. 서비스와 이용자 사이의 분쟁은 서로 성실히 협의해
         해결하고, 협의가 안 되면 대한민국 법령에 따라 민사소송법상 관할 법원에서 해결해요.
       </p>
 
       <h2>제13조 (서비스 제공자)</h2>
       <p>
-        {SITE.name}은(는) {SITE.business.name}(대표 {SITE.business.ceo})이(가) 운영해요. 사업자등록번호 {SITE.business.regNo} · 이메일 {SITE.business.email} · 호스팅 제공자 {SITE.business.hosting}
+        {SITE.name}은(는) {SITE.business.name}(대표 {SITE.business.ceo})이(가) 운영해요. 사업자등록번호 {SITE.business.regNo} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email} · 호스팅 제공자 {SITE.business.hosting}
       </p>
 
       <h2>부칙</h2>

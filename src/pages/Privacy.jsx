@@ -156,7 +156,7 @@ export default function Privacy() {
       <p>
         회원은 마이페이지에서 내 정보를 보고 고치거나 지울 수 있어요(닉네임 변경, 내 사주 정보 수정·삭제, 보낸 궁합 초대 지우기,
         회원 탈퇴). '회원 탈퇴'를 누르면 위 1번의 회원 정보와 회원 기능으로 저장한 정보가 바로 지워져요. 문의 내용은 마이페이지의
-        내 문의내역에서 볼 수 있어요. 그 밖의 열람·정정·삭제·처리 정지는 '문의하기'나 아래 이메일로 요청하면 지체 없이 처리해요.
+        내 문의내역에서 볼 수 있어요. 그 밖의 열람·정정·삭제·처리 정지는 '문의하기'나 아래 전화·이메일로 요청하면 지체 없이 처리해요.
       </p>
 
       <h2>8. 파기 절차와 방법</h2>
@@ -175,7 +175,7 @@ export default function Privacy() {
 
       <h2>10. 개인정보 보호 책임자</h2>
       <p>
-        운영자: {SITE.business.name}(대표 {SITE.business.ceo}, 사업자등록번호 {SITE.business.regNo}) · 개인정보 보호 책임자: {SITE.business.name} · 이메일 {SITE.business.email}
+        운영자: {SITE.business.name}(대표 {SITE.business.ceo}, 사업자등록번호 {SITE.business.regNo}) · 개인정보 보호 책임자: {SITE.business.name} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email}
       </p>
       <p>개인정보 침해에 대한 신고나 상담은 개인정보침해신고센터(privacy.kisa.or.kr, 국번 없이 118), 개인정보분쟁조정위원회(www.kopico.go.kr, 1833-6972)에도 할 수 있어요.</p>
 
