@@ -6,8 +6,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TALISMANS, talismanById, talismanSvg, talismanPng, todayTalisman } from '../brand/talisman.js';
-import GlassIcon from '../components/GlassIcon.jsx';
-import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
@@ -73,7 +71,7 @@ export default function Talisman() {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
       trackEvent('talisman_save', { kind: t.id, mode });
-      setMsg(mode === 'wallpaper' ? '배경화면 이미지를 저장했어요. 휴대폰 설정에서 배경화면으로 골라 보세요.' : '부적 이미지를 저장했어요.');
+      setMsg('부적 이미지를 저장했어요.');
     } catch {
       setMsg('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     }
@@ -141,42 +139,39 @@ export default function Talisman() {
               <p className="nm-kicker">부적을 펼쳤어요</p>
               <h1 className="tal-name">{t.name}</h1>
               <p className="tal-cheer">{t.cheer}</p>
-              <dl className="tal-info card">
+              {/* 2026-11-14 사용자 지시: 'AI 티' 빼고 담백하게 — 상자 대신 얇은 줄로 나눈 글, 버튼은 이미지 저장(주)·보관함에 담기(보조) 두 개만 */}
+              <dl className="tal-info">
                 <div>
                   <dt>부적의 의미</dt>
                   <dd>{t.meaning}</dd>
                 </div>
                 <div>
-                  <dt>이런 분께 추천해요</dt>
+                  <dt>이런 분께</dt>
                   <dd>{t.forWho}</dd>
                 </div>
                 <div>
-                  <dt>이렇게 써 보세요</dt>
+                  <dt>쓰는 법</dt>
                   <dd>{t.use}</dd>
                 </div>
               </dl>
-              <p className="tal-note">전통 부적의 모양과 상징을 빌려 사주천문이 만든 창작 부적이에요. 재물·건강·합격 같은 결과를 약속하지는 않아요.</p>
               <div className="tal-actions">
-                <LiquidMetalButton label={saving === 'wallpaper' ? '만드는 중…' : '배경화면으로 저장'} width={220} onClick={() => download('wallpaper')} disabled={!!saving} />
-                <div className="tal-actions-row">
-                  <button type="button" className="btn-ghost" onClick={() => download('card')} disabled={!!saving}>
-                    {saving === 'card' ? '만드는 중…' : '이미지 저장'}
-                  </button>
-                  <button type="button" className="btn-ghost" onClick={keep}>
-                    보관함에 담기
-                  </button>
-                </div>
+                <button type="button" className="btn-primary" onClick={() => download('card')} disabled={!!saving}>
+                  {saving ? '만드는 중…' : '이미지 저장'}
+                </button>
+                <button type="button" className="tal-keep" onClick={keep}>
+                  보관함에 담기
+                </button>
                 {msg && (
                   <p className="tal-msg" role="status">
                     {msg}
                   </p>
                 )}
               </div>
-              <Link to={`/wish?write=1&cat=${TALISMAN_TO_WISH[t.id] || 'etc'}`} className="tal-wish card" onClick={() => trackEvent('talisman_to_wish', { kind: t.id })}>
-                <GlassIcon kind="sky" size="sm" />
-                <span>
-                  <b>이 행운을 소원으로도 띄워 볼까요?</b>
-                  <small>이 부적과 같은 종류의 소원 쓰기 창이 바로 열려요</small>
+              <p className="tal-note">전통 부적의 모양과 상징을 빌려 사주천문이 만든 창작 부적이에요. 재물·건강·합격 같은 결과를 약속하지는 않아요.</p>
+              <Link to={`/wish?write=1&cat=${TALISMAN_TO_WISH[t.id] || 'etc'}`} className="tal-wish" onClick={() => trackEvent('talisman_to_wish', { kind: t.id })}>
+                <span>이 행운이 이루어지도록 소원으로 작성해 볼까요?</span>
+                <span className="tal-wish-go" aria-hidden="true">
+                  소원 쓰기
                 </span>
               </Link>
               <ResultShare

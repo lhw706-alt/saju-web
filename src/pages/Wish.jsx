@@ -163,13 +163,13 @@ export default function Wish() {
   const submit = async (e) => {
     e.preventDefault();
     const t = text.trim();
-    const bad = wishProblem(t) || (!wcat ? '소원의 종류를 골라 주세요.' : null);
+    const bad = wishProblem(t); // 종류 고르기는 사용자 지시로 뺌 — 부적에서 넘어오면 그 종류, 아니면 기타
     if (bad) return setErr(bad);
     setSending(true);
-    const r = await api('/api/wish', { method: 'POST', body: JSON.stringify({ text: t, cat: wcat, pub }) });
+    const r = await api('/api/wish', { method: 'POST', body: JSON.stringify({ text: t, cat: wcat || 'etc', pub }) });
     setSending(false);
     if (!r.ok) return setErr(r.data.error || '소원을 띄우지 못했어요. 잠시 뒤 다시 시도해 주세요.');
-    trackEvent('wish_post', { cat: wcat, pub: pub ? 'yes' : 'no' });
+    trackEvent('wish_post', { cat: wcat || 'etc', pub: pub ? 'yes' : 'no' });
     setCompose(false);
     setLaunch(r.data.wish);
     setText('');
@@ -221,7 +221,6 @@ export default function Wish() {
           <span className="wish-moon" />
           {floating.map((w, i) => (
             <span key={w.id} className={`wish-float f${i}`}>
-              <LineIcon kind={w.cat === 'etc' ? 'luck' : w.cat} size={13} />
               {w.text.length > 18 ? `${w.text.slice(0, 18)}…` : w.text}
             </span>
           ))}
@@ -421,15 +420,6 @@ export default function Wish() {
             <p className="wish-count">
               실명·연락처 같은 개인정보는 적지 말아 주세요 <span>{text.trim().length}/{WISH_MAX}</span>
             </p>
-            <p className="nm-label">어떤 소원인가요?</p>
-            <div className="nm-rels wish-cat-pick" role="radiogroup" aria-label="소원 종류">
-              {WISH_CATS.map((c) => (
-                <button key={c.id} type="button" role="radio" aria-checked={wcat === c.id} className={wcat === c.id ? 'on' : ''} onClick={() => setWcat(c.id)}>
-                  <GlassIcon kind={c.id === 'etc' ? 'luck' : c.id} size="sm" />
-                  <span>{c.label}</span>
-                </button>
-              ))}
-            </div>
             <p className="nm-label">소원 공개 설정</p>
             <div className="wish-vis" role="radiogroup" aria-label="공개 설정">
               <button type="button" role="radio" aria-checked={pub} className={pub ? 'on' : ''} onClick={() => setPub(true)}>
@@ -462,10 +452,6 @@ export default function Wish() {
             ))}
           </div>
           <div className="wish-launch-card" aria-hidden="true">
-            <span className="wish-cat">
-              <LineIcon kind={launch.cat === 'etc' ? 'luck' : launch.cat} size={15} />
-              {wishCat(launch.cat)?.label}
-            </span>
             <p>“{launch.text}”</p>
           </div>
           <div className="wish-launch-msg">

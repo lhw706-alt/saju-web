@@ -1655,3 +1655,25 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
   .wish-moon { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .wish-float { animation: none; } }
+
+/* 소원 도착 문구: 끝 상태를 분명히(불투명 1) — 시작 상태만 있는 fortune-fade 로는 투명한 채로 멈춰 화면이 어둡게 남았음 (2026-11-14) */
+@keyframes wish-appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.wish-launch-msg { animation: wish-appear 0.5s ease-out 1.9s forwards; }
+.wish-float { gap: 0; }
+@media (prefers-reduced-motion: reduce) { .wish-launch-msg { animation: wish-appear 0.01s forwards; } }
+
+/* 행운의 부적 결과 (2026-11-14 사용자 지시: 담백하게·시각적 계층) — 상자 없는 정의 목록, 주 버튼 하나 + 글자 버튼 하나, 소원 연결은 얇은 줄 한 줄 */
+.tal-info { width: min(100%, 520px); margin: 18px 0 0; padding: 0; border: 0; background: none; box-shadow: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.tal-info div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding: 14px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.tal-info dt { font-size: 13px; font-weight: 500; color: var(--text-2); padding-top: 2px; }
+.tal-info dd { margin: 0; font-size: 15px; line-height: 1.7; color: var(--text); }
+.tal-actions { display: grid; justify-items: center; gap: 6px; margin-top: 22px; }
+.tal-actions .btn-primary { width: min(100%, 300px); margin: 0; }
+.tal-keep { height: 40px; padding: 0 12px; border: 0; background: none; color: var(--text-2); font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); cursor: pointer; }
+.tal-keep:hover { color: var(--text); }
+.tal-note { margin-top: 10px; }
+.tal-wish { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: min(100%, 520px); margin-top: 22px; padding: 16px 2px; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0; background: none; box-shadow: none; color: var(--text); font-size: 15px; text-decoration: none; text-align: left; }
+.tal-wish-go { flex: none; color: var(--primary); font-size: 14px; font-weight: 500; }
+.tal-wish-go::after { content: ' →'; }
+@media (max-width: 400px) { .tal-info div { grid-template-columns: 1fr; gap: 4px; } }
+.tal .tal-actions .btn-primary { display: block; width: 260px; max-width: 100%; }
