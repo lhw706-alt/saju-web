@@ -268,16 +268,7 @@ export default function Wish() {
       {tab === 'feed' && (
         <section className="wish-feed">
           <div className="wish-filters">
-            <div className="wish-sort" role="group" aria-label="정렬"> {/* 정렬: 글자 탭 (종류 칩보다 한 단계 위) */}
-              {[
-                ['new', '최신 소원'],
-                ['hot', '인기 소원'],
-              ].map(([k, l]) => (
-                <button key={k} type="button" className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
-                  {l}
-                </button>
-              ))}
-            </div>
+            {/* 종류 칩 (위) + 소원 수·정렬 토글 (아래, 작게) — 위 탭과 같은 모양이 겹치지 않게 (2026-11-14 사용자 지시) */}
             <div className="wish-cats" role="group" aria-label="종류">
               <button type="button" className={!cat ? 'on' : ''} aria-pressed={!cat} onClick={() => setCat('')}>
                 전체
@@ -289,13 +280,28 @@ export default function Wish() {
                 </button>
               ))}
             </div>
+            <div className="wish-listbar">
+              <span>{feed ? `소원 ${feed.length.toLocaleString('ko-KR')}개` : ''}</span>
+              <div className="wish-sort" role="group" aria-label="정렬">
+                {[
+                  ['new', '최신순'],
+                  ['hot', '인기순'],
+                ].map(([k, l]) => (
+                  <button key={k} type="button" className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           {feed === null ? (
             <p className="hint center">하늘을 올려다보는 중이에요…</p>
           ) : feed.length === 0 ? (
             <div className="wish-empty">
-              <GlassIcon kind="sky" />
-              <p>아직 하늘에 뜬 소원이 없어요. 첫 소원을 띄워 보세요.</p>
+              <p>
+                아직 하늘에 뜬 소원이 없어요.
+                <br />첫 소원을 띄워 보세요.
+              </p>
             </div>
           ) : (
             <ul className="wish-list">
