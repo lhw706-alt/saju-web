@@ -143,6 +143,10 @@ const PROPS = {
     star(28, 28, 2.4),
     `<g transform="translate(104 62)"><path d="M0 12 L14 0 L28 12 V30 H0Z" fill="${PAPER}"/><path d="M-3 13 L14 -2 L31 13" fill="none" stroke="${RED}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><rect x="10" y="18" width="8" height="12" rx="1.5" fill="#b08a3a"/></g>`,
   ],
+  byeolmaru: () => [
+    `<path d="M30 18a10 10 0 1 0 8 16a8 8 0 1 1 -8 -16z" fill="#f3d98e" opacity=".95"/>` + star(132, 22, 2.6) + star(118, 40, 1.6) + star(144, 46, 2),
+    `<g transform="translate(104 72)"><path d="M0 14 V-2" stroke="${GOLD_D}" stroke-width="1.4"/><rect x="-6" y="-13" width="12" height="12" rx="3" fill="#ffcf8a"/><rect x="-6" y="-13" width="12" height="3" rx="1.5" fill="#c8352b"/><circle cy="-6" r="2.2" fill="#fff6d8"/></g>`,
+  ],
   wish: () => [
     `<path d="M20 20 L44 36" stroke="${GOLD}" stroke-width="2" stroke-linecap="round" opacity=".6"/>` + star(46, 38, 5) + star(128, 26, 2.4) + star(138, 50, 1.8),
     `<g transform="translate(103 70)"><path d="M0 16 V0" stroke="${GOLD_D}" stroke-width="1.4"/><path d="M-7 -12 h14 l-2 12 h-10z" fill="#ffcf6b" opacity=".95"/><circle cy="-6" r="2.5" fill="#fff6d8"/></g>`,
@@ -196,6 +200,7 @@ const FACES = {
   number: { eyes: 'star', mouth: 'open' },
   blessing: { eyes: 'happy', mouth: 'cat' },
   moving: { eyes: 'dot', mouth: 'smile', brows: 'soft' },
+  byeolmaru: { eyes: 'closed', mouth: 'smile', brows: 'soft' },
   wish: { eyes: 'closed', mouth: 'smile', brows: 'soft' },
   charm: { eyes: 'smug', mouth: 'smirk', brows: 'firm' },
   sal: { eyes: 'dot', mouth: 'flat', brows: 'firm' },

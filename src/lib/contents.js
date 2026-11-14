@@ -30,6 +30,7 @@ export const CONTENTS = [
   { id: 'match', group: 'match', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
   { id: 'namematch', group: 'match', title: '이름 궁합', desc: '이름 두 개로 알아보는 우리 사이의 케미', glyph: '緣', el: 'wood', status: 'live', path: '/name-match' },
 
+  { id: 'byeolmaru', group: 'luck', title: '별마루', desc: '밤하늘 마당을 걸으며 별을 헤아리고 쉬어 가기', glyph: '星', el: 'water', status: 'live', path: '/byeolmaru' },
   { id: 'number', group: 'luck', title: '행운의 번호', desc: '천둥도사가 하루 한 번 뽑아 주는 6개의 숫자', glyph: '數', el: 'water', status: 'live', path: '/lucky' },
   { id: 'blessing', group: 'luck', title: '천생복덕운', desc: '타고난 복을 활용하는 방법', glyph: '福', el: 'earth', status: 'soon' },
   { id: 'moving', group: 'luck', title: '이사택일', desc: '한눈에 보는 이사하기 좋은 날', glyph: '移', el: 'wood', status: 'soon' },
