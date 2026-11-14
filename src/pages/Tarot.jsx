@@ -6,7 +6,6 @@ import { useOutletContext } from 'react-router-dom';
 import { TAROT, TAROT_TOPICS, TAROT_SPREADS, TAROT_Q_MAX, tarotById, tarotFaceSvg, TAROT_BACK } from '../lib/tarot.js';
 import { wishProblem } from '../lib/wish.js';
 import { streamTarot, END_MESSAGES } from '../lib/stream.js';
-import { guestCanView, markGuestView } from '../lib/history.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
 import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
@@ -33,7 +32,16 @@ const sectionsOf = (text) => {
 };
 
 export default function Tarot() {
-  const { auth, openLogin } = useOutletContext();
+  const { notify } = useOutletContext();
+  const [left, setLeft] = useState(null); // 오늘 남은 횟수 (서버 /api/tarot GET)
+  const loadLeft = () =>
+    fetch('/api/tarot', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setLeft(d.left))
+      .catch(() => {});
+  useEffect(() => {
+    loadLeft();
+  }, []);
   const [phase, setPhase] = useState('setup'); // setup | shuffle | pick | reveal
   const [topic, setTopic] = useState('today');
   const [count, setCount] = useState(1);
@@ -53,15 +61,10 @@ export default function Tarot() {
   const start = () => {
     const q = question.trim();
     if (q && wishProblem(q) && q.length >= 2) return setQErr(wishProblem(q));
-    if (!auth?.user) {
-      // 비회원: 사주와 같은 2번 제한(뽑을 때마다 한 번으로 셈)
-      const key = `tarot:${Date.now()}`;
-      if (!guestCanView(key)) {
-        trackEvent('guest_limit', { from: 'tarot' });
-        openLogin('천둥도사가 기운을 아끼는 중이에요. 로그인하면 타로를 계속 볼 수 있어요.');
-        return;
-      }
-      markGuestView(key);
+    if (left === 0) {
+      trackEvent('tarot_limit');
+      notify('타로는 하루에 2번까지 볼 수 있어요. 내일 다시 카드를 펼쳐 주세요.');
+      return;
     }
     trackEvent('tarot_start', { topic, count });
     setDeck(shuffle(TAROT.map((c) => ({ id: c.id, rev: Math.random() < 0.3 })))); // 30% 는 역방향
@@ -92,6 +95,7 @@ export default function Tarot() {
     try {
       const r = await streamTarot({ cards, spread: count, topic, question: question.trim(), signal: ctrl.current.signal, onText: (text) => setReading((x) => ({ ...x, text })) });
       setReading({ text: r.text, status: r.error ? 'error' : 'done', error: r.error || '', end: r.end });
+      loadLeft();
     } catch (e) {
       if (e.name !== 'AbortError') setReading((x) => ({ ...x, status: 'error', error: '네트워크 연결을 확인하고 다시 시도해 주세요.' }));
     }
@@ -180,9 +184,10 @@ export default function Tarot() {
               </div>
             </li>
           </ol>
-          <button type="button" className="btn-primary tarot-go" onClick={start}>
+          <button type="button" className="btn-primary tarot-go" onClick={start} disabled={left === 0}>
             카드 섞기
           </button>
+          <p className="tarot-left">{left === 0 ? '오늘은 두 번 모두 보셨어요. 내일 다시 카드를 펼쳐 주세요.' : '타로는 하루에 2번까지 볼 수 있어요.'}</p>
         </section>
       )}
 
@@ -194,7 +199,6 @@ export default function Tarot() {
           <h1 className="tarot-title">마음이 가는 카드를 {count}장 골라 주세요</h1>
           <p className="tarot-lead">
             {chosen.length} / {count}
-            {count === 3 && chosen.length < 3 ? ` · 다음은 ${spread.pos[chosen.length]}` : ''}
           </p>
           <ul className="tarot-spread">
             {deck.map((d, k) => (

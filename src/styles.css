@@ -1782,3 +1782,5 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .tarot-again { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; padding: 0 26px 0 14px; border: 1px solid rgba(232, 197, 111, 0.6); border-radius: 16px; background: linear-gradient(135deg, #2a1d63, #3b2a80); color: #f6e7c0; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.35); transition: transform 0.15s, border-color 0.2s; }
 .tarot-again:hover { border-color: #f6df9c; transform: translateY(-1px); }
 .tarot-again .tarot-count-ic { width: 44px; height: 40px; transform: scale(0.82); }
+
+.tarot-left { margin: 10px 0 0; font-size: 13px; color: var(--text-2); text-align: center; }

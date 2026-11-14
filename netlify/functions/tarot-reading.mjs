@@ -4,6 +4,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { tarotById, TAROT_TOPICS, TAROT_SPREADS, TAROT_Q_MAX } from '../../src/lib/tarot.js';
 import { wishProblem } from '../../src/lib/wish.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
+import { sessionOf } from '../lib/session.mjs';
+import { getStore } from '@netlify/blobs';
+
+// 하루 2번 (2026-11-14 사용자 지시 — 풀이 비용). 회원은 회원번호, 비회원은 접속 IP 로 셈. KST 자정에 다시 2번.
+export const TAROT_DAILY = 2;
+const kstDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+const whoKey = (req, context) => {
+  const s = sessionOf(req);
+  const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
+  return s ? `u/${s.sub}` : `ip/${ip}`;
+};
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
 const TIME_LIMIT_MS = 55_000;
@@ -20,6 +31,13 @@ const SYSTEM = `당신은 한국어로 타로 카드를 읽어 주는 '천둥도
 - 주어지지 않은 카드나 정보 지어내기.`;
 
 export default async (req, context) => {
+  const store = getStore({ name: 'tarot-count', consistency: 'strong' });
+  const countKey = `${whoKey(req, context)}/${kstDay()}`;
+  // 오늘 남은 횟수 (화면이 카드를 섞기 전에 물어봄)
+  if (req.method === 'GET') {
+    const used = Number(await store.get(countKey).catch(() => 0)) || 0;
+    return json({ left: Math.max(0, TAROT_DAILY - used), daily: TAROT_DAILY });
+  }
   if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
   if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처예요.' }, 403);
   let body;
@@ -38,10 +56,15 @@ export default async (req, context) => {
   if (q.length > TAROT_Q_MAX) return json({ error: `질문은 ${TAROT_Q_MAX}자까지 적을 수 있어요.` }, 400);
   if (q && q.length >= 2 && wishProblem(q)) return json({ error: wishProblem(q) }, 400);
 
+  const used = Number(await store.get(countKey).catch(() => 0)) || 0;
+  if (used >= TAROT_DAILY) return json({ error: `타로는 하루에 ${TAROT_DAILY}번까지 볼 수 있어요. 내일 다시 카드를 펼쳐 주세요.`, reason: 'daily_limit', left: 0 }, 429);
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
+
+  await store.set(countKey, String(used + 1)); // 풀이를 시작할 때 한 번으로 셈
 
   const lines = picked.map((p, i) => `- ${spread.pos[i]}: ${p.card.ko}(${p.card.en}) ${p.rev ? '역방향' : '정방향'} — 핵심어: ${p.rev ? p.card.rev : p.card.up}`).join('\n');
   const one = spread.pos.length === 1;
