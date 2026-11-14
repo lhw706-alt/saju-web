@@ -2604,3 +2604,12 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 @media (min-width: 560px) and (max-width: 720px) { .moon-gate { right: -4%; } }
 @media (prefers-reduced-motion: reduce) { .moon-gate { animation: none; } }
 @media (max-width: 559px) { .moon-gate { top: 1%; right: -2%; } .moon-gate-orb { width: 68px; height: 68px; } .moon-gate-label { margin-top: -4px; } .moon-gate-label span { display: none; } }
+/* 달 2차 (2026-11-15 사용자 지시: 더 크게, 천동이 영역 밖으로, 글자 테두리 없이, '들어가기' 대신 다른 말) */
+.moon-gate-label { padding: 0; border: 0; border-radius: 0; margin-top: 2px; gap: 5px; }
+.moon-gate-label b { font-size: 15px; }
+.moon-gate:hover .moon-gate-label b { text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(226, 194, 122, 0.6); }
+@media (min-width: 1000px) { .moon-gate { top: -2%; right: -46%; } .moon-gate-orb { width: 196px; height: 196px; } }
+@media (min-width: 760px) and (max-width: 999px) { .moon-gate { top: -2%; right: -24%; } .moon-gate-orb { width: 156px; height: 156px; } }
+@media (min-width: 560px) and (max-width: 759px) { .moon-gate { top: 0; right: -6%; } .moon-gate-orb { width: 120px; height: 120px; } }
+@media (max-width: 559px) { .moon-gate { top: -1%; right: -3%; } .moon-gate-orb { width: 82px; height: 82px; } .moon-gate-label { margin-top: -2px; font-size: 12px; } .moon-gate-label span { display: inline; } .moon-gate-label b { font-size: 13px; } }
+@media (max-width: 559px) { .moon-gate-label span { display: none; } }

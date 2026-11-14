@@ -193,14 +193,14 @@ export default function MoonGate({ onEnter }) {
   };
 
   return (
-    <button ref={btnRef} type="button" className={`moon-gate${going ? ' is-going' : ''}`} onClick={enter} aria-label={`별마루 들어가기${sky ? ` — 오늘 밤 ${moonName(sky.lunarDay)}` : ''}`}>
+    <button ref={btnRef} type="button" className={`moon-gate${going ? ' is-going' : ''}`} onClick={enter} aria-label={`달빛 따라 별마루로${sky ? ` — 오늘 밤 ${moonName(sky.lunarDay)}` : ''}`}>
       <span className="moon-gate-orb">
         <canvas ref={canvasRef} aria-hidden="true" />
         <span className="moon-gate-ring" aria-hidden="true" />
       </span>
       <span className="moon-gate-label">
-        <b>별마루</b>
-        <span>들어가기</span>
+        <span>달빛 따라</span>
+        <b>별마루로</b>
       </span>
     </button>
   );
