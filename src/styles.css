@@ -1624,3 +1624,34 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wish-listbar .wish-sort button + button::before { content: '·'; margin: 0 8px; color: rgba(220, 222, 228, 0.35); }
 .wish-listbar .wish-sort button.on { box-shadow: none; color: var(--text); font-weight: 500; }
 .wish-empty p { margin: 0; line-height: 1.7; }
+
+/* 소원빌기 3차 (2026-11-14 사용자 지시): 띄운 소원은 화면 위쪽 하늘 띠에 둥둥, 천동이는 그 아래 */
+.wish-hero { padding-top: 0; }
+.wish-sky { position: relative; inset: auto; width: 100%; height: 200px; margin-bottom: -28px; z-index: 2; }
+.wish-stage { margin-top: 0; }
+.wish-moon { top: 6px; right: 4%; width: 40px; height: 40px; }
+.wish-float { z-index: 3; max-width: 31%; padding: 9px 14px; font-size: 13px; border-radius: 999px; animation: wish-bob 6s ease-in-out infinite; }
+.wish-float.f0 { left: 2%; right: auto; top: 22px; }
+.wish-float.f1 { left: 34%; right: auto; top: 70px; animation-delay: -1.5s; }
+.wish-float.f2 { left: auto; right: 13%; top: 26px; animation-delay: -3s; }
+.wish-float.f3 { left: 8%; right: auto; top: 128px; animation-delay: -4.5s; }
+.wish-float.f4 { left: auto; right: 3%; top: 118px; animation-delay: -2.2s; }
+.wish-float.f5 { left: 42%; right: auto; top: 150px; animation-delay: -5s; }
+.wish-lantern.l0 { left: 12%; top: 40px; }
+.wish-lantern.l1 { left: 36%; top: 96px; }
+.wish-lantern.l2 { left: 62%; top: 30px; }
+.wish-lantern.l3 { left: 82%; top: 120px; }
+@keyframes wish-bob { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-12px) rotate(1deg); } }
+@media (max-width: 559px) {
+  .wish-sky { height: 210px; margin-bottom: -36px; }
+  .wish-float, .wish-lantern { display: inline-flex; }
+  .wish-lantern { display: block; }
+  .wish-float { max-width: 56%; font-size: 12px; padding: 8px 12px; }
+  .wish-float.f0 { left: 2%; top: 14px; }
+  .wish-float.f1 { left: auto; right: 2%; top: 62px; }
+  .wish-float.f2 { left: 6%; right: auto; top: 112px; }
+  .wish-float.f3 { left: auto; right: 6%; top: 160px; }
+  .wish-float.f4, .wish-float.f5 { display: none; }
+  .wish-moon { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .wish-float { animation: none; } }

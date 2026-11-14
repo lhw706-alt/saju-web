@@ -210,7 +210,7 @@ export default function Wish() {
     loadFeed();
   };
 
-  const floating = (feed || []).slice(0, 4); // 천동이 양옆에만
+  const floating = (feed || []).slice(0, 6); // 화면 위쪽 하늘 띠에 둥둥 (휴대폰은 4개)
   const mineList = (mine || []).filter((w) => (mineFilter === 'all' ? true : mineFilter === 'done' ? w.done : !w.done));
   const doneCount = (mine || []).filter((w) => w.done).length;
 
