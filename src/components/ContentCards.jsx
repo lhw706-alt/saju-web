@@ -25,7 +25,9 @@ export default function ContentCards({ onOpen }) {
         <section key={g.id} id={g.id} className="content-group">
           <h2 className="section-title">{g.label}</h2>
           <ul className="content-grid">
-            {CONTENTS.filter((c) => c.group === g.id).map((c) => (
+            {CONTENTS.filter((c) => c.group === g.id)
+              .sort((a, b) => (a.status === 'live' ? 0 : 1) - (b.status === 'live' ? 0 : 1)) // 쓸 수 있는 콘텐츠를 준비중보다 앞에 (2026-11-14 사용자 지시, 같은 상태끼리는 contents.js 순서)
+              .map((c) => (
               <li key={c.id}>
                 <button type="button" className={`content-card el-${c.el}${c.status === 'live' ? '' : ' is-soon'}`} onClick={() => click(c)}>
                   <span className="content-text">
