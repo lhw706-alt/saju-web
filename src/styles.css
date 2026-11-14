@@ -1578,3 +1578,32 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .wish-moon { top: 18px; right: 8%; }
 @media (max-width: 559px) { .wish-hero { padding-top: 4px; } .wish-float { max-width: 40%; } .wish-float.f0 { top: 40px; } .wish-float.f1 { top: 64px; } .wish-float.f2 { top: 250px; } .wish-float.f3 { top: 286px; } }
 @media (max-width: 559px) { .wish-float, .wish-lantern { display: none; } .wish-hero { padding-top: 14px; } .wish-stage { margin-top: 0; } } /* 휴대폰: 천동이를 가리지 않게 떠다니는 소원 카드는 숨김 */
+
+/* 소원빌기 2차 (2026-11-14 사용자 지시): 밤하늘이 페이지 전체를 덮고, 카드 대신 글자 계층, 칩 강도 낮춤 */
+body:has(.wish) { background: radial-gradient(90% 900px at 50% 0%, rgba(74, 82, 150, 0.45), transparent 70%), linear-gradient(180deg, #23274a 0%, #1c1f36 35%, #181a28 70%, #16171f 100%); background-color: #16171f; }
+body:has(.wish) .sky { display: none; } /* 다른 화면의 위쪽 하늘 띠(640px) 대신 소원빌기는 페이지 전체가 밤하늘 */
+body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 8% 12%, rgba(255, 244, 214, 0.85), transparent), radial-gradient(1px 1px at 22% 38%, rgba(255, 244, 214, 0.6), transparent), radial-gradient(1.5px 1.5px at 37% 8%, rgba(255, 244, 214, 0.8), transparent), radial-gradient(1px 1px at 55% 30%, rgba(255, 244, 214, 0.55), transparent), radial-gradient(1.5px 1.5px at 72% 16%, rgba(255, 244, 214, 0.85), transparent), radial-gradient(1px 1px at 88% 42%, rgba(255, 244, 214, 0.6), transparent), radial-gradient(1px 1px at 14% 66%, rgba(255, 244, 214, 0.5), transparent), radial-gradient(1.5px 1.5px at 64% 72%, rgba(255, 244, 214, 0.6), transparent), radial-gradient(1px 1px at 92% 84%, rgba(255, 244, 214, 0.5), transparent), radial-gradient(1px 1px at 40% 90%, rgba(255, 244, 214, 0.5), transparent); }
+.wish-hero { background: none; border: 0; border-radius: 0; padding-left: 0; padding-right: 0; overflow: visible; }
+.wish-sky { background-image: none; }
+.wish-stats { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 10px 0 14px; }
+.wish-stats div { display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 0 22px; }
+.wish-stats div + div { border-left: 1px solid rgba(255, 255, 255, 0.14); }
+.wish-stats dt { font-size: 13px; color: rgba(220, 222, 228, 0.72); }
+.wish-stats dd { margin: 0; font-size: 26px; font-weight: 600; line-height: 1.2; color: var(--primary); font-variant-numeric: tabular-nums; }
+.wish-stats li { display: none; }
+/* 정렬 = 글자 탭(위 단계), 종류 = 작은 칩(아래 단계) */
+.wish-filters { gap: 12px; }
+.wish-sort { gap: 18px; }
+.wish-sort button { height: auto; padding: 4px 0; border: 0; border-radius: 0; background: none; color: rgba(220, 222, 228, 0.6); font-size: 15px; font-weight: 500; }
+.wish-sort button.on { border: 0; background: none; color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary); }
+.wish-cats { gap: 6px; }
+.wish-cats button { height: 32px; padding: 0 12px; border-color: rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.03); color: rgba(220, 222, 228, 0.72); font-size: 13px; }
+.wish-cats button svg { color: rgba(220, 222, 228, 0.55); }
+.wish-cats button.on { border-color: rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.1); color: var(--text); font-weight: 500; }
+.wish-cats button.on svg { color: var(--primary); }
+/* 카드 안 버튼도 한 단계 낮춤 */
+.wish-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
+.wish-cheer { border-color: rgba(255, 255, 255, 0.14); color: rgba(220, 222, 228, 0.85); }
+.wish-cheer svg, .wish-cheer b { color: var(--primary); }
+.wish-cheer.on { background: rgba(226, 194, 122, 0.1); border-color: rgba(226, 194, 122, 0.35); }
+.wish-tabs { border-bottom-color: rgba(255, 255, 255, 0.1); }

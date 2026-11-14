@@ -94,7 +94,7 @@ export default function Wish() {
   const [params, setParams] = useSearchParams();
   const asked = useRef(false);
   useEffect(() => {
-    if (asked.current || !params.get('write') || !auth?.ready) return;
+    if (asked.current || !params.get('write') || !auth?.ready || (auth.user && mine === null)) return; // 회원이면 오늘 남은 수를 받은 뒤
     asked.current = true;
     const c = wishCat(params.get('cat'))?.id || '';
     setParams({}, { replace: true });
@@ -102,12 +102,16 @@ export default function Wish() {
       openLogin('부적에 담은 마음을 소원으로 띄우려면 로그인해 주세요.');
       return;
     }
+    if (left <= 0) {
+      notify(`소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.`);
+      return;
+    }
     setWcat(c);
     setErr('');
     setCompose(true);
     trackEvent('wish_compose', { from: 'talisman' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.ready, auth?.user]);
+  }, [auth?.ready, auth?.user, mine]);
 
   const loadFeed = useCallback(async () => {
     const q = new URLSearchParams({ sort, ...(cat ? { cat } : {}) });
@@ -138,6 +142,10 @@ export default function Wish() {
     if (!member) {
       trackEvent('wish_login');
       openLogin('소원은 천둥도사가 회원의 것만 하늘에 띄워 드려요. 로그인해 주세요.');
+      return;
+    }
+    if (left <= 0) {
+      notify(`소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.`);
       return;
     }
     setErr('');
@@ -228,18 +236,17 @@ export default function Wish() {
           <p className="nm-kicker">소원빌기</p>
           <h1 className="wish-title">오늘 당신의 소원은 무엇인가요?</h1>
           <p className="wish-lead">마음속에 담아 두었던 작은 바람을 하늘에 띄워 보세요. 다른 사람들의 작은 바람도 함께 만날 수 있어요.</p>
-          <ul className="wish-stats">
-            <li>
-              <b>{stats.total.toLocaleString('ko-KR')}</b>
-              <span>하늘에 뜬 소원</span>
-            </li>
-            <li>
-              <b>{stats.today.toLocaleString('ko-KR')}</b>
-              <span>오늘 빈 소원</span>
-            </li>
-          </ul>
+          <dl className="wish-stats">
+            <div>
+              <dt>하늘에 뜬 소원</dt>
+              <dd>{stats.total.toLocaleString('ko-KR')}</dd>
+            </div>
+            <div>
+              <dt>오늘 빈 소원</dt>
+              <dd>{stats.today.toLocaleString('ko-KR')}</dd>
+            </div>
+          </dl>
           <LiquidMetalButton label="내 소원 띄우기" width={200} onClick={openCompose} />
-          {member && <p className="wish-left">오늘 {left}개 더 빌 수 있어요</p>}
         </div>
       </section>
 
@@ -261,7 +268,7 @@ export default function Wish() {
       {tab === 'feed' && (
         <section className="wish-feed">
           <div className="wish-filters">
-            <div className="wish-sort" role="group" aria-label="정렬">
+            <div className="wish-sort" role="group" aria-label="정렬"> {/* 정렬: 글자 탭 (종류 칩보다 한 단계 위) */}
               {[
                 ['new', '최신 소원'],
                 ['hot', '인기 소원'],
@@ -436,7 +443,6 @@ export default function Wish() {
             <div className="nm-submit">
               <LiquidMetalButton type="submit" label={sending ? '띄우는 중…' : '하늘에 소원 띄우기'} width={220} disabled={sending || left <= 0} />
             </div>
-            <p className="wish-left">{left > 0 ? `오늘 ${left}개 더 빌 수 있어요` : `소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.`}</p>
           </form>
         </div>
       )}
