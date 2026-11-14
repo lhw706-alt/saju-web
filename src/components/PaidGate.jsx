@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { PRICES, fmtCredits } from '../lib/wallet.js';
 import { PriceTag, announceBalance } from './BokchaLink.jsx';
 import { trackEvent } from '../lib/analytics.js';
+import { askConfirm, showAlert } from './ConfirmHost.jsx';
 
 const post = (url, body) =>
   fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
 
-export default function PaidGate({ item, input, member, openLogin, title, desc, points = [], children }) {
+export default function PaidGate({ item, input, member, openLogin, title, desc, points = [], onBought, children }) {
   const navigate = useNavigate();
   const price = PRICES[item].credits;
   const [state, setState] = useState({ owned: member ? null : false, balance: 0 });
@@ -27,16 +28,17 @@ export default function PaidGate({ item, input, member, openLogin, title, desc, 
     if (!member) return openLogin?.(`${title}는 복채로 볼 수 있어요. 로그인해 주세요.`);
     if (state.balance < price) {
       trackEvent('paid_need_credit', { item });
-      if (window.confirm(`복채가 ${fmtCredits(price - state.balance)} 모자라요. 충전하러 갈까요? (지금 ${fmtCredits(state.balance)})`)) navigate('/wallet');
+      if (await askConfirm({ title: '복채가 조금 모자라요', message: `${title}에는 ${fmtCredits(price)}이 필요해요. 지금 ${fmtCredits(state.balance)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
       return;
     }
-    if (!window.confirm(`${title}에 ${fmtCredits(price)}을 쓸까요? (지금 ${fmtCredits(state.balance)})\n같은 사람의 ${title}는 다시 볼 때 금전이 들지 않아요.`)) return;
+    if (!(await askConfirm({ title: `${title}를 열까요?`, message: `${fmtCredits(price)}을 쓰면 바로 풀이가 시작돼요. 지금 ${fmtCredits(state.balance)} 있어요.`, note: `같은 사람의 ${title}는 다시 볼 때 금전이 들지 않아요.`, ok: `${fmtCredits(price)}으로 열기`, cancel: '취소' }))) return;
     setBusy(true);
     const r = await post('/api/wallet/buy', { item, input });
     setBusy(false);
-    if (!r.ok) return window.alert(r.data.error || '열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    if (!r.ok) return showAlert(r.data.error || '열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     trackEvent('paid_buy', { item });
     announceBalance(r.data.balance);
+    onBought?.();
     setState({ owned: true, balance: r.data.balance });
   };
 

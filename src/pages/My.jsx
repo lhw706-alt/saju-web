@@ -16,6 +16,7 @@ import { passwordOk } from '../lib/password.js';
 import { loadPresets, removePreset, saveInput, savePartner, savePartnerName } from '../lib/storage.js';
 import { copyText, displayLink } from '../lib/share.js';
 import { presetMain, presetSub, birthDateText, genderText, ageText } from '../lib/presetText.js';
+import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 
 // 마이페이지 탭 (주소 /my, /my/saju, /my/charms, /my/support). 풀이 내역 탭은 2026-11-13 사용자 지시로 뺌 (풀이 기억하기 기능은 유지). 세로로 길어지지 않게 기능별로 나눔 (2026-11-13)
 const MY_TABS = [
@@ -68,7 +69,7 @@ export default function My() {
     notify(ok ? '초대 링크를 복사했어요.' : '복사하지 못했어요.', ok ? 'positive' : 'negative');
   };
   const deleteInvite = async (it) => {
-    if (!window.confirm('이 궁합 초대를 지울까요? 링크도 더 이상 열리지 않아요.')) return;
+    if (!await askConfirm('이 궁합 초대를 지울까요? 링크도 더 이상 열리지 않아요.')) return;
     const r = await fetch(`/api/invite?token=${encodeURIComponent(it.token)}`, { method: 'DELETE' }).catch(() => null);
     if (r?.ok) setInvites((l) => l.filter((x) => x.token !== it.token));
   };
@@ -112,7 +113,7 @@ export default function My() {
     setBirthMsg('내 사주 정보를 저장했어요.');
   };
   const deleteBirth = async () => {
-    if (!window.confirm('저장된 내 사주 정보를 지울까요?')) return;
+    if (!await askConfirm('저장된 내 사주 정보를 지울까요?')) return;
     const r = await fetch('/api/auth/birth', { method: 'DELETE' }).catch(() => null);
     if (r?.ok) {
       setProfile((pf) => ({ ...(pf || auth.user), birth: null }));

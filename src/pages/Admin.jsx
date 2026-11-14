@@ -1,6 +1,7 @@
 // 관리자: 카카오 로그인 회원 목록 (/admin). 비밀번호 = Netlify 환경 변수 ADMIN_PASSWORD.
 // 비밀번호는 저장하지 않고 이 화면에 있는 동안만 메모리에 둠. 검색 노출 막음(Layout noindex, robots.txt).
 import { useState } from 'react';
+import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmt = (iso) => {
@@ -59,7 +60,7 @@ export default function Admin() {
   const lucky = data?.lucky || [];
   const [luckyMsg, setLuckyMsg] = useState('');
   const resetLucky = async (x) => {
-    if (!window.confirm(`${x.nick} 님의 오늘 행운의 번호를 지울까요? 지우면 오늘 다시 뽑을 수 있어요.`)) return;
+    if (!await askConfirm(`${x.nick} 님의 오늘 행운의 번호를 지울까요? 지우면 오늘 다시 뽑을 수 있어요.`)) return;
     const r = await fetch('/api/admin/lucky', {
       method: 'POST',
       headers: { authorization: `Bearer ${pw}`, 'content-type': 'application/json' },
@@ -81,7 +82,7 @@ export default function Admin() {
     const amount = Number(giveAmt[u.id] || 0);
     if (!Number.isInteger(amount) || amount < 1) return setGiveMsg('넣을 금전을 1 이상 숫자로 적어 주세요.');
     const name = u.displayNick || u.nick || u.id;
-    if (!window.confirm(`${name} 님에게 ${amount.toLocaleString('ko-KR')}금전을 넣을까요?`)) return;
+    if (!await askConfirm(`${name} 님에게 ${amount.toLocaleString('ko-KR')}금전을 넣을까요?`)) return;
     setGiving(u.id);
     const r = await fetch('/api/admin/credit', {
       method: 'POST',

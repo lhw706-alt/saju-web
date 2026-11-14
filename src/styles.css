@@ -2144,3 +2144,42 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .admin-credit-list .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
 .admin-credit-list .btn-primary.inline { margin: 0; height: 38px; }
 @media (max-width: 640px) { .admin-credit-list li { grid-template-columns: 1fr auto; } .admin-credit-list .contact-input { grid-column: span 1; } }
+
+/* 소원 현황 한 줄 (2026-11-15 사용자 지시: 트렌디하게) */
+.wish-live { margin: 14px 0 18px; text-align: center; }
+.wish-live-main { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 0 6px; margin: 0; font-size: 15px; color: rgba(232, 234, 240, 0.88); }
+.wish-live-dot { position: relative; width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 10px rgba(226, 194, 122, 0.8); }
+.wish-live-dot::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid rgba(226, 194, 122, 0.6); animation: wish-live-ping 2.2s ease-out infinite; }
+@keyframes wish-live-ping { 0% { transform: scale(0.4); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
+.wish-live-n { font-family: var(--title); font-size: 22px; font-weight: 400; line-height: 1; color: var(--primary); font-variant-numeric: tabular-nums; }
+.wish-live-sub { margin: 6px 0 0; font-size: 13px; color: rgba(220, 222, 228, 0.62); }
+.wish-live-sub .wish-live-n { font-size: 15px; font-family: inherit; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .wish-live-dot::after { animation: none; } }
+/* 맨 위 강조 제목: 얇게, 소원과 간격 넓게 */
+.wish-pin { margin-top: 24px; }
+.wish-pin-title { margin: 0 0 14px; font-family: var(--title); font-size: 17px; font-weight: 400; letter-spacing: 0.01em; color: rgba(236, 222, 186, 0.92); }
+
+/* 사이트 확인 창 (2026-11-15 사용자 지시: 브라우저 기본 창 대신) */
+.confirm-overlay { z-index: 80; }
+.confirm-box { width: min(92vw, 380px); padding: 24px 22px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); background: #212225; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); animation: confirm-in 0.18s ease-out; }
+@keyframes confirm-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.confirm-title { margin: 0 0 8px; font-family: var(--title); font-size: 20px; font-weight: 400; color: var(--text); }
+.confirm-msg { margin: 0; font-size: 15px; line-height: 1.65; color: rgba(220, 222, 228, 0.92); word-break: keep-all; white-space: pre-line; }
+.confirm-note { margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.8); }
+.confirm-actions { display: flex; gap: 8px; margin-top: 20px; }
+.confirm-actions button { flex: 1; height: 48px; border-radius: 10px; border: 0; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.confirm-cancel { background: rgba(255, 255, 255, 0.07); color: rgba(220, 222, 228, 0.9); }
+.confirm-cancel:hover { background: rgba(255, 255, 255, 0.11); }
+.confirm-ok { background: #ECE6D8; color: #1B1C1E; }
+.confirm-ok:hover { background: #F6F1E6; }
+@media (max-width: 559px) {
+  .confirm-overlay { align-items: flex-end; }
+  .confirm-box { width: 100%; border-radius: 20px 20px 0 0; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+}
+/* 풀이 기록: 사람별 거르기 + 항목 탭 (2026-11-15) */
+.rec-head { align-items: center; }
+.rec-tabs { display: flex; gap: 6px; margin: 2px 0 6px; padding: 2px 0 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rec-tabs::-webkit-scrollbar { display: none; }
+.rec-tabs button { flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); background: none; color: rgba(220, 222, 228, 0.85); font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.rec-tabs button.on { border-color: transparent; background: #ECE6D8; color: #1B1C1E; font-weight: 600; }
+.rec-body .rec-sec-title { margin: 10px 0 6px; }

@@ -10,6 +10,7 @@ import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import Markdown from './Markdown.jsx';
 import { announceBalance, PriceTag } from './BokchaLink.jsx';
 import { trackEvent } from '../lib/analytics.js';
+import { askConfirm, showAlert } from './ConfirmHost.jsx';
 
 const KEY = 'newyearMonth';
 const PARTS = ['newyear', 'nym1', 'nym2'];
@@ -74,14 +75,14 @@ export default function NewYearMonthly({ input, member, openLogin }) {
     if (state.owned) return load();
     if (state.balance < price) {
       trackEvent('nym_need_credit');
-      if (window.confirm(`복채가 ${fmtCredits(price - state.balance)} 모자라요. 충전하러 갈까요? (지금 ${fmtCredits(state.balance)})`)) navigate('/wallet');
+      if (await askConfirm({ title: '복채가 조금 모자라요', message: `신년운세에는 ${fmtCredits(price)}이 필요해요. 지금 ${fmtCredits(state.balance)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
       return;
     }
-    if (!window.confirm(`${NEXT_YEAR} 신년운세에 ${fmtCredits(price)}을 쓸까요? (지금 ${fmtCredits(state.balance)})\n같은 사람의 신년운세는 다시 볼 때 복채가 들지 않아요.`)) return;
+    if (!(await askConfirm({ title: `${NEXT_YEAR} 신년운세를 열까요?`, message: `${fmtCredits(price)}을 쓰면 한 해 흐름과 월별 상세 풀이가 시작돼요. 지금 ${fmtCredits(state.balance)} 있어요.`, note: '같은 사람의 신년운세는 다시 볼 때 금전이 들지 않아요.', ok: `${fmtCredits(price)}으로 열기`, cancel: '취소' }))) return;
     setBusy(true);
     const r = await post('/api/wallet/buy', { item: KEY, input });
     setBusy(false);
-    if (!r.ok) return window.alert(r.data.error || '열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    if (!r.ok) return showAlert(r.data.error || '열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     trackEvent('nym_buy');
     setState({ owned: true, balance: r.data.balance });
     announceBalance(r.data.balance);

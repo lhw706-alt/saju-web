@@ -12,6 +12,7 @@ import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
 import { announceBalance, PriceTag } from '../components/BokchaLink.jsx';
+import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 const shuffle = (arr) => {
@@ -65,10 +66,10 @@ export default function Tarot() {
       const bal = w?.balance ?? 0;
       if (bal < cost) {
         trackEvent('tarot_need_credit', { cost });
-        if (window.confirm(`복채가 ${fmtCredits(cost - bal)} 모자라요. 충전하러 갈까요? (지금 ${fmtCredits(bal)})`)) navigate('/wallet');
+        if (await askConfirm({ title: '복채가 조금 모자라요', message: `${count === 3 ? '세 장 펼침' : '한 장'}에는 ${fmtCredits(cost)}이 필요해요. 지금 ${fmtCredits(bal)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
         return;
       }
-      if (!window.confirm(`${count === 3 ? '타로 세 장 펼침' : '타로 한 장'}에 ${fmtCredits(cost)}을 쓸까요? (지금 ${fmtCredits(bal)})`)) return;
+      if (!(await askConfirm({ title: `${count === 3 ? '타로 세 장' : '타로 한 장'}을 펼칠까요?`, message: `${fmtCredits(cost)}을 쓰고 카드를 섞어요. 지금 ${fmtCredits(bal)} 있어요.`, ok: `${fmtCredits(cost)}으로 섞기`, cancel: '취소' }))) return;
       usePay = true;
       announceBalance(bal - cost); // GNB 숫자 (풀이를 못 만들면 서버가 돌려주고, 다음에 지갑을 열 때 맞춰짐)
     }

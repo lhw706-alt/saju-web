@@ -11,6 +11,7 @@ import { dosaArtSvg } from '../brand/dosaArt.js';
 import Select from '../components/Select.jsx';
 import { PriceTag, CoinIcon, announceBalance } from '../components/BokchaLink.jsx';
 import { WISH_OFFERS, WISH_OFFER_MAX, fmtCredits } from '../lib/wallet.js';
+import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 
 // 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -35,6 +36,26 @@ const api = async (url, opts = {}) => {
   const d = await r?.json().catch(() => ({}));
   return { ok: !!r?.ok, status: r?.status || 0, data: d || {} };
 };
+
+// 숫자가 0부터 올라가며 나타남 (0.9초)
+function CountUp({ n }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const to = Number(n) || 0;
+    if (!to) return setV(0);
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return setV(to);
+    let raf;
+    const t0 = performance.now();
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / 900);
+      setV(Math.round(to * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [n]);
+  return <b className="wish-live-n">{v.toLocaleString('ko-KR')}</b>;
+}
 
 // 소원 한 줄 (2026-11-15 사용자 지시: 누르면 긴 글이 펼쳐지고 바로 응원)
 function WishCard({ w, member, onCheer, onReport, rank = 0 }) {
@@ -216,7 +237,7 @@ export default function Wish() {
     setMine((m) => (m ? m.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)) : m));
   };
   const report = async (w) => {
-    if (!window.confirm('이 소원을 신고할까요? 신고가 쌓이면 하늘에서 내려가요.')) return;
+    if (!await askConfirm('이 소원을 신고할까요? 신고가 쌓이면 하늘에서 내려가요.')) return;
     const r = await api('/api/wish/report', { method: 'POST', body: JSON.stringify({ id: w.id }) });
     notify(r.ok ? '신고했어요. 살펴볼게요.' : r.data.error || '신고하지 못했어요.', r.ok ? 'positive' : 'negative');
   };
@@ -231,7 +252,7 @@ export default function Wish() {
     loadFeed();
   };
   const remove = async (w) => {
-    if (!window.confirm('이 소원을 지울까요? 지우면 되돌릴 수 없어요.')) return;
+    if (!await askConfirm('이 소원을 지울까요? 지우면 되돌릴 수 없어요.')) return;
     const r = await api(`/api/wish?id=${w.id}`, { method: 'DELETE' });
     if (!r.ok) return notify(r.data.error || '지우지 못했어요.', 'negative');
     setMine((m) => m.filter((x) => x.id !== w.id));
@@ -263,16 +284,16 @@ export default function Wish() {
           <p className="nm-kicker">소원빌기</p>
           <h1 className="wish-title">오늘 당신의 소원은 무엇인가요?</h1>
           <p className="wish-lead">마음속에 담아 두었던 작은 바람을 하늘에 띄워 보세요. 다른 사람들의 작은 바람도 함께 만날 수 있어요.</p>
-          <dl className="wish-stats">
-            <div>
-              <dt>하늘에 뜬 소원</dt>
-              <dd>{stats.total.toLocaleString('ko-KR')}</dd>
-            </div>
-            <div>
-              <dt>오늘 빈 소원</dt>
-              <dd>{stats.today.toLocaleString('ko-KR')}</dd>
-            </div>
-          </dl>
+          {/* 현황 (2026-11-15 사용자 지시: 숫자 두 칸 대신 깜빡이는 점 + 문장 한 줄, 숫자는 올라가며 나타남) */}
+          <div className="wish-live" aria-live="polite">
+            <p className="wish-live-main">
+              <span className="wish-live-dot" aria-hidden="true" />
+              지금 밤하늘에서 <CountUp n={stats.total} />개의 소원이 반짝이고 있어요
+            </p>
+            <p className="wish-live-sub">
+              오늘 새로 떠오른 소원 <CountUp n={stats.today} />개
+            </p>
+          </div>
           <LiquidMetalButton label="내 소원 띄우기" width={200} onClick={openCompose} />
         </div>
       </section>
@@ -295,7 +316,7 @@ export default function Wish() {
       {tab === 'feed' && pinned.length > 0 && (
         <section className="wish-pin" aria-labelledby="wish-pin-title">
           <h2 id="wish-pin-title" className="wish-pin-title">
-            {pinned.some((w) => w.offer > 0) ? '정성을 가장 많이 담은 소원' : '방금 하늘에 뜬 소원'}
+            {pinned.some((w) => w.offer > 0) ? '가장 깊은 정성이 담긴 소원' : '가장 최근 하늘에 닿은 소원'}
           </h2>
           <ul className="wish-pin-list">
             {pinned.map((w, i) => (

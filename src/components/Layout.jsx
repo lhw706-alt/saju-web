@@ -12,6 +12,7 @@ import { syncLocalToAccount } from '../lib/history.js';
 import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
+import ConfirmHost, { askConfirm, showAlert } from './ConfirmHost.jsx';
 
 function setHeadTag(selector, create, update) {
   let el = document.head.querySelector(selector);
@@ -138,7 +139,7 @@ export default function Layout() {
   };
   // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃 → 성공하면 true
   const withdraw = async () => {
-    if (!window.confirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return false;
+    if (!await askConfirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return false;
     const r = await fetch('/api/auth/delete', { method: 'POST' }).catch(() => null);
     const ok = !!r?.ok;
     if (ok) {
@@ -225,6 +226,7 @@ export default function Layout() {
           <span>호스팅 제공자 {SITE.business.hosting}</span>
         </p>
       </footer>
+      <ConfirmHost />
       <ContactModal
         open={contact}
         onClose={closeContact}
