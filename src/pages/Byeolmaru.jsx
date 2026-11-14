@@ -335,21 +335,34 @@ export default function Byeolmaru() {
   const [failed, setFailed] = useState(false);
   const [help, setHelp] = useState(true);
   const nick = auth?.user?.nick || guestName();
-  // 20초마다 "아직 있어요" + 인원·잔상 받기 (실시간 서버 없이 가볍게)
+  // 30초마다 "아직 있어요" + 인원·잔상 받기 (실시간 서버 없이 가볍게)
+  // 탭을 내렸거나 자기 전 모드면 보내지 않음, 돌아오면 바로 한 번. 서버가 바쁘면 인원·잔상만 조용히 숨김.
+  const sleepRef = useRef(false);
+  sleepRef.current = sleep;
   useEffect(() => {
     if (!ready) return undefined;
     const sid = tabSid();
     let stop = false;
     const beat = async () => {
+      if (document.hidden || sleepRef.current) return;
       const pos = apiRef.current?.getPos?.();
       if (pos) fetch('/api/plaza', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, ...pos }) }).catch(() => {});
-      const r = await fetch(`/api/plaza?me=${sid}`, { cache: 'no-store' }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-      if (stop || !r) return;
+      const r = await fetch('/api/plaza').then((x) => (x.ok ? x.json() : null)).catch(() => null); // CDN 이 10초 나눠 줌
+      if (stop) return;
+      if (!r || r.count == null) {
+        setPeople(null);
+        apiRef.current?.setGhosts?.([]);
+        return;
+      }
       setPeople(r.count);
-      apiRef.current?.setGhosts?.(r.ghosts);
+      // 내 자리에 겹친 잔상(나 자신)은 빼고
+      const me = apiRef.current?.getPos?.();
+      apiRef.current?.setGhosts?.((r.ghosts || []).filter((g) => !me || Math.hypot(g.x - me.x, g.z - me.z) > 1.2));
     };
     beat();
-    const iv = setInterval(beat, 20000);
+    const iv = setInterval(beat, 30000);
+    const onVis = () => !document.hidden && beat();
+    document.addEventListener('visibilitychange', onVis);
     // 하늘의 소원 등불: 공개 소원 최근 것
     fetch('/api/wish?sort=new', { cache: 'no-store' })
       .then((x) => (x.ok ? x.json() : null))
@@ -358,6 +371,7 @@ export default function Byeolmaru() {
     return () => {
       stop = true;
       clearInterval(iv);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, [ready]);
   // 꾸미기: 회원이면 산 것·입은 것을 불러와 내 천동이에 입힘
