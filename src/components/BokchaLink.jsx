@@ -110,7 +110,7 @@ export const announceBalance = (balance) => {
   if (typeof balance === 'number') window.dispatchEvent(new CustomEvent('saju:wallet', { detail: { balance } }));
 };
 
-// GNB 복채 버튼 (2026-11-15 사용자 지시: 테두리 없이 '복채' + 안에 엽전 아이콘과 남은 금전 숫자)
+// GNB 복채 버튼 (2026-11-15 사용자 지시: 글자 없이 엽전 아이콘 + 남은 금전 숫자만, 비회원은 엽전만)
 export default function BokchaLink({ member = false }) {
   const [bal, setBal] = useState(null);
   useEffect(() => {
@@ -129,7 +129,6 @@ export default function BokchaLink({ member = false }) {
   }, [member]);
   return (
     <Link to="/wallet" className="bokcha-link" aria-label={bal === null ? '복채 충전' : `복채 충전, 남은 금전 ${bal}`}>
-      <span className="bokcha-word">복채</span>
       <span className="bokcha-pill">
         <CoinIcon size={22} />
         {bal !== null && <b>{bal.toLocaleString('ko-KR')}</b>}

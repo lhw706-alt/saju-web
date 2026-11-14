@@ -2,7 +2,7 @@
 // 결제창에서 돌아오면(?pay=success&paymentKey&orderId&amount) 서버 승인 후 잔액을 다시 불러옴. 주소의 결제 정보는 바로 지움.
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
-import { PACKAGES, PRICES, fmtCredits, discountOf, listWon } from '../lib/wallet.js';
+import { PACKAGES, fmtCredits, discountOf, listWon } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
@@ -127,15 +127,6 @@ export default function Wallet() {
         {busy ? '처리 중…' : ready ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
       </button>
 
-      <h2 className="wallet-h2">복채 쓰는 곳</h2>
-      <ul className="wallet-prices">
-        {Object.values(PRICES).map((p) => (
-          <li key={p.label}>
-            <span>{p.label}</span>
-            <Coins n={p.credits} size={18} />
-          </li>
-        ))}
-      </ul>
 
       {w?.ledger?.length > 0 && (
         <>
