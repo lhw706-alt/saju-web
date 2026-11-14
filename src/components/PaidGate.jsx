@@ -52,8 +52,12 @@ export default function PaidGate({ item, input, member, openLogin, title, desc, 
           ))}
         </ul>
       )}
-      <button type="button" className="btn-primary paygate-btn" onClick={buy} disabled={busy || state.owned === null}>
-        {state.owned === null ? '확인 중…' : `${fmtCredits(price)}으로 보기`}
+      <button type="button" className="pay-cta" onClick={buy} disabled={busy || state.owned === null}>
+        <span>{state.owned === null ? '확인 중…' : `${title} 열어 보기`}</span>
+        <span className="pay-cta-price">
+          <PriceTag n={price} size={18} />
+          <small>{(price * 100).toLocaleString('ko-KR')}원</small>
+        </span>
       </button>
       <p className="paygate-note">한 번 열면 같은 사람의 {title}는 다시 볼 때 금전이 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.</p>
     </section>

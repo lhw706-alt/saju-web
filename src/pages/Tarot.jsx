@@ -53,7 +53,7 @@ export default function Tarot() {
   const spread = TAROT_SPREADS[count];
   const picks = useMemo(() => chosen.map((k) => ({ ...deck[k], card: tarotById(deck[k].id) })), [chosen, deck]);
 
-  // 복채 (2026-11-15 사용자 지시: 처음부터 유료) — 한 장 10금전 · 세 장 15금전
+  // 복채 (2026-11-15 사용자 지시: 처음부터 유료) — 한 장 10금전 · 세 장 20금전
   const cost = count === 3 ? PRICES.tarot3.credits : PRICES.tarot1.credits;
   const begin = async () => {
     const q = question.trim();

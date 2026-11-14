@@ -9,7 +9,7 @@ import { getStore } from '@netlify/blobs';
 import { spend, refundSpend, putRecord, recordId } from '../lib/wallet.mjs';
 import { PRICES } from '../../src/lib/wallet.js';
 
-// 2026-11-15 사용자 지시: 타로는 처음부터 유료(한 장 10금전·세 장 15금전, 회원만). 하루 횟수 제한은 없앴고,
+// 2026-11-15 사용자 지시: 타로는 처음부터 유료(한 장 10금전·세 장 20금전, 회원만). 하루 횟수 제한은 없앴고,
 // 'tarot-count' 는 활동 배지(타로 본 횟수) 셈용으로만 남김.
 const kstDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const whoKey = (req, context) => {
@@ -57,7 +57,7 @@ export default async (req, context) => {
   if (q.length > TAROT_Q_MAX) return json({ error: `질문은 ${TAROT_Q_MAX}자까지 적을 수 있어요.` }, 400);
   if (q && q.length >= 2 && wishProblem(q)) return json({ error: wishProblem(q) }, 400);
 
-  // 복채: 한 장 10금전 · 세 장 15금전, 회원만
+  // 복채: 한 장 10금전 · 세 장 20금전, 회원만
   const used = Number(await store.get(countKey).catch(() => 0)) || 0;
   const three = spread.pos.length === 3;
   const price = three ? PRICES.tarot3 : PRICES.tarot1;

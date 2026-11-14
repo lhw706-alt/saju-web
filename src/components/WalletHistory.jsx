@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Coins, announceBalance } from './BokchaLink.jsx';
+import Select from './Select.jsx';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -38,7 +39,7 @@ export default function WalletHistory() {
       <h2 id="mw-title" className="mw-title">내 복채</h2>
       <div className="mw-balance">
         {w && !w.error ? <Coins n={w.balance} size={34} className="mw-bal" /> : <b className="mw-bal-wait">{w?.error ? '-' : '…'}</b>}
-        <Link to="/wallet" className="btn-primary inline mw-charge">
+        <Link to="/wallet" className="mw-charge">
           충전하기
         </Link>
       </div>
@@ -46,13 +47,9 @@ export default function WalletHistory() {
 
       <div className="mw-head">
         <h3>충전·사용 내역</h3>
-        <div className="mw-filter" role="tablist" aria-label="내역 거르기">
-          {FILTERS.map((f) => (
-            <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} className={filter === f.id ? 'on' : ''} onClick={() => setFilter(f.id)}>
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <span className="sel-compact">
+          <Select ariaLabel="내역 거르기" value={filter} onChange={setFilter} options={FILTERS.map((f) => ({ value: f.id, label: f.label }))} />
+        </span>
       </div>
       {w && !w.error && ledger.length === 0 && <p className="rec-empty">아직 내역이 없어요.</p>}
       {ledger.length > 0 && (

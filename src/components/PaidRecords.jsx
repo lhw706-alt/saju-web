@@ -80,17 +80,17 @@ export default function PaidRecords() {
     <section aria-labelledby="rec-title">
       <div className="rec-head">
         <h2 id="rec-title">풀이 기록</h2>
-        <Link to="/wallet">복채 내역 보기</Link>
       </div>
       <p className="my-sec-note">복채로 본 타로·신년운세·평생 사주 풀이가 여기에 남아요.</p>
       {err && <p className="rec-empty">{err}</p>}
       {!err && list === null && <p className="rec-empty">불러오는 중이에요…</p>}
       {list && list.length === 0 && (
-        <p className="rec-empty">
-          아직 기록이 없어요.
-          <br />
-          <Link to="/tarot">타로</Link>나 <Link to="/newyear">신년운세</Link>를 보면 여기에 남아요.
-        </p>
+        <div className="rec-empty">
+          <p>아직 기록이 없어요. 운세를 보러 갈까요?</p>
+          <Link to="/#saju" className="rec-go">
+            운세 보러 가기
+          </Link>
+        </div>
       )}
       {list && list.length > 0 && (
         <ul className="rec-list">

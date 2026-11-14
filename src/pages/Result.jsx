@@ -101,12 +101,6 @@ export default function Result() {
           title="내 평생 사주를 나눠 보세요"
           kakao={{ title: '천둥도사가 풀어 준 내 평생 사주', description: '타고난 성향부터 10년마다 바뀌는 대운까지. 나도 내 사주를 볼까요?', button: '내 사주 보기' }}
         />
-        {/* 맨 아래: 다시 보기 (새로 입력한 뒤에도 평생 사주 리포트로) */}
-        <div className="report-bottom">
-          <Link to="/start" className="btn-primary inline" onClick={() => saveTopic('overall')}>
-            사주 다시 보기
-          </Link>
-        </div>
       </GlossaryProvider>
     );
   }

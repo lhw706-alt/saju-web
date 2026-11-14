@@ -8,6 +8,9 @@ import { WISH_CATS, WISH_MAX, WISH_DAILY, wishCat, wishProblem } from '../lib/wi
 import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
+import Select from '../components/Select.jsx';
+import { PriceTag, CoinIcon, announceBalance } from '../components/BokchaLink.jsx';
+import { WISH_OFFERS, fmtCredits } from '../lib/wallet.js';
 
 // 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -44,6 +47,7 @@ function WishCard({ w, member, onCheer, onReport }) {
           {w.mine && <em> · 나의 소원</em>}
           {w.done && <em className="is-done"> · 이루어졌어요</em>}
         </span>
+        {w.offer > 0 && <PriceTag n={w.offer} size={15} className="wish-offer" />}
         <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={() => onCheer(w)} aria-pressed={!!w.cheered} disabled={!!w.cheered}>
           {w.cheered ? '응원했어요' : '응원하기'} <b>{w.cheers}</b>
         </button>
@@ -76,6 +80,8 @@ export default function Wish() {
   const [text, setText] = useState('');
   const [wcat, setWcat] = useState('');
   const [pub, setPub] = useState(true);
+  const [offer, setOffer] = useState(0); // 소원에 넣을 금전 (2026-11-15)
+  const [bal, setBal] = useState(null); // 쓰기 창을 열 때 내 금전
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
   const [launch, setLaunch] = useState(null); // 방금 띄운 소원 (하늘로 올라가는 연출)
@@ -156,21 +162,29 @@ export default function Wish() {
     return () => window.removeEventListener('keydown', onKey);
   }, [compose]);
 
+  useEffect(() => {
+    if (!compose || !member) return;
+    api('/api/wallet').then((r) => r.ok && setBal(r.data.balance ?? 0));
+  }, [compose, member]);
+
   const submit = async (e) => {
     e.preventDefault();
     const t = text.trim();
     const bad = wishProblem(t); // 종류 고르기는 사용자 지시로 뺌 — 부적에서 넘어오면 그 종류, 아니면 기타
     if (bad) return setErr(bad);
     setSending(true);
-    const r = await api('/api/wish', { method: 'POST', body: JSON.stringify({ text: t, cat: wcat || 'etc', pub }) });
+    if (offer > 0 && bal !== null && bal < offer) return setErr(`금전이 ${fmtCredits(offer - bal)} 모자라요. 충전한 뒤 넣어 주세요.`);
+    const r = await api('/api/wish', { method: 'POST', body: JSON.stringify({ text: t, cat: wcat || 'etc', pub, offer }) });
     setSending(false);
     if (!r.ok) return setErr(r.data.error || '소원을 띄우지 못했어요. 잠시 뒤 다시 시도해 주세요.');
-    trackEvent('wish_post', { cat: wcat || 'etc', pub: pub ? 'yes' : 'no' });
+    trackEvent('wish_post', { cat: wcat || 'etc', pub: pub ? 'yes' : 'no', offer });
+    if (offer > 0 && bal !== null) announceBalance(bal - offer);
     setCompose(false);
     setLaunch(r.data.wish);
     setText('');
     setWcat('');
     setPub(true);
+    setOffer(0);
     loadFeed();
     loadMine();
   };
@@ -309,16 +323,18 @@ export default function Wish() {
             </div>
             <div className="wish-listbar">
               <span>{feed ? `소원 ${feed.length.toLocaleString('ko-KR')}개` : ''}</span>
-              <div className="wish-sort" role="group" aria-label="정렬">
-                {[
-                  ['new', '최신순'],
-                  ['hot', '인기순'],
-                ].map(([k, l]) => (
-                  <button key={k} type="button" className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
-                    {l}
-                  </button>
-                ))}
-              </div>
+              <span className="sel-compact">
+                <Select
+                  ariaLabel="정렬"
+                  value={sort}
+                  onChange={setSort}
+                  options={[
+                    { value: 'new', label: '최신순' },
+                    { value: 'hot', label: '인기순' },
+                    { value: 'offer', label: '복채순' },
+                  ]}
+                />
+              </span>
             </div>
           </div>
           {feed === null ? (
@@ -392,6 +408,7 @@ export default function Wish() {
                         {wishCat(w.cat)?.label} · {ymd(w.createdAt)}
                         {w.done && w.doneAt ? ` · ${ymd(w.doneAt)} 이루어짐` : ''}
                       </span>
+                      {w.offer > 0 && <PriceTag n={w.offer} size={15} className="wish-offer" />}
                       <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={() => cheer(w)} aria-pressed={!!w.cheered} disabled={!!w.cheered || w.hidden}>
                         {w.cheered ? '응원했어요' : '응원하기'} <b>{w.cheers}</b>
                       </button>
@@ -459,13 +476,31 @@ export default function Wish() {
               </button>
             </div>
             <p className="wish-seg-desc">{pub ? '다른 사람도 볼 수 있어요. 이름 없이 익명으로 보여요.' : '나만 볼 수 있어요. 다른 사람에게는 보이지 않아요.'}</p>
+            {/* 소원에 금전 넣기 (2026-11-15 사용자 지시) — 넣은 금전은 소원 옆에 보이고, 복채순으로 정렬됨 */}
+            <p className="nm-label">금전 넣기 <small>선택</small></p>
+            <div className="wish-offer-pick" role="radiogroup" aria-label="넣을 금전">
+              {WISH_OFFERS.map((n) => (
+                <button key={n} type="button" role="radio" aria-checked={offer === n} className={offer === n ? 'on' : ''} onClick={() => setOffer(n)}>
+                  {n === 0 ? '안 넣기' : (
+                    <>
+                      <CoinIcon size={16} />
+                      {n}
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="wish-seg-desc">
+              {offer > 0 ? `정성을 담아 ${fmtCredits(offer)}을 넣어요. 소원 옆에 넣은 금전이 보이고, 넣은 금전은 돌려받을 수 없어요.` : '금전을 넣으면 소원 옆에 정성이 보이고, 복채순으로 위에 떠요.'}
+              {bal !== null && <> (지금 {fmtCredits(bal)})</>}
+            </p>
             {err && (
               <p className="nm-err" role="alert">
                 {err}
               </p>
             )}
             <button type="submit" className="btn-primary wish-submit" disabled={sending || left <= 0}>
-              {sending ? '띄우는 중…' : '하늘에 소원 띄우기'}
+              {sending ? '띄우는 중…' : offer > 0 ? `${fmtCredits(offer)} 넣고 소원 띄우기` : '하늘에 소원 띄우기'}
             </button>
           </form>
         </div>

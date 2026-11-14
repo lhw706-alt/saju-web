@@ -1,4 +1,4 @@
-// 신년운세 (유료 — 40금전, 2026-11-15 사용자 지시로 처음부터 유료). 사주 결과 화면의 '신년운세' 주제를 고르면 Reading 안에 나옴.
+// 신년운세 (유료 — 30금전, 2026-11-15 사용자 지시로 처음부터 유료). 사주 결과 화면의 '신년운세' 주제를 고르면 Reading 안에 나옴.
 // 회원이 이 사람·이 해 상품을 사면(/api/wallet/buy) 한 해 흐름(newyear)·1~6월(nym1)·7~12월(nym2)을 동시에 받아 보여 줌.
 // 한 번 산 건 다시 볼 때 복채가 들지 않음(서버 purchases). 받은 풀이는 풀이 기억하기 + 서버가 마이페이지 '풀이 기록'에 남김.
 import { useEffect, useMemo, useState } from 'react';
@@ -8,7 +8,7 @@ import { PRICES, fmtCredits } from '../lib/wallet.js';
 import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import Markdown from './Markdown.jsx';
-import { announceBalance } from './BokchaLink.jsx';
+import { announceBalance, PriceTag } from './BokchaLink.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
 const KEY = 'newyearMonth';
@@ -102,8 +102,14 @@ export default function NewYearMonthly({ input, member, openLogin }) {
             <h2 id="nym-title">{NEXT_YEAR}년 신년운세</h2>
             <p className="nym-desc">한 해의 큰 흐름과 계절마다 운, 그리고 1월부터 12월까지 달마다 바뀌는 기운이 내 사주와 어떻게 만나는지 천둥도사가 하나하나 짚어 드려요.</p>
           </div>
-          <button type="button" className="btn-primary nym-btn" onClick={buy} disabled={busy || state.owned === null}>
-            {state.owned ? '신년운세 보기' : `${fmtCredits(price)}으로 보기`}
+          <button type="button" className="pay-cta nym-btn" onClick={buy} disabled={busy || state.owned === null}>
+            <span>{state.owned ? '신년운세 보기' : '신년운세 열어 보기'}</span>
+            {!state.owned && (
+              <span className="pay-cta-price">
+                <PriceTag n={price} size={18} />
+                <small>{(price * 100).toLocaleString('ko-KR')}원</small>
+              </span>
+            )}
           </button>
         </div>
       </section>

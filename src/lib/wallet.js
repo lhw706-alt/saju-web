@@ -15,8 +15,8 @@ export const packageById = (id) => PACKAGES.find((p) => p.id === id) || null;
 // 쓰는 곳 (2026-11-15 사용자 지시: 타로·신년운세는 처음부터 유료)
 export const PRICES = {
   tarot1: { credits: 10, label: '타로 한 장' },
-  tarot3: { credits: 15, label: '타로 세 장 펼침' },
-  newyearMonth: { credits: 40, label: '신년운세 (한 해 흐름 + 월별 상세)' },
+  tarot3: { credits: 20, label: '타로 세 장 펼침' },
+  newyearMonth: { credits: 30, label: '신년운세 (한 해 흐름 + 월별 상세)' },
   life: { credits: 50, label: '평생 사주 리포트' }, // 2026-11-15 사용자 지시로 유료
 };
 // 메인 카드 배지에 적는 가격 (contents.js id → 글자)
@@ -25,4 +25,6 @@ export const PRICE_COIN = { tarot: { n: PRICES.tarot1.credits, from: true }, new
 // 사람마다 한 번 사는 상품. perYear 면 해마다 따로 (신년운세)
 export const PAID_ITEMS = { newyearMonth: { perYear: true, kind: 'newyear', prefix: 'ny' }, life: { perYear: false, kind: 'life', prefix: 'lf' } };
 export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}${UNIT}부터`, newyear: `${PRICES.newyearMonth.credits}${UNIT}` };
+// 소원에 넣는 금전 (2026-11-15 사용자 지시) — 0 은 넣지 않음. 넣은 금전은 돌려받지 않음
+export const WISH_OFFERS = [0, 5, 10, 30, 50];
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;

@@ -2077,3 +2077,34 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wish-mine-stats span { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
 .wish-empty p + p { margin-top: 2px; color: rgba(194, 196, 200, 0.8); }
 .wish-row .wish-remind { padding: 0; border: 0; border-radius: 0; background: none; }
+
+/* 2026-11-15 7차: 유료 배지 테두리 없이 은은한 바탕 */
+.content-badge.price-tag { border: 0; background: rgba(255, 255, 255, 0.08); padding: 2px 8px 2px 4px; }
+.content-badge.price-tag b { font-size: 13px; }
+/* 결제 버튼: 큰 금색 덩어리 대신 담백한 줄 버튼 — 왼쪽 할 일, 오른쪽 가격(금전·원) */
+.pay-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; margin-top: 20px; padding: 10px 16px 10px 18px; border: 0; border-radius: 10px; background: #ECE6D8; color: #1B1C1E; font: inherit; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer; transition: background 0.15s ease; }
+.pay-cta:hover:not(:disabled) { background: #F6F1E6; }
+.pay-cta:disabled { opacity: 0.6; cursor: default; }
+.pay-cta-price { display: inline-flex; align-items: baseline; gap: 8px; }
+.pay-cta-price .price-tag b { color: #8A6020; font-size: 16px; }
+.pay-cta-price small { font-size: 13px; font-weight: 500; color: rgba(27, 28, 30, 0.6); }
+.nym-btn.pay-cta { width: auto; min-width: 260px; margin-top: 0; }
+@media (max-width: 559px) { .nym-btn.pay-cta { width: 100%; } }
+/* 마이페이지 복채 탭: 충전하기는 한 단계 낮게, 내역 거르기는 작은 드롭다운 */
+.mw-charge { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 10px; background: rgba(226, 194, 122, 0.14); color: var(--primary); font-size: 14px; font-weight: 600; text-decoration: none; }
+.mw-charge:hover { background: rgba(226, 194, 122, 0.22); }
+.sel-compact { display: inline-block; min-width: 96px; }
+.sel-compact .sel-trigger { height: 34px; min-height: 34px; padding: 0 10px; font-size: 14px; border-radius: 8px; }
+/* 풀이 기록 빈 상태 */
+.rec-empty p { margin: 0; }
+.rec-go { display: inline-flex; align-items: center; height: 38px; margin-top: 12px; padding: 0 16px; border-radius: 10px; background: rgba(226, 194, 122, 0.14); color: var(--primary); font-size: 14px; font-weight: 600; text-decoration: none; }
+.rec-go:hover { background: rgba(226, 194, 122, 0.22); }
+
+/* 소원 금전 넣기 (2026-11-15) */
+.nm-label small { margin-left: 4px; font-size: 13px; font-weight: 400; color: rgba(194, 196, 200, 0.75); }
+.wish-offer-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.wish-offer-pick button { display: inline-flex; align-items: center; gap: 4px; height: 38px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; background: none; color: rgba(220, 222, 228, 0.9); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.wish-offer-pick button.on { border-color: var(--primary); color: var(--primary); background: rgba(226, 194, 122, 0.08); }
+.wish-offer { flex: none; }
+.wish-offer b { font-size: 14px; }
+.wish-listbar .sel-compact { min-width: 100px; }

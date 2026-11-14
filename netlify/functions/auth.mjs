@@ -31,7 +31,7 @@ import { passwordOk } from '../../src/lib/password.js';
 import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
-import { PACKAGES, packageById, PRICES, PAID_ITEMS } from '../../src/lib/wallet.js';
+import { PACKAGES, packageById, PRICES, PAID_ITEMS, WISH_OFFERS } from '../../src/lib/wallet.js';
 import { walletOf, credit, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
@@ -865,7 +865,7 @@ export default async (req, context) => {
     const ws = getStore({ name: 'wishes', consistency: 'strong' });
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
     const kstDay = (t = Date.now()) => new Date(t + 9 * 3600e3).toISOString().slice(0, 10);
-    const pub = (w) => ({ id: w.id, text: w.text, cat: w.cat, createdAt: w.createdAt, cheers: w.cheers || 0, done: !!w.done, mine: !!s && w.uid === s.sub });
+    const pub = (w) => ({ id: w.id, text: w.text, cat: w.cat, createdAt: w.createdAt, cheers: w.cheers || 0, offer: w.offer || 0, done: !!w.done, mine: !!s && w.uid === s.sub });
     const loadAll = async () => {
       const { blobs } = await ws.list({ prefix: 'w/' });
       const keys = blobs.map((b) => b.key).sort().slice(0, 400); // id 가 시간 역순이라 키 순 = 최신순
@@ -897,6 +897,7 @@ export default async (req, context) => {
       const cat = url.searchParams.get('cat');
       let list = all.filter((w) => w.pub && !w.hidden && (!cat || w.cat === cat));
       if (url.searchParams.get('sort') === 'hot') list = list.sort((a, b) => (b.cheers || 0) - (a.cheers || 0) || b.createdAt.localeCompare(a.createdAt));
+      if (url.searchParams.get('sort') === 'offer') list = list.sort((a, b) => (b.offer || 0) - (a.offer || 0) || b.createdAt.localeCompare(a.createdAt)); // 복채순
       // 내가 응원한 소원 표시
       const ids = list.slice(0, 120).map((w) => w.id);
       const cheered = s ? new Set((await Promise.all(ids.map(async (id) => ((await ws.get(`c/${id}/${s.sub}`)) ? id : null)))).filter(Boolean)) : new Set();
@@ -916,8 +917,15 @@ export default async (req, context) => {
       const today = kstDay();
       const mine = (await Promise.all(mineKeys.map((b) => ws.get(`w/${b.key.split('/')[2]}`, { type: 'json' })))).filter(Boolean);
       if (mine.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length >= WISH_DAILY) return json({ error: `소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.` }, 429);
+      const offer = Number(body?.offer || 0);
+      if (!WISH_OFFERS.includes(offer)) return json({ error: '넣을 금전을 다시 골라 주세요.' }, 400);
       const id = (9999999999999 - Date.now()).toString(36) + randomBytes(3).toString('hex');
-      const w = { id, uid: s.sub, text, cat: body.cat, pub: body?.pub !== false, createdAt: new Date().toISOString(), cheers: 0, reports: 0, hidden: false, done: false };
+      // 소원에 금전 넣기 (2026-11-15) — 먼저 금전을 쓰고, 모자라면 띄우지 않음
+      if (offer > 0) {
+        const sp = await spend(s.sub, offer, '소원에 넣은 금전', `wish-${id}`);
+        if (!sp.ok) return json({ error: '금전이 모자라요. 충전한 뒤 다시 띄워 주세요.', reason: 'no_credit', need: offer, balance: sp.balance }, 402);
+      }
+      const w = { id, uid: s.sub, text, cat: body.cat, pub: body?.pub !== false, offer, createdAt: new Date().toISOString(), cheers: 0, reports: 0, hidden: false, done: false };
       await ws.setJSON(`w/${id}`, w);
       await ws.set(`u/${s.sub}/${id}`, '1');
       return json({ ok: true, wish: { ...pub(w), pub: w.pub } });
