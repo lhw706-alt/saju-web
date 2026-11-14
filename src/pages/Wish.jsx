@@ -3,7 +3,7 @@
 //      → 소원 구경하기(최신·인기·종류, 응원·신고) · 내 소원 보관함(전체·이루어진·진행 중, 이루어졌어요·삭제, 30일 다시 보기 안내).
 // 서버 /api/wish*(netlify/functions/auth.mjs), 규칙 src/lib/wish.js. 다른 사람에게는 익명으로만 보임. 이모지 대신 글래스 아이콘.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { WISH_CATS, WISH_MAX, WISH_DAILY, wishCat, wishProblem } from '../lib/wish.js';
 import GlassIcon, { LineIcon } from '../components/GlassIcon.jsx';
 import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
@@ -90,6 +90,24 @@ export default function Wish() {
   const [sending, setSending] = useState(false);
   const [launch, setLaunch] = useState(null); // 방금 띄운 소원 (하늘로 올라가는 연출)
   const panel = useRef(null);
+  // 행운의 부적에서 '소원으로도 띄워 볼까요?' → /wish?write=1&cat=종류: 로그인 확인이 끝나면 작성 창을 그 종류로 바로 엶 (2026-11-14)
+  const [params, setParams] = useSearchParams();
+  const asked = useRef(false);
+  useEffect(() => {
+    if (asked.current || !params.get('write') || !auth?.ready) return;
+    asked.current = true;
+    const c = wishCat(params.get('cat'))?.id || '';
+    setParams({}, { replace: true });
+    if (!auth.user) {
+      openLogin('부적에 담은 마음을 소원으로 띄우려면 로그인해 주세요.');
+      return;
+    }
+    setWcat(c);
+    setErr('');
+    setCompose(true);
+    trackEvent('wish_compose', { from: 'talisman' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth?.ready, auth?.user]);
 
   const loadFeed = useCallback(async () => {
     const q = new URLSearchParams({ sort, ...(cat ? { cat } : {}) });

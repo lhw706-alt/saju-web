@@ -12,6 +12,8 @@ import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
 const BOX = 'saju:talismans';
+// 부적 종류 → 소원 종류 (만사형통 → 기타)
+const TALISMAN_TO_WISH = { money: 'money', love: 'love', career: 'career', health: 'health', study: 'study', luck: 'etc' };
 const loadBox = () => {
   try {
     const v = JSON.parse(localStorage.getItem(BOX) || '[]');
@@ -169,11 +171,11 @@ export default function Talisman() {
                   </p>
                 )}
               </div>
-              <Link to="/wish" className="tal-wish card">
+              <Link to={`/wish?write=1&cat=${TALISMAN_TO_WISH[t.id] || 'etc'}`} className="tal-wish card" onClick={() => trackEvent('talisman_to_wish', { kind: t.id })}>
                 <GlassIcon kind="sky" size="sm" />
                 <span>
                   <b>이 행운을 소원으로도 띄워 볼까요?</b>
-                  <small>소원빌기에서 바라는 일을 하늘에 띄워 보세요</small>
+                  <small>이 부적과 같은 종류의 소원 쓰기 창이 바로 열려요</small>
                 </span>
               </Link>
               <ResultShare
