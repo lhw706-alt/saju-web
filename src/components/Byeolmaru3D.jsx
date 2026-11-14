@@ -823,6 +823,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     // ── 입력 ──
     const keys = new Set();
     const onKey = (e) => {
+      if (e.target?.closest?.('input, textarea, [contenteditable]')) return; // 소원 쓰는 중엔 걷지 않음
       const k = e.key.toLowerCase();
       if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) {
         if (e.type === 'keydown') keys.add(k);
@@ -949,7 +950,8 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           renderer.render(scene, camera);
           return renderer.domElement.toDataURL('image/jpeg', 0.92);
         },
-        lantern: () => {
+        // opts: { wish, big, quiet } — wish 가 있으면 하늘 높이에서 멈춰 소원 등불로 남음(눌러서 읽기), big = 큰 등불(10금전)
+        lantern: (opts = {}) => {
           lastAct = 'lantern';
           const l = new THREE.Group();
           const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.42, 12, 1, true), lanternMat);
@@ -960,7 +962,9 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           halo.scale.setScalar(1.6);
           l.add(body, cap, halo);
           l.position.copy(player.position).setY(1.6);
-          l.userData = { age: 0, sway: Math.random() * 6, told: false };
+          l.userData = { age: 0, sway: Math.random() * 6, told: !!(opts.quiet || opts.wish), wish: opts.wish || null, settleY: 7.5 + Math.random() * 1.5 };
+          if (opts.big) l.scale.setScalar(1.9);
+          else if (opts.wish) l.scale.setScalar(1.25);
           scene.add(l);
           lanterns.push(l);
           burst(player.position.clone().setY(1), 10);
@@ -1153,11 +1157,18 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
         const l = lanterns[i];
         const u = l.userData;
         u.age += dt;
-        l.position.y += dt * (0.9 + u.age * 0.12);
+        l.position.y += dt * (u.wish ? 0.75 : 0.9 + u.age * 0.12);
         l.position.x += Math.sin(t * 0.8 + u.sway) * dt * 0.25;
         if (!u.told && u.age > 2.6) {
           u.told = true;
           onEvent?.('lantern-up');
+        }
+        if (u.wish && l.position.y >= u.settleY) {
+          // 내 소원 등불: 그 자리 하늘에 남아 다른 소원 등불처럼 떠 있음
+          lanterns.splice(i, 1);
+          l.userData = { wish: u.wish, base: l.position.y, ph: Math.random() * 6 };
+          wishLanterns.push(l);
+          continue;
         }
         if (l.position.y > 70) {
           scene.remove(l);

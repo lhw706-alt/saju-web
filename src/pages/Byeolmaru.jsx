@@ -7,7 +7,8 @@ import { saveTopic } from '../lib/storage.js';
 import { skyState } from '../lib/byeolmaruSky.js';
 import { copyText, sendKakao } from '../lib/share.js';
 import { COSMETICS, fmtCredits } from '../lib/wallet.js';
-import { PriceTag } from '../components/BokchaLink.jsx';
+import { PriceTag, announceBalance } from '../components/BokchaLink.jsx';
+import { WISH_MAX, wishProblem } from '../lib/wish.js';
 import { askConfirm } from '../components/ConfirmHost.jsx';
 import { computeSaju } from '../lib/saju.js';
 import { MANSIONS, GROUPS as M_GROUPS, loadMansions, unlockToday, todayOracle, drawOracle } from '../lib/byeolmaruCollect.js';
@@ -270,7 +271,7 @@ function ActionIcon({ id }) {
 
 export default function Byeolmaru() {
   const navigate = useNavigate();
-  const { auth, notify } = useOutletContext();
+  const { auth, notify, openLogin } = useOutletContext();
   const joyRef = useRef({ x: 0, y: 0 });
   const apiRef = useRef(null);
   const [stars, setStars] = useState(loadStars);
@@ -395,7 +396,7 @@ export default function Byeolmaru() {
     if (!own) {
       const bal = wardrobe?.balance ?? 0;
       if (bal < item.credits) {
-        if (await askConfirm({ title: '금전이 조금 모자라요', message: `${item.label}에는 ${fmtCredits(item.credits)}이 필요해요. 지금 ${fmtCredits(bal)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
+        if (await askConfirm({ title: '금전이 조금 모자라요', message: `${item.label}에는 ${fmtCredits(item.credits)}이 필요해요. 지금 ${fmtCredits(bal)} 있어요.`, note: '충전 화면으로 가면 별마루에서 나가요.', ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
         return;
       }
       if (!(await askConfirm({ title: `${item.label}를 살까요?`, message: `${fmtCredits(item.credits)}을 쓰면 바로 입혀 드려요. 한 번 사면 계속 쓸 수 있어요.`, ok: `${fmtCredits(item.credits)}으로 사기` }))) return;
@@ -464,7 +465,56 @@ export default function Byeolmaru() {
         if (added) apiRef.current?.addMansion?.(added.id);
         setCard({ kind: 'stars', mansion: added });
       }
-    } else if (a.id === 'lantern') api.lantern();
+    } else if (a.id === 'lantern') openCompose();
+  };
+  // 별마루 밖 화면으로 갈 때는 먼저 알림 (2026-11-15 사용자 지시: 게임 안에서 갑자기 나가지 않게)
+  const leave = async (label, go) => {
+    if (await askConfirm({ title: '별마루에서 나갈까요?', message: `${label}을 보려면 별마루 밖 화면으로 이동해요.`, note: '다시 들어오면 마당 처음 자리에서 시작해요. 오늘 헤아린 별은 그대로 남아요.', ok: '이동하기', cancel: '머물기' })) go();
+  };
+  // 등불에 소원 담기 (2026-11-15 사용자 지시: 소원빌기 화면으로 나가지 않고 별마루 안에서 — 쓰고 띄우면 내 자리에서 등불이 오르고 소원 목록에도 올라감)
+  const [compose, setCompose] = useState({ text: '', big: false, pub: true, busy: false, balance: null });
+  const openCompose = (big = false) => {
+    setCompose((c) => ({ ...c, big, busy: false }));
+    setCard({ kind: 'compose' });
+    if (auth?.user)
+      fetch('/api/wallet', { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d && setCompose((c) => ({ ...c, balance: d.balance ?? 0 })))
+        .catch(() => {});
+  };
+  const plainLantern = () => {
+    setCard(null);
+    apiRef.current?.lantern({ quiet: true });
+  };
+  const sendWish = async () => {
+    if (!auth?.user) return openLogin?.('등불에 소원을 담으려면 로그인해 주세요.');
+    const text = compose.text.trim();
+    const bad = wishProblem(text);
+    if (bad) return notify?.(bad);
+    const offer = compose.big ? 10 : 0;
+    if (offer && compose.balance != null && compose.balance < offer) {
+      if (await askConfirm({ title: '금전이 조금 모자라요', message: `큰 등불에는 ${fmtCredits(offer)}이 필요해요. 지금 ${fmtCredits(compose.balance)} 있어요.`, note: '충전 화면으로 가면 별마루에서 나가요.', ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
+      return;
+    }
+    setCompose((c) => ({ ...c, busy: true }));
+    const r = await fetch('/api/wish', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, cat: 'etc', pub: compose.pub, offer }) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    if (!r || !r.ok) {
+      setCompose((c) => ({ ...c, busy: false }));
+      if (d.reason === 'no_credit') {
+        if (await askConfirm({ title: '금전이 조금 모자라요', message: `큰 등불에는 ${fmtCredits(offer)}이 필요해요.`, note: '충전 화면으로 가면 별마루에서 나가요.', ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
+        return;
+      }
+      return notify?.(d.error || '등불을 띄우지 못했어요. 잠시 뒤 다시 해 주세요.');
+    }
+    trackEvent('wish_post', { from: 'plaza', offer });
+    trackEvent('plaza_action', { type: offer ? 'wish_big' : 'wish' });
+    setCard(null);
+    setCompose((c) => ({ ...c, text: '', busy: false, balance: c.balance != null ? c.balance - offer : c.balance }));
+    if (offer && compose.balance != null) announceBalance(compose.balance - offer);
+    apiRef.current?.lantern({ wish: d.wish, big: offer >= 10 });
+    // 등불이 하늘에 닿을 즈음 알림 카드
+    setTimeout(() => setCard({ kind: 'sent', wish: d.wish, big: offer >= 10 }), 3800);
   };
   // 사진 찍기 → 카드 만들기
   const takePhoto = async () => {
@@ -619,10 +669,10 @@ export default function Byeolmaru() {
                 </div>
                 <p className="bm-hut-note">오늘의 점괘는 하루에 한 번이에요. 더 깊이 묻고 싶다면</p>
                 <div className="bm-card-actions">
-                  <button type="button" className="bm-card-ghost" onClick={() => navigate('/tarot')}>
+                  <button type="button" className="bm-card-ghost" onClick={() => leave('타로', () => navigate('/tarot'))}>
                     타로 보기
                   </button>
-                  <button type="button" className="bm-card-main" onClick={() => { saveTopic('overall'); navigate('/start'); }}>
+                  <button type="button" className="bm-card-main" onClick={() => leave('평생 사주', () => { saveTopic('overall'); navigate('/start'); })}>
                     평생 사주 보기
                   </button>
                 </div>
@@ -813,7 +863,7 @@ export default function Byeolmaru() {
                 <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
                   닫기
                 </button>
-                <button type="button" className="bm-card-main" onClick={() => { saveTopic('today'); navigate('/start'); }}>
+                <button type="button" className="bm-card-main" onClick={() => leave('오늘의 운세', () => { saveTopic('today'); navigate('/start'); })}>
                   오늘의 운세도 보기
                 </button>
               </div>
@@ -821,21 +871,87 @@ export default function Byeolmaru() {
           )}
           {card.kind === 'lantern' && (
             <>
-              <p className="bm-card-kicker">등불이 하늘로 올라가요</p>
-              <p id="bm-card-title" className="bm-card-text">
-                이 등불에 소원을 담아 볼까요?
-              </p>
+              <p id="bm-card-title" className="bm-card-text">등불이 하늘로 올라가요</p>
               <div className="bm-card-actions">
-                <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
-                  나중에
-                </button>
-                <button type="button" className="bm-card-main" onClick={() => navigate('/wish?write=1')}>
-                  소원 쓰기
+                <button type="button" className="bm-card-main" onClick={() => openCompose()}>
+                  소원 담아 띄우기
                 </button>
               </div>
-              <button type="button" className="bm-card-big" onClick={() => navigate('/wish?write=1&offer=10')}>
-                큰 등불로 띄우기 <span>10금전 · 하늘에 더 크고 밝게 떠요</span>
-              </button>
+            </>
+          )}
+          {card.kind === 'compose' && (
+            <>
+              <p className="bm-card-kicker">등불에 소원 담기</p>
+              {auth?.user ? (
+                <>
+                  <textarea
+                    className="bm-wish-input"
+                    value={compose.text}
+                    maxLength={WISH_MAX}
+                    rows={3}
+                    placeholder="하늘에 띄울 소원을 적어 주세요"
+                    aria-label="소원"
+                    onChange={(e) => setCompose((c) => ({ ...c, text: e.target.value }))}
+                  />
+                  <p className="bm-wish-count">
+                    {compose.text.length}/{WISH_MAX} · 이름·연락처는 적지 말아 주세요
+                  </p>
+                  <div className="bm-wish-seg" role="radiogroup" aria-label="등불 크기">
+                    <button type="button" role="radio" aria-checked={!compose.big} className={compose.big ? '' : 'on'} onClick={() => setCompose((c) => ({ ...c, big: false }))}>
+                      등불 <small>무료</small>
+                    </button>
+                    <button type="button" role="radio" aria-checked={compose.big} className={compose.big ? 'on' : ''} onClick={() => setCompose((c) => ({ ...c, big: true }))}>
+                      큰 등불 <PriceTag n={10} size={13} />
+                    </button>
+                  </div>
+                  <p className="bm-wish-note">
+                    {compose.big ? '하늘에 더 크고 밝게 떠요' : '하늘에 등불로 떠요'}
+                    {compose.balance != null && ` · 지금 ${fmtCredits(compose.balance)}`}
+                  </p>
+                  <label className="bm-wish-pub">
+                    <input type="checkbox" checked={!compose.pub} onChange={(e) => setCompose((c) => ({ ...c, pub: !e.target.checked }))} /> 나만 보기 (다른 사람 하늘엔 안 떠요)
+                  </label>
+                  <div className="bm-card-actions">
+                    <button type="button" className="bm-card-ghost" onClick={plainLantern}>
+                      그냥 띄우기
+                    </button>
+                    <button type="button" className="bm-card-main" onClick={sendWish} disabled={compose.busy || !compose.text.trim()}>
+                      {compose.busy ? '띄우는 중…' : compose.big ? '큰 등불 띄우기' : '등불 띄우기'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p id="bm-card-title" className="bm-card-sub">
+                    로그인하면 등불에 소원을 담아 띄울 수 있어요. 띄운 소원은 소원빌기 하늘에도 함께 올라가요.
+                  </p>
+                  <div className="bm-card-actions">
+                    <button type="button" className="bm-card-ghost" onClick={plainLantern}>
+                      그냥 띄우기
+                    </button>
+                    <button type="button" className="bm-card-main" onClick={() => openLogin?.('등불에 소원을 담으려면 로그인해 주세요.')}>
+                      로그인하기
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          {card.kind === 'sent' && (
+            <>
+              <p className="bm-card-kicker">{card.big ? '큰 등불이 하늘에 닿았어요' : '등불이 하늘에 닿았어요'}</p>
+              <p id="bm-card-title" className="bm-card-text">
+                {card.wish?.text}
+              </p>
+              <p className="bm-card-sub">소원빌기 하늘에도 함께 올라갔어요. 하늘의 등불을 누르면 다시 볼 수 있어요.</p>
+              <div className="bm-card-actions">
+                <button type="button" className="bm-card-ghost" onClick={() => leave('소원 구경하기', () => navigate('/wish'))}>
+                  소원 구경하기
+                </button>
+                <button type="button" className="bm-card-main" onClick={() => setCard(null)}>
+                  닫기
+                </button>
+              </div>
             </>
           )}
           {card.kind === 'wish' && (
