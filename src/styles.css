@@ -2108,3 +2108,6 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wish-offer { flex: none; }
 .wish-offer b { font-size: 14px; }
 .wish-listbar .sel-compact { min-width: 100px; }
+/* 풀이 글 속 용어 밑줄 → 누르면 설명 창 (2026-11-15) */
+.md-term { display: inline; padding: 0; margin: 0; border: 0; background: none; font: inherit; color: inherit; line-height: inherit; letter-spacing: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-color: rgba(226, 194, 122, 0.75); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.md-term:hover, .md-term:focus-visible { color: var(--primary); text-decoration-style: solid; outline: none; }

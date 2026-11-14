@@ -77,7 +77,7 @@ export default function Result() {
   // 오늘·내일·지정일 운세: 하루 운세 화면만 (원국표·다른 주제 없이)
   if (params.get('v') === 'day') {
     return (
-      <>
+      <GlossaryProvider>
         <DayReport key={JSON.stringify([input, params.get('d')])} input={input} member={member} initial={params.get('t') || 'today'} pickedDate={params.get('d')} />
         <PollCard place="day" />
         <MemberCta place="day" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
@@ -87,7 +87,7 @@ export default function Result() {
             다른 사람 운세 보기
           </Link>
         </div>
-      </>
+      </GlossaryProvider>
     );
   }
 

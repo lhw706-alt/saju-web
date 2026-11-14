@@ -222,7 +222,6 @@ export default function Layout() {
           <span>대표 {SITE.business.ceo}</span>
           <span>사업자등록번호 {SITE.business.regNo}</span>
           <span>이메일 {SITE.business.email}</span>
-          <span>호스팅 제공자 {SITE.business.hosting}</span>
         </p>
       </footer>
       <ContactModal

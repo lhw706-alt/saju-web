@@ -8,9 +8,10 @@ import { GLOSSARY, GOD_GROUPS, DICT_SLUG, termBySlug, dictShort } from '../lib/g
 import NotFound from './NotFound.jsx';
 
 const GROUPS = [
-  { label: '사주의 기본', terms: ['사주원국', '년주', '월주', '일주', '시주', '천간', '지지', '일간', '오행', '음양'] },
-  { label: '십성 — 나와의 관계', terms: ['십성', ...GOD_GROUPS.flatMap((g) => g.gods)] },
-  { label: '더 깊이 보기', terms: ['지장간', '십이운성', '대운', '세운'] },
+  { label: '사주의 기본', terms: ['사주원국', '원국', '간지', '년주', '월주', '일주', '시주', '천간', '지지', '일간', '오행', '음양'] },
+  { label: '기둥의 자리', terms: ['년간', '월간', '년지', '월지', '일지', '시지'] },
+  { label: '십성 — 나와의 관계', terms: ['십성', ...GOD_GROUPS.flatMap((g) => g.gods), '비겁', '식상', '재성', '관성', '인성'] },
+  { label: '더 깊이 보기', terms: ['지장간', '십이운성', '건록', '충', '합', '신강', '신약', '용신', '대운', '세운'] },
 ];
 
 export default function Dict() {

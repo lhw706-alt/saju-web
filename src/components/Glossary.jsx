@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { createPortal } from 'react-dom';
 import { GLOSSARY, GOD_GROUPS } from '../lib/glossary.js';
 
-const Ctx = createContext(() => {});
+const Ctx = createContext(null); // 설명 창이 없는 곳(타로 등)에선 null — 용어 밑줄도 안 함
 export const useGlossary = () => useContext(Ctx);
 
 function Modal({ term, onOpen, onClose }) {
@@ -94,7 +94,7 @@ export function GlossaryProvider({ children }) {
 // 작은 ? 버튼
 export function Help({ term, label }) {
   const open = useGlossary();
-  if (!GLOSSARY[term]) return null;
+  if (!GLOSSARY[term] || !open) return null;
   return (
     <button type="button" className="help" aria-label={`${label || term} 뜻 보기`} onClick={() => open(term)}>
       ?
@@ -105,7 +105,7 @@ export function Help({ term, label }) {
 // 용어 자체를 누를 수 있는 칩 (십성 이름 등)
 export function TermButton({ term, children, className = '' }) {
   const open = useGlossary();
-  if (!GLOSSARY[term]) return <span className={className}>{children || term}</span>;
+  if (!GLOSSARY[term] || !open) return <span className={className}>{children || term}</span>;
   return (
     <button type="button" className={`term ${className}`} onClick={() => open(term)} aria-label={`${term} 뜻 보기`}>
       {children || term}
