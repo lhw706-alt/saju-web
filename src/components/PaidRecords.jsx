@@ -23,6 +23,15 @@ function Body({ r }) {
       </div>
     );
   const p = r.parts || {};
+  if (r.kind === 'life')
+    return (
+      <div className="rec-body">
+        {['life1', 'life2', 'life3', 'life4'].filter((id) => p[id]).map((id) => (
+          <Markdown key={id} text={p[id].replace(/```json[\s\S]*?```/g, '').trim()} />
+        ))}
+        {!['life1', 'life2', 'life3', 'life4'].some((id) => p[id]) && <p className="rec-q">아직 받은 풀이가 없어요. 사주 결과 화면에서 평생 사주를 다시 열면 이어서 받아요.</p>}
+      </div>
+    );
   const months = [...splitSections(p.nym1), ...splitSections(p.nym2)];
   return (
     <div className="rec-body">
@@ -73,7 +82,7 @@ export default function PaidRecords() {
         <h2 id="rec-title">풀이 기록</h2>
         <Link to="/wallet">복채 내역 보기</Link>
       </div>
-      <p className="my-sec-note">복채로 본 타로와 신년운세 풀이가 여기에 남아요.</p>
+      <p className="my-sec-note">복채로 본 타로·신년운세·평생 사주 풀이가 여기에 남아요.</p>
       {err && <p className="rec-empty">{err}</p>}
       {!err && list === null && <p className="rec-empty">불러오는 중이에요…</p>}
       {list && list.length === 0 && (
@@ -87,12 +96,12 @@ export default function PaidRecords() {
         <ul className="rec-list">
           {list.map((r) => {
             const on = open === r.id;
-            const title = r.kind === 'tarot' ? `${r.topic}${r.question ? ` — ${r.question}` : ''}` : `${r.year}년 신년운세`;
-            const sub = r.kind === 'tarot' ? `${dateOf(r.at)} · ${r.spread === 3 ? '세 장' : '한 장'} · ${cardsText(r.cards)}` : `${dateOf(r.at)} · 한 해 흐름 + 월별 상세`;
+            const title = r.kind === 'tarot' ? `${r.topic}${r.question ? ` — ${r.question}` : ''}` : r.kind === 'life' ? '평생 사주 리포트' : `${r.year}년 신년운세`;
+            const sub = r.kind === 'tarot' ? `${dateOf(r.at)} · ${r.spread === 3 ? '세 장' : '한 장'} · ${cardsText(r.cards)}` : r.kind === 'life' ? `${dateOf(r.at)} · 성향·재물·직업·연애·건강·대운` : `${dateOf(r.at)} · 한 해 흐름 + 월별 상세`;
             return (
               <li key={r.id} className={`rec-item${on ? ' on' : ''}`}>
                 <button type="button" className="rec-row" aria-expanded={on} onClick={() => setOpen(on ? null : r.id)}>
-                  <span className="rec-kind">{r.kind === 'tarot' ? '타로' : '신년운세'}</span>
+                  <span className="rec-kind">{r.kind === 'tarot' ? '타로' : r.kind === 'life' ? '평생 사주' : '신년운세'}</span>
                   <span className="rec-main">
                     <span className="rec-title">{title}</span>
                     <span className="rec-sub">

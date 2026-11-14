@@ -13,6 +13,7 @@ import Markdown from './Markdown.jsx';
 import ChartTable from './ChartTable.jsx';
 import ElementChart from './ElementChart.jsx';
 import { Help, TermButton } from './Glossary.jsx';
+import PaidGate from './PaidGate.jsx';
 
 // 섹션 자리: [부분 id, 그 부분 안에서 몇 번째 '## ' 덩어리인지]
 const SLOTS = {
@@ -259,10 +260,27 @@ function Skeleton() {
 }
 
 // member: 로그인 회원이면 풀이를 계정 내역에도 저장하고, 전에 본 풀이를 서버에서 찾아 씀
-export default function LifeReport({ chart, input, member = false }) {
-  // 로딩은 방금 입력을 마치고 들어왔을 때만 (새로고침이면 안 나옴)
-  const [loading, setLoading] = useState(peekFresh);
+// 평생 사주는 2026-11-15 사용자 지시로 처음부터 유료(50금전) — 산 회원만 LifeReportBody 를 봄
+export default function LifeReport({ chart, input, member = false, openLogin }) {
   useEffect(() => clearFresh(), []);
+  return (
+    <PaidGate
+      item="life"
+      input={input}
+      member={member}
+      openLogin={openLogin}
+      title="평생 사주 리포트"
+      desc={`${chart.dayMaster.ko}${ELEMENT_KO[chart.dayMaster.element]} 일간으로 태어난 내 사주를, 천둥도사가 처음부터 끝까지 한 편의 리포트로 풀어 드려요.`}
+      points={['한눈에 보는 내 사주 요약', '타고난 성향과 기질', '재물·직업·연애·건강', '10년마다 바뀌는 대운 흐름 그래프']}
+    >
+      <LifeReportBody chart={chart} input={input} member={member} />
+    </PaidGate>
+  );
+}
+
+function LifeReportBody({ chart, input, member = false }) {
+  // 결제하고 막 열었을 때는 천둥도사 로딩 없이 바로 리포트 (내용이 차례로 채워짐)
+  const [loading, setLoading] = useState(false);
   // 이미 받은 풀이(이 탭·이 브라우저에 기억한 것)는 그대로 보여 주고 다시 부르지 않음
   const known = () => ({ ...localParts(input, 'life'), ...loadReport(input) });
   const [parts, setParts] = useState(() =>

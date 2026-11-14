@@ -31,8 +31,8 @@ import { passwordOk } from '../../src/lib/password.js';
 import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
-import { PACKAGES, packageById, PRICES } from '../../src/lib/wallet.js';
-import { walletOf, credit, spend, purchaseKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
+import { PACKAGES, packageById, PRICES, PAID_ITEMS } from '../../src/lib/wallet.js';
+import { walletOf, credit, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -768,10 +768,10 @@ export default async (req, context) => {
     if (path === '/api/wallet/owned' || path === '/api/wallet/buy') {
       const item = String(body?.item || '');
       const price = PRICES[item];
-      if (!price || item !== 'newyearMonth') return json({ error: '잘못된 상품이에요.' }, 400);
+      if (!price || !PAID_ITEMS[item]) return json({ error: '잘못된 상품이에요.' }, 400);
       let key;
       try {
-        key = purchaseKey(s.sub, item, body?.input, String(new Date().getFullYear() + 1));
+        key = itemKey(s.sub, item, body?.input);
       } catch {
         return json({ error: '생년월일 정보를 다시 확인해 주세요.' }, 400);
       }
@@ -859,7 +859,7 @@ export default async (req, context) => {
   // Netlify Blobs 'wishes': 'w/<id>' = { id, uid, text, cat, pub, createdAt, cheers, reports, hidden, done, doneAt }
   //   id = (9999999999999 - 시각) 36진수 + 무작위 → 키 순서 = 최신순. 'u/<회원번호>/<id>' = 내 소원 색인, 'c/<id>/<회원번호>' = 응원, 'r/<id>/<회원번호>' = 신고.
   // 목록: GET /api/wish?sort=new|hot&cat= (공개·숨김 아닌 것, 최대 120개) · 내 소원: GET /api/wish?mine=1
-  // 쓰기: POST /api/wish {text, cat, pub} (회원, 하루 3개) · POST /api/wish/cheer {id} (회원, 소원마다 1번, 내 소원 X)
+  // 쓰기: POST /api/wish {text, cat, pub} (회원, 하루 3개) · POST /api/wish/cheer {id} (회원, 소원마다 1번, 내 소원도 가능)
   //       POST /api/wish/done {id, done} · POST /api/wish/report {id} · DELETE /api/wish?id= (본인)
   if (path === '/api/wish' || path.startsWith('/api/wish/')) {
     const ws = getStore({ name: 'wishes', consistency: 'strong' });
@@ -888,7 +888,9 @@ export default async (req, context) => {
       if (url.searchParams.get('mine')) {
         if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
         const rankOf = Object.fromEntries(top.map((w, i) => [w.id, i + 1]));
-        const mine = all.filter((w) => w.uid === s.sub).map((w) => ({ ...pub(w), pub: w.pub, doneAt: w.doneAt || null, hidden: !!w.hidden, weekRank: rankOf[w.id] || null }));
+        const own = all.filter((w) => w.uid === s.sub);
+        const myCheer = new Set((await Promise.all(own.map(async (w) => ((await ws.get(`c/${w.id}/${s.sub}`)) ? w.id : null)))).filter(Boolean));
+        const mine = own.map((w) => ({ ...pub(w), pub: w.pub, doneAt: w.doneAt || null, hidden: !!w.hidden, weekRank: rankOf[w.id] || null, cheered: myCheer.has(w.id) }));
         const left = Math.max(0, WISH_DAILY - mine.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length);
         return json({ stats, wishes: mine, left });
       }
@@ -922,8 +924,8 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && path === '/api/wish/cheer') {
       const w = await getWish(body?.id);
-      if (!w || !w.pub || w.hidden) return json({ error: '소원을 찾지 못했어요.' }, 404);
-      if (w.uid === s.sub) return json({ error: '내 소원은 응원할 수 없어요.' }, 400);
+      // 내 소원도 응원할 수 있음 (2026-11-15 사용자 지시) — 나만 보기 소원은 주인만
+      if (!w || w.hidden || (!w.pub && w.uid !== s.sub)) return json({ error: '소원을 찾지 못했어요.' }, 404);
       if (await ws.get(`c/${w.id}/${s.sub}`)) return json({ ok: true, cheers: w.cheers || 0, already: true });
       await ws.set(`c/${w.id}/${s.sub}`, '1');
       await ws.set(`g/${s.sub}/${w.id}`, '1'); // 내가 응원한 소원 (활동 배지 셈)

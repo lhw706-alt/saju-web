@@ -9,7 +9,8 @@ import { computeSaju, chartSummary, dayLuck, dayLuckSummary, SajuInputError } fr
 import { topicById, TOPIC_FORMAT, ttiYears } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 import { sessionOf } from '../lib/session.mjs';
-import { purchaseKey, owned, getRecord, putRecord, newyearRecordId } from '../lib/wallet.mjs';
+import { owned, getRecord, putRecord, itemKey, itemRecordId } from '../lib/wallet.mjs';
+import { PAID_ITEMS } from '../../src/lib/wallet.js';
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
 const TIME_LIMIT_MS = 55_000;
@@ -77,14 +78,14 @@ export default async (req, context) => {
     day = dayLuck(chart, ymd);
   }
 
-  // 유료 주제(신년운세 한 해 흐름·월별 상세, 2026-11-15 처음부터 유료): 이 회원이 이 사람·이 해 상품을 샀는지 확인
+  // 유료 주제(신년운세 한 해 흐름·월별 상세, 평생 사주 — 2026-11-15 처음부터 유료): 이 회원이 이 사람(·이 해) 상품을 샀는지 확인
   let paidRec = null;
   if (topic.paid) {
     const s = sessionOf(req);
-    if (!s) return json({ error: '신년운세는 복채로 볼 수 있어요. 로그인해 주세요.', login: true }, 401);
-    const pkey = purchaseKey(s.sub, topic.paid, body?.input, String(new Date().getFullYear() + 1));
+    if (!s) return json({ error: '이 풀이는 복채로 볼 수 있어요. 로그인해 주세요.', login: true }, 401);
+    const pkey = itemKey(s.sub, topic.paid, body?.input);
     if (!(await owned(pkey))) return json({ error: '먼저 복채로 열어 주세요.', reason: 'not_owned' }, 402);
-    paidRec = { uid: s.sub, id: newyearRecordId(pkey) };
+    paidRec = { uid: s.sub, id: itemRecordId(topic.paid, pkey), kind: PAID_ITEMS[topic.paid].kind };
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -140,11 +141,11 @@ ${topic.format || TOPIC_FORMAT}`;
         }
         const final = await ms.finalMessage();
         if (paidRec && final.stop_reason === 'end_turn' && full.trim()) {
-          // 마이페이지 '풀이 기록': 같은 사람·같은 해 신년운세 한 건에 부분(newyear·nym1·nym2)을 모음
+          // 마이페이지 '풀이 기록': 같은 상품 한 건에 부분(신년운세 newyear·nym1·nym2 / 평생 사주 life1~4)을 모음
           const prev = (await getRecord(paidRec.uid, paidRec.id)) || {};
           await putRecord(paidRec.uid, paidRec.id, {
-            kind: 'newyear',
-            year: chart.nextSeun.year,
+            kind: paidRec.kind,
+            ...(paidRec.kind === 'newyear' ? { year: chart.nextSeun.year } : {}),
             at: prev.at || new Date().toISOString(),
             parts: { ...(prev.parts || {}), [topic.id]: full },
           }).catch(() => {});

@@ -11,7 +11,7 @@ import { dosaArtSvg } from '../brand/dosaArt.js';
 import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
-import { announceBalance } from '../components/BokchaLink.jsx';
+import { announceBalance, PriceTag } from '../components/BokchaLink.jsx';
 
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 const shuffle = (arr) => {
@@ -166,7 +166,7 @@ export default function Tarot() {
                       <span className="tarot-count-txt">
                         <b>{TAROT_SPREADS[n].label}</b>
                         <span>{TAROT_SPREADS[n].desc}</span>
-                        <em className="tarot-price">{fmtCredits(n === 3 ? PRICES.tarot3.credits : PRICES.tarot1.credits)}</em>
+                        <PriceTag n={n === 3 ? PRICES.tarot3.credits : PRICES.tarot1.credits} size={15} className="tarot-price" />
                       </span>
                     </button>
                   ))}

@@ -7,6 +7,7 @@ import StepForm from '../components/StepForm.jsx';
 import CharmBook from './CharmBook.jsx';
 import BadgeBoard from '../components/BadgeBoard.jsx';
 import PaidRecords from '../components/PaidRecords.jsx';
+import WalletHistory from '../components/WalletHistory.jsx';
 import ChartTable from '../components/ChartTable.jsx';
 import { GlossaryProvider, Help } from '../components/Glossary.jsx';
 import { computeSaju, ELEMENT_KO } from '../lib/saju.js';
@@ -22,7 +23,7 @@ const MY_TABS = [
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
   { id: 'records', label: '풀이 기록', to: '/my/records' },
   { id: 'badges', label: '내 배지', to: '/my/badges' },
-  { id: 'wallet', label: '복채', to: '/wallet' },
+  { id: 'wallet', label: '복채', to: '/my/wallet' },
   { id: 'charms', label: '부적 도감', to: '/my/charms' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
@@ -452,6 +453,12 @@ export default function My() {
         )}
       </div>
         </>
+      )}
+
+      {tab === 'wallet' && (
+      <div className="my-sec card">
+        <WalletHistory />
+      </div>
       )}
 
       {tab === 'records' && (

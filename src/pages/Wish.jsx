@@ -5,7 +5,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { WISH_CATS, WISH_MAX, WISH_DAILY, wishCat, wishProblem } from '../lib/wish.js';
-import GlassIcon, { LineIcon } from '../components/GlassIcon.jsx';
 import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
@@ -37,27 +36,17 @@ const api = async (url, opts = {}) => {
 function WishCard({ w, member, onCheer, onReport }) {
   const c = wishCat(w.cat);
   return (
-    <li className={`wish-card${w.done ? ' is-done' : ''}`}>
-      <div className="wish-card-top">
-        <span className="wish-cat">
-          {c?.label}
+    <li className={`wish-row${w.done ? ' is-done' : ''}${w.mine ? ' is-mine' : ''}`}>
+      <p className="wish-row-text">{w.text}</p>
+      <div className="wish-row-foot">
+        <span className="wish-row-meta">
+          {c?.label} · {ago(w.createdAt)}
+          {w.mine && <em> · 나의 소원</em>}
+          {w.done && <em className="is-done"> · 이루어졌어요</em>}
         </span>
-        {w.done && <span className="wish-done-tag">이루어졌어요</span>}
-        <span className="wish-time">{ago(w.createdAt)}</span>
-      </div>
-      <p className="wish-text">“{w.text}”</p>
-      <div className="wish-card-foot">
-        <span className="wish-anon">{w.mine ? '나의 소원' : '익명의 소원'}</span>
-        {!w.mine && (
-          <button type="button" className={`wish-cheer${w.cheered ? ' on' : ''}`} onClick={() => onCheer(w)} aria-pressed={!!w.cheered}>
-            {w.cheered ? '응원했어요' : '소원 응원하기'} <b>{w.cheers}</b>
-          </button>
-        )}
-        {w.mine && (
-          <span className="wish-cheer is-static">
-            응원 <b>{w.cheers}</b>
-          </span>
-        )}
+        <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={() => onCheer(w)} aria-pressed={!!w.cheered} disabled={!!w.cheered}>
+          {w.cheered ? '응원했어요' : '응원하기'} <b>{w.cheers}</b>
+        </button>
         {member && !w.mine && (
           <button type="button" className="wish-report" onClick={() => onReport(w)} aria-label="이 소원 신고하기">
             신고
@@ -187,13 +176,14 @@ export default function Wish() {
   };
 
   const cheer = async (w) => {
-    if (!member) return openLogin('다른 사람의 소원을 응원하려면 로그인해 주세요.');
+    if (!member) return openLogin('소원을 응원하려면 로그인해 주세요.');
     if (w.cheered) return;
     const r = await api('/api/wish/cheer', { method: 'POST', body: JSON.stringify({ id: w.id }) });
     if (!r.ok) return notify(r.data.error || '응원하지 못했어요.', 'negative');
     trackEvent('wish_cheer');
     setFeed((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
     setTop((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
+    setMine((m) => (m ? m.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)) : m));
   };
   const report = async (w) => {
     if (!window.confirm('이 소원을 신고할까요? 신고가 쌓이면 하늘에서 내려가요.')) return;
@@ -290,7 +280,7 @@ export default function Wish() {
                   <span className="wish-top-text">“{w.text}”</span>
                   <span className="wish-top-n">응원 {w.cheers}</span>
                 </button>
-                {openTop === w.id && !w.mine && (
+                {openTop === w.id && (
                   <div className="wish-top-act">
                     <button type="button" className={`wish-cheer${w.cheered ? ' on' : ''}`} onClick={() => cheer(w)} aria-pressed={!!w.cheered}>
                       {w.cheered ? '응원했어요' : '소원 응원하기'}
@@ -354,17 +344,14 @@ export default function Wish() {
         <section className="wish-mine">
           <ul className="wish-mine-stats">
             <li>
-              <GlassIcon kind="box" size="sm" />
               <b>{(mine || []).length}</b>
               <span>전체 소원</span>
             </li>
             <li>
-              <GlassIcon kind="done" size="sm" />
               <b>{doneCount}</b>
               <span>이루어진 소원</span>
             </li>
             <li>
-              <GlassIcon kind="luck" size="sm" />
               <b>{(mine || []).length - doneCount}</b>
               <span>진행 중</span>
             </li>
@@ -384,37 +371,40 @@ export default function Wish() {
             <p className="hint center">보관함을 여는 중이에요…</p>
           ) : mineList.length === 0 ? (
             <div className="wish-empty">
-              <GlassIcon kind="box" />
-              <p>{mineFilter === 'done' ? '아직 이루어진 소원이 없어요. 꼭 이루어지길 응원해요.' : '아직 띄운 소원이 없어요.'}</p>
+              <p>{mineFilter === 'done' ? '아직 이루어진 소원이 없어요.' : '아직 띄운 소원이 없어요.'}</p>
+              <p>{mineFilter === 'done' ? '꼭 이루어지길 응원해요.' : '첫 소원을 하늘에 띄워 보세요.'}</p>
             </div>
           ) : (
             <ul className="wish-mine-list">
               {mineList.map((w) => {
                 const old = !w.done && Date.now() - Date.parse(w.createdAt) > 30 * 86400e3;
                 return (
-                  <li key={w.id} className={`wish-mine-item card${w.done ? ' is-done' : ''}`}>
-                    <div className="wish-card-top">
-                      <span className="wish-cat">
-                        {wishCat(w.cat)?.label}
-                      </span>
-                      <span className={`wish-state${w.done ? ' is-done' : ''}`}>{w.done ? '이루어졌어요' : '진행 중'}</span>
-                      {w.weekRank && <span className="wish-rank-tag">이번 주 {w.weekRank}위</span>}
-                      {!w.pub && <span className="wish-private">나만 보기</span>}
-                      {w.hidden && <span className="wish-private">신고로 숨겨짐</span>}
-                    </div>
-                    <p className="wish-text">“{w.text}”</p>
-                    <p className="wish-meta">
-                      {ymd(w.createdAt)} 등록{w.done && w.doneAt ? ` · ${ymd(w.doneAt)} 이루어짐` : ''} · 응원 {w.cheers}
+                  <li key={w.id} className={`wish-row is-mine${w.done ? ' is-done' : ''}`}>
+                    <p className={`wish-row-state${w.done ? ' is-done' : ''}`}>
+                      {w.done ? '이루어진 소원' : '진행 중'}
+                      {w.weekRank && <span> · 이번 주 {w.weekRank}위</span>}
+                      {!w.pub && <span> · 나만 보기</span>}
+                      {w.hidden && <span> · 신고로 숨겨짐</span>}
                     </p>
+                    <p className="wish-row-text">{w.text}</p>
+                    <div className="wish-row-foot">
+                      <span className="wish-row-meta">
+                        {wishCat(w.cat)?.label} · {ymd(w.createdAt)}
+                        {w.done && w.doneAt ? ` · ${ymd(w.doneAt)} 이루어짐` : ''}
+                      </span>
+                      <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={() => cheer(w)} aria-pressed={!!w.cheered} disabled={!!w.cheered || w.hidden}>
+                        {w.cheered ? '응원했어요' : '응원하기'} <b>{w.cheers}</b>
+                      </button>
+                    </div>
                     {old && <p className="wish-remind">소원을 빈 지 30일이 지났어요. 다시 마음에 새겨 보세요.</p>}
-                    <div className="wish-mine-actions">
-                      <button type="button" className={w.done ? 'btn-ghost' : 'btn-primary inline'} onClick={() => toggleDone(w)}>
+                    <div className="wish-row-actions">
+                      <button type="button" className={w.done ? '' : 'is-main'} onClick={() => toggleDone(w)}>
                         {w.done ? '다시 진행 중으로' : '소원이 이루어졌어요'}
                       </button>
-                      <button type="button" className="btn-ghost" onClick={() => navigate(`/talisman?k=${WISH_TO_TALISMAN[w.cat] || 'luck'}`)}>
-                        어울리는 부적 보기
+                      <button type="button" onClick={() => navigate(`/talisman?k=${WISH_TO_TALISMAN[w.cat] || 'luck'}`)}>
+                        어울리는 부적
                       </button>
-                      <button type="button" className="wish-del" onClick={() => remove(w)}>
+                      <button type="button" className="is-del" onClick={() => remove(w)}>
                         지우기
                       </button>
                     </div>

@@ -6,7 +6,8 @@ import { NEXT_YEAR } from '../lib/topics.js';
 import { saveTopic } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
-import { PRICE_TAGS } from '../lib/wallet.js';
+import { PRICE_TAGS, PRICE_COIN } from '../lib/wallet.js';
+import { PriceTag } from '../components/BokchaLink.jsx';
 
 const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
 const STEMS_H = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
@@ -65,7 +66,7 @@ export default function NewYear() {
         </p>
         <h1 className="ny-title">{y} 신년운세</h1>
         <p className="ny-lead">천둥도사가 내 사주와 {y}년의 기운을 맞춰 보고, 한 해의 흐름과 계절마다 운, 1월부터 12월까지 달마다의 흐름을 풀어 드려요.</p>
-        <p className="ny-price">{PRICE_TAGS.newyear}</p>
+        <p className="ny-price"><PriceTag {...PRICE_COIN.newyear} size={20} /></p>
         <span className="ny-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('newyear') }} />
         <button type="button" className="btn-primary" onClick={() => start('top')}>
           내 {y} 신년운세 보기

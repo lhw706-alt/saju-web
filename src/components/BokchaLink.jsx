@@ -105,6 +105,17 @@ export function Coins({ n, size = 20, sign = false, className = '' }) {
     </span>
   );
 }
+// 유료 가격표: 엽전 + 숫자 (+ '부터'). 메인 카드 배지·주제 칩·장수 버튼 등 — 무료 배지와 확실히 구분 (2026-11-15 사용자 지시)
+export function PriceTag({ n, from = false, size = 16, className = '' }) {
+  return (
+    <span className={`price-tag ${className}`.trim()} aria-label={`${n}금전${from ? '부터' : ''}`}>
+      <CoinIcon size={size} />
+      <b>{n}</b>
+      {from && <small>부터</small>}
+    </span>
+  );
+}
+
 // 잔액이 바뀌면 화면 어디서든 window 에 'saju:wallet' 이벤트(detail.balance)를 보내 GNB 숫자를 맞춤
 export const announceBalance = (balance) => {
   if (typeof balance === 'number') window.dispatchEvent(new CustomEvent('saju:wallet', { detail: { balance } }));

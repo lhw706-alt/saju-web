@@ -57,5 +57,8 @@ export async function deleteAllRecords(uid) {
   const { blobs } = await records().list({ prefix: `u/${uid}/` });
   await Promise.all(blobs.map((b) => records().delete(b.key)));
 }
-// 신년운세 기록 id — 산 상품 키의 해시 부분을 그대로 씀 (같은 사람·같은 해면 같은 기록)
-export const newyearRecordId = (pkey) => `ny-${pkey.split('/').pop()}`;
+// 사람마다 사는 상품(신년운세·평생 사주)의 키 — 신년운세는 내년 연도까지 붙임
+import { PAID_ITEMS } from '../../src/lib/wallet.js';
+export const itemKey = (uid, item, input) => purchaseKey(uid, item, input, PAID_ITEMS[item]?.perYear ? String(new Date().getFullYear() + 1) : '');
+// 상품 기록 id — 산 상품 키의 해시 부분을 그대로 씀 (같은 사람(·같은 해)이면 같은 기록)
+export const itemRecordId = (item, pkey) => `${PAID_ITEMS[item]?.prefix || 'x'}-${pkey.split('/').pop()}`;

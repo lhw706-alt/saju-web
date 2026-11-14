@@ -4,7 +4,8 @@ import { trackEvent } from '../lib/analytics.js';
 import Markdown from './Markdown.jsx';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import NewYearMonthly from './NewYearMonthly.jsx';
-import { PRICE_TAGS } from '../lib/wallet.js';
+import { PRICE_COIN } from '../lib/wallet.js';
+import { PriceTag } from './BokchaLink.jsx';
 
 const END_MESSAGES = {
   refusal: '이 주제는 풀이를 만들지 못했어요. 다른 주제를 골라 주세요.',
@@ -133,7 +134,7 @@ export default function Reading({ input, initialTopic = null, member = false, op
             onClick={() => run(t.id)}
           >
             <strong>{t.label}</strong>
-            {t.paid && <em className="topic-price">{PRICE_TAGS.newyear}</em>}
+            {t.paid && <PriceTag {...PRICE_COIN.newyear} size={15} className="topic-price" />}
             <span>{t.desc}</span>
           </button>
         ))}

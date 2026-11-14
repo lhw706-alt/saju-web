@@ -2002,3 +2002,78 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-pkg-was { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
 .wallet-pkg-was s { color: rgba(194, 196, 200, 0.7); }
 .wallet-pkg-was em { font-style: normal; font-weight: 600; color: #FF6B5E; }
+
+/* 유료 가격표: 엽전 + 숫자 (2026-11-15 사용자 지시 — 무료 배지와 확실히 구분) */
+.price-tag { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.price-tag .coin-ic { animation: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)); }
+.price-tag b { font-weight: 600; color: var(--primary); }
+.price-tag small { font-size: 12px; color: rgba(194, 196, 200, 0.85); }
+.content-badge.price-tag { gap: 4px; padding: 3px 9px 3px 4px; background: rgba(10, 10, 12, 0.55); border: 1px solid rgba(226, 194, 122, 0.45); }
+.content-badge.price-tag b { font-size: 14px; }
+.topic-price.price-tag { margin-left: 6px; vertical-align: -3px; }
+.topic-price.price-tag b { font-size: 14px; }
+.ny-price .price-tag b { font-size: 18px; }
+
+/* 마이페이지 복채 탭 (2026-11-15) */
+.mw-title { margin: 0; font-size: 18px; font-weight: 600; }
+.mw-balance { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 16px 0 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.mw-bal b { font-size: 32px; color: var(--primary); }
+.mw-bal-wait { font-size: 28px; color: var(--text-2); }
+.mw-charge { margin: 0; }
+.mw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 6px; }
+.mw-head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.mw-filter { display: flex; gap: 12px; }
+.mw-filter button { padding: 4px 0; border: 0; background: none; font: inherit; font-size: 15px; color: rgba(194, 196, 200, 0.8); cursor: pointer; }
+.mw-filter button.on { color: var(--text); font-weight: 600; }
+.mw-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.mw-list li { display: flex; align-items: center; gap: 12px; padding: 13px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.mw-kind { flex: none; width: 56px; font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.mw-kind.is-charge { color: var(--primary); }
+.mw-what { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: 15px; }
+.mw-what small { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.mw-list .coins b { color: var(--text-2); }
+.mw-list .coins.is-plus b { color: var(--primary); }
+.mw-note { margin: 16px 0 0; font-size: 13px; line-height: 1.7; color: rgba(194, 196, 200, 0.8); }
+.mw-note a { color: var(--text); }
+
+/* 유료 결제 카드 (평생 사주 등, 2026-11-15) */
+.paygate { margin-top: 8px; padding: 28px 24px; text-align: left; }
+.paygate-price b { font-size: 22px; }
+.paygate-title { margin: 10px 0 0; font-family: var(--title); font-size: 26px; font-weight: 400; }
+.paygate-desc { margin: 8px 0 0; font-size: 15px; line-height: 1.7; color: rgba(194, 196, 200, 0.9); word-break: keep-all; }
+.paygate-points { margin: 18px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.paygate-points li { padding: 11px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); font-size: 15px; }
+.paygate-btn { display: block; width: 100%; margin: 20px 0 0; }
+.paygate-note { margin: 12px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.8); }
+
+/* 소원 목록·보관함 (2026-11-15 사용자 지시: 'AI 티' 빼기 — 상자·알약·따옴표 없이 줄 목록, 글이 주인공) */
+.wish-list, .wish-mine-list { display: block; margin: 12px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.wish-row { padding: 18px 2px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.wish-row-text { margin: 0; font-family: var(--title); font-size: 18px; line-height: 1.55; color: var(--text); word-break: keep-all; overflow-wrap: anywhere; }
+.wish-row.is-done .wish-row-text { color: rgba(220, 222, 228, 0.75); }
+.wish-row-foot { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.wish-row-meta { flex: 1; min-width: 0; font-size: 13px; color: rgba(194, 196, 200, 0.75); }
+.wish-row-meta em { font-style: normal; color: rgba(220, 222, 228, 0.9); }
+.wish-row-meta em.is-done { color: #8fe3ad; }
+.wish-row-cheer { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; border: 0; background: none; font: inherit; font-size: 14px; color: rgba(220, 222, 228, 0.85); cursor: pointer; }
+.wish-row-cheer b { font-weight: 600; color: var(--primary); }
+.wish-row-cheer:hover:not(:disabled) { color: var(--primary); }
+.wish-row-cheer.on { color: var(--primary); cursor: default; }
+.wish-row-cheer:disabled { cursor: default; }
+.wish-row .wish-report { flex: none; padding: 4px 0; border: 0; background: none; font: inherit; font-size: 13px; color: rgba(194, 196, 200, 0.6); cursor: pointer; }
+.wish-row-state { margin: 0 0 6px; font-size: 13px; color: var(--primary); }
+.wish-row-state.is-done { color: #8fe3ad; }
+.wish-row-state span { color: rgba(194, 196, 200, 0.75); }
+.wish-row-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; }
+.wish-row-actions button { padding: 4px 0; border: 0; background: none; font: inherit; font-size: 14px; color: rgba(220, 222, 228, 0.8); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(220, 222, 228, 0.3); cursor: pointer; }
+.wish-row-actions button.is-main { color: var(--primary); text-decoration-color: rgba(226, 194, 122, 0.5); }
+.wish-row-actions button.is-del { margin-left: auto; color: rgba(194, 196, 200, 0.6); text-decoration: none; }
+.wish-row .wish-remind { margin: 10px 0 0; font-size: 13px; color: rgba(194, 196, 200, 0.85); }
+/* 보관함 숫자: 상자 없이 글자 계층 */
+.wish-mine-stats { display: flex; gap: 0; margin: 18px 0 14px; padding: 0; list-style: none; }
+.wish-mine-stats li { flex: 1; display: grid; justify-items: start; gap: 2px; padding: 0 0 0 14px; border: 0; border-left: 1px solid rgba(255, 255, 255, 0.12); border-radius: 0; background: none; }
+.wish-mine-stats li:first-child { padding-left: 0; border-left: 0; }
+.wish-mine-stats b { font-size: 26px; font-weight: 600; }
+.wish-mine-stats span { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.wish-empty p + p { margin-top: 2px; color: rgba(194, 196, 200, 0.8); }
+.wish-row .wish-remind { padding: 0; border: 0; border-radius: 0; background: none; }

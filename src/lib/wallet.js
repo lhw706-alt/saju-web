@@ -17,7 +17,12 @@ export const PRICES = {
   tarot1: { credits: 10, label: '타로 한 장' },
   tarot3: { credits: 15, label: '타로 세 장 펼침' },
   newyearMonth: { credits: 40, label: '신년운세 (한 해 흐름 + 월별 상세)' },
+  life: { credits: 50, label: '평생 사주 리포트' }, // 2026-11-15 사용자 지시로 유료
 };
 // 메인 카드 배지에 적는 가격 (contents.js id → 글자)
+// 가격표(엽전 아이콘 + 숫자로 표시, 2026-11-15 사용자 지시) — PriceTag 컴포넌트가 씀
+export const PRICE_COIN = { tarot: { n: PRICES.tarot1.credits, from: true }, newyear: { n: PRICES.newyearMonth.credits }, life: { n: PRICES.life.credits } };
+// 사람마다 한 번 사는 상품. perYear 면 해마다 따로 (신년운세)
+export const PAID_ITEMS = { newyearMonth: { perYear: true, kind: 'newyear', prefix: 'ny' }, life: { perYear: false, kind: 'life', prefix: 'lf' } };
 export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}${UNIT}부터`, newyear: `${PRICES.newyearMonth.credits}${UNIT}` };
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;
