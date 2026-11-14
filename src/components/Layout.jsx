@@ -7,6 +7,7 @@ import FortuneFab from './FortuneFab.jsx';
 import ContactModal from './ContactModal.jsx';
 import LoginModal from './LoginModal.jsx';
 import UserMenu from './UserMenu.jsx';
+import BokchaLink from './BokchaLink.jsx';
 import { syncLocalToAccount } from '../lib/history.js';
 import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
@@ -181,7 +182,9 @@ export default function Layout() {
             </Link>
           ))}
         </nav>
-        {/* 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
+        {/* 복채(복주머니) + 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
+        <div className="header-actions">
+        <BokchaLink />
         {auth.user ? (
           <UserMenu nick={auth.user.nick} onLogout={() => logout().then(() => pathname.startsWith('/my') && navigate('/'))} />
         ) : (
@@ -189,6 +192,7 @@ export default function Layout() {
             로그인
           </button>
         )}
+        </div>
       </header>
 
       <main className="main">

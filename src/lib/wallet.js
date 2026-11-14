@@ -1,6 +1,6 @@
-// 복채(충전식 유료 단위) — 2026-11-14 사용자 결정. 1천(天) = 100원. 화면·서버가 같이 씀.
+// 복채(충전식 유료) — 2026-11-14 사용자 결정. 단위는 '금전'(2026-11-15 사용자 지시), 1금전 = 100원. 화면·서버가 같이 씀.
 // 가격·패키지를 바꾸면 여기만 고치면 됨 (서버가 금액을 이 표로 다시 확인).
-export const UNIT = '천';
+export const UNIT = '금전';
 export const PACKAGES = [
   { id: 'p3', won: 3000, credits: 30, label: '3,000원', bonus: '' },
   { id: 'p10', won: 10000, credits: 110, label: '10,000원', bonus: '10% 덤' },
@@ -15,5 +15,5 @@ export const PRICES = {
   newyearMonth: { credits: 40, label: '신년운세 (한 해 흐름 + 월별 상세)' },
 };
 // 메인 카드 배지에 적는 가격 (contents.js id → 글자)
-export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}천부터`, newyear: `${PRICES.newyearMonth.credits}천` };
+export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}${UNIT}부터`, newyear: `${PRICES.newyearMonth.credits}${UNIT}` };
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;

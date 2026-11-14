@@ -52,7 +52,7 @@ export default function Tarot() {
   const spread = TAROT_SPREADS[count];
   const picks = useMemo(() => chosen.map((k) => ({ ...deck[k], card: tarotById(deck[k].id) })), [chosen, deck]);
 
-  // 복채 (2026-11-15 사용자 지시: 처음부터 유료) — 한 장 10천 · 세 장 15천
+  // 복채 (2026-11-15 사용자 지시: 처음부터 유료) — 한 장 10금전 · 세 장 15금전
   const cost = count === 3 ? PRICES.tarot3.credits : PRICES.tarot1.credits;
   const begin = async () => {
     const q = question.trim();
@@ -67,7 +67,7 @@ export default function Tarot() {
         if (window.confirm(`복채가 ${fmtCredits(cost - bal)} 모자라요. 충전하러 갈까요? (지금 ${fmtCredits(bal)})`)) navigate('/wallet');
         return;
       }
-      if (!window.confirm(`${count === 3 ? '타로 세 장 펼침' : '타로 한 장'}에 복채 ${fmtCredits(cost)}을 쓸까요? (지금 ${fmtCredits(bal)})`)) return;
+      if (!window.confirm(`${count === 3 ? '타로 세 장 펼침' : '타로 한 장'}에 ${fmtCredits(cost)}을 쓸까요? (지금 ${fmtCredits(bal)})`)) return;
       usePay = true;
     }
     setPaid(usePay);
@@ -193,7 +193,7 @@ export default function Tarot() {
             </li>
           </ol>
           <button type="button" className="btn-primary tarot-go" onClick={begin}>
-            {cost ? `복채 ${fmtCredits(cost)}으로 카드 섞기` : '카드 섞기'}
+            {cost ? `${fmtCredits(cost)}으로 카드 섞기` : '카드 섞기'}
           </button>
           <p className="tarot-left">
             {auth?.user ? '다 본 풀이는 마이페이지 ‘풀이 기록’에 남아요.' : '타로는 회원만 복채로 볼 수 있어요.'}

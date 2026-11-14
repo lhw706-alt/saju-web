@@ -736,7 +736,7 @@ export default async (req, context) => {
       const orderId = `sc-${Date.now().toString(36)}-${randomBytes(6).toString('hex')}`;
       await orders.setJSON(orderId, { uid: s.sub, pkg: pkg.id, won: pkg.won, credits: pkg.credits, status: 'ready', createdAt: new Date().toISOString() });
       const customerKey = createHash('sha256').update(`cust:${s.sub}:${secret}`).digest('base64url').slice(0, 40);
-      return json({ orderId, amount: pkg.won, orderName: `사주천문 복채 ${pkg.credits}천`, customerKey });
+      return json({ orderId, amount: pkg.won, orderName: `사주천문 복채 ${pkg.credits}금전`, customerKey });
     }
     if (path === '/api/pay/confirm') {
       if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);

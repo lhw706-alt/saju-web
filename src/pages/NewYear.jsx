@@ -39,7 +39,7 @@ const YEAR_INFO = {
 };
 
 const FAQ = [
-  ['얼마인가요?', '한 해의 흐름과 1~12월 월별 상세를 합쳐 복채 40천(4,000원)이에요. 한 번 열면 같은 사람의 그해 신년운세는 다시 볼 때 복채가 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.'],
+  ['얼마인가요?', '한 해의 흐름과 1~12월 월별 상세를 합쳐 40금전(4,000원)이에요. 한 번 열면 같은 사람의 그해 신년운세는 다시 볼 때 복채가 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.'],
   ['태어난 시간을 몰라도 되나요?', '네, 시간을 몰라도 볼 수 있어요. 태어난 시(時)를 빼고 여섯 글자로 풀이하고, 그 때문에 덜 정확할 수 있는 부분은 따로 알려 드려요.'],
   ['음력 생일로도 되나요?', '네, 양력과 음력(윤달 포함) 모두 넣을 수 있어요.'],
   ['어떤 기준으로 풀이하나요?', '만세력으로 계산한 내 사주 원국에 그해의 세운(그해의 기운)과 지금 대운(10년 흐름)이 어떻게 만나는지를 보고 풀이해요. 어느 글자에서 그렇게 읽었는지 근거도 함께 적어요.'],
@@ -65,7 +65,7 @@ export default function NewYear() {
         </p>
         <h1 className="ny-title">{y} 신년운세</h1>
         <p className="ny-lead">천둥도사가 내 사주와 {y}년의 기운을 맞춰 보고, 한 해의 흐름과 계절마다 운, 1월부터 12월까지 달마다의 흐름을 풀어 드려요.</p>
-        <p className="ny-price">복채 {PRICE_TAGS.newyear}</p>
+        <p className="ny-price">{PRICE_TAGS.newyear}</p>
         <span className="ny-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('newyear') }} />
         <button type="button" className="btn-primary" onClick={() => start('top')}>
           내 {y} 신년운세 보기
@@ -108,7 +108,7 @@ export default function NewYear() {
         <ol className="ny-steps">
           <li>아래 버튼을 눌러요.</li>
           <li>성별 → 생년월일 → 태어난 시각 → 태어난 곳을 차례로 넣어요.</li>
-          <li>복채 {PRICE_TAGS.newyear}으로 열면 천둥도사가 {y}년 한 해 흐름과 월별 상세를 풀어 드려요.</li>
+          <li>{PRICE_TAGS.newyear}으로 열면 천둥도사가 {y}년 한 해 흐름과 월별 상세를 풀어 드려요.</li>
         </ol>
       </section>
 

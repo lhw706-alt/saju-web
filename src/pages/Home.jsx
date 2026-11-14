@@ -1,4 +1,3 @@
-import PollCard from '../components/PollCard.jsx';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogoSymbol } from '../components/Logo.jsx';
@@ -93,7 +92,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <PollCard place="home" />
+      {/* 오늘의 질문(투표)은 2026-11-15 사용자 지시로 메인에서 잠시 숨김 — 나중에 다시 넣음 */}
       <ContentCards onOpen={openContent} />
 
     </>

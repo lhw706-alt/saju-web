@@ -5,6 +5,7 @@ import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { PACKAGES, PRICES, fmtCredits } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
+import { PouchIcon } from '../components/BokchaLink.jsx';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -48,7 +49,7 @@ export default function Wallet() {
     confirmCharge(data)
       .then((d) => {
         trackEvent('charge_done', { credits: d.credits });
-        setMsg({ ok: true, text: `복채 ${fmtCredits(d.credits)}이 충전됐어요.` });
+        setMsg({ ok: true, text: `${fmtCredits(d.credits)}이 충전됐어요.` });
         load();
       })
       .catch((e) => setMsg({ ok: false, text: e.message }))
@@ -59,7 +60,8 @@ export default function Wallet() {
   if (auth?.ready && !auth.user) {
     return (
       <section className="wallet">
-        <h1 className="start-title">복채 충전</h1>
+        <span className="wallet-pouch"><PouchIcon size={88} /></span>
+      <h1 className="start-title">복채 충전</h1>
         <p className="start-lead">복채는 로그인한 회원만 충전하고 쓸 수 있어요.</p>
         <button type="button" className="btn-primary wallet-login" onClick={() => openLogin('복채를 충전하려면 로그인해 주세요.')}>
           로그인
@@ -83,6 +85,7 @@ export default function Wallet() {
 
   return (
     <section className="wallet">
+      <span className="wallet-pouch"><PouchIcon size={88} /></span>
       <h1 className="start-title">복채 충전</h1>
       <p className="start-lead">복채로 타로와 신년운세를 볼 수 있어요. 본 풀이는 마이페이지 '풀이 기록'에 남아요.</p>
 
@@ -144,7 +147,7 @@ export default function Wallet() {
       )}
 
       <div className="wallet-notice">
-        <p>1천은 100원이에요. 충전한 복채는 사주천문에서만 쓸 수 있고, 유효기간은 충전일로부터 5년이에요.</p>
+        <p>1금전은 100원이에요. 충전한 복채는 사주천문에서만 쓸 수 있고, 유효기간은 충전일로부터 5년이에요.</p>
         <p>
           충전 후 7일 안에 쓰지 않은 복채는 전액 환불받을 수 있고, 일부를 쓴 뒤에도 남은 복채는 환불을 요청할 수 있어요. 환불은{' '}
           <Link to="/my/support">고객센터</Link>로 요청해 주세요. 자세한 내용은 <Link to="/terms">이용약관</Link>을 확인해 주세요.
