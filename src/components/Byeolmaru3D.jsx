@@ -5,6 +5,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildCheondong } from './Mascot3D.jsx';
+import { SKY_COLORS } from '../lib/byeolmaruSky.js';
 
 const WORLD_R = 24; // 걸을 수 있는 반지름
 const SPEED = 4.4;
@@ -34,12 +35,12 @@ const glow = (inner, outer = 'rgba(0,0,0,0)') =>
   });
 
 // 밤하늘: 위는 짙은 남색, 지평선은 보랏빛 (안쪽에서 보는 큰 구)
-function buildSky() {
+function buildSky(colors = SKY_COLORS.night) {
   const geo = new THREE.SphereGeometry(180, 32, 16);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
-    uniforms: { top: { value: new THREE.Color('#070a1f') }, mid: { value: new THREE.Color('#141a3d') }, bottom: { value: new THREE.Color('#2b2150') } },
+    uniforms: { top: { value: new THREE.Color(colors.top) }, mid: { value: new THREE.Color(colors.mid) }, bottom: { value: new THREE.Color(colors.bottom) } },
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
     fragmentShader:
       'uniform vec3 top; uniform vec3 mid; uniform vec3 bottom; varying vec3 vP; void main(){ float h = vP.y; vec3 c = h > 0.15 ? mix(mid, top, smoothstep(0.15, 0.7, h)) : mix(bottom, mid, smoothstep(-0.05, 0.15, h)); gl_FragColor = vec4(c, 1.0); }',
@@ -95,6 +96,75 @@ function buildSky() {
   milky.rotation.set(-0.9, 0.2, 0.9);
   group.add(milky);
   return group;
+}
+
+// 달: phase 0 새달 · 0.5 보름 · 1 그믐 — 밝은 원에 어두운 원을 겹쳐 모양을 냄
+function moonSprite(phase) {
+  const tex = canvasTex(256, 256, (g, w) => {
+    g.clearRect(0, 0, w, w);
+    const r = w * 0.36;
+    const cx = w / 2;
+    const glowG = g.createRadialGradient(cx, cx, r * 0.9, cx, cx, w / 2);
+    glowG.addColorStop(0, 'rgba(255,240,200,0.35)');
+    glowG.addColorStop(1, 'rgba(255,240,200,0)');
+    g.fillStyle = glowG;
+    g.fillRect(0, 0, w, w);
+    g.save();
+    g.beginPath();
+    g.arc(cx, cx, r, 0, Math.PI * 2);
+    g.clip();
+    g.fillStyle = '#fff3cf';
+    g.fillRect(0, 0, w, w);
+    // 그림자 원: 보름(0.5)에서 가장 멀리 → 안 보임, 새달(0·1)에서 겹쳐 가림
+    const k = Math.cos(phase * Math.PI * 2); // 1(새달) ~ -1(보름)
+    const off = (1 - k) * r * 1.02 * (phase < 0.5 ? -1 : 1);
+    g.fillStyle = '#0d1230';
+    g.beginPath();
+    g.arc(cx + off, cx, r * 1.02, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+  });
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
+  sp.scale.setScalar(phase > 0.4 && phase < 0.6 ? 26 : 20);
+  return sp;
+}
+
+// 오늘의 일진 석판
+function iljiStone(sky) {
+  const g = new THREE.Group();
+  const tex = canvasTex(512, 768, (c, w, h) => {
+    c.fillStyle = '#4a4d5c';
+    c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 300; i++) {
+      c.fillStyle = `rgba(${Math.random() < 0.5 ? '255,255,255' : '0,0,0'},${Math.random() * 0.05})`;
+      c.fillRect(Math.random() * w, Math.random() * h, 30, 18);
+    }
+    c.strokeStyle = 'rgba(226,194,122,0.55)';
+    c.lineWidth = 6;
+    c.strokeRect(22, 22, w - 44, h - 44);
+    c.textAlign = 'center';
+    c.fillStyle = 'rgba(243,228,191,0.9)';
+    c.font = '600 40px "Pretendard Variable", Pretendard, sans-serif';
+    c.fillText('오늘의 일진', w / 2, 100);
+    c.fillStyle = '#f6dc9a';
+    c.font = '600 190px "ChosunSm", serif';
+    c.fillText(sky.ilji.hanja, w / 2, 330);
+    c.fillStyle = 'rgba(243,228,191,0.95)';
+    c.font = '600 54px "Pretendard Variable", Pretendard, sans-serif';
+    c.fillText(`${sky.ilji.ko}일 · ${sky.ilji.element}의 기운`, w / 2, 430);
+    if (sky.special) {
+      c.fillStyle = '#ffb38a';
+      c.font = '600 46px "Pretendard Variable", Pretendard, sans-serif';
+      c.fillText(`오늘은 ${sky.special.title}`, w / 2, 560);
+    }
+  });
+  document.fonts?.load('600 190px "ChosunSm"', sky.ilji.hanja).then(() => tex.userData.redraw()).catch(() => {});
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.25, 0.32), [stoneMat, stoneMat, stoneMat, stoneMat, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.28 }), stoneMat]);
+  slab.position.y = 1.55;
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.45, 0.7), darkStone);
+  base.position.y = 0.22;
+  g.add(slab, base);
+  return g;
 }
 
 // 별자리 돌바닥: 어두운 돌 + 금빛 별자리 선
@@ -276,13 +346,13 @@ const COLLIDERS = [
 
 // apiRef.current = { qi(), stopQi(), bow(), star(), lantern() } — 화면의 동작 버튼이 부름
 // onEvent(type, data): 'qi-walk'(방석으로 가는 중) · 'qi-start' · 'qi-cancel' · 'star'({n}) · 'lantern-up'
-export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, onReady, onFail }) {
+export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, sky: skyInfo, onReady, onFail }) {
   const mount = useRef(null);
   useEffect(() => {
     const el = mount.current;
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: false });
     } catch {
       onFail?.();
       return undefined;
@@ -293,8 +363,10 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     renderer.toneMappingExposure = 1.05;
     el.appendChild(renderer.domElement);
     const colliders = COLLIDERS.map((c) => [...c]);
+    colliders.push([4.6, 13.6, 1.0]); // 일진 석판
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog('#141a3d', 28, 95);
+    const colors = SKY_COLORS[skyInfo?.time || 'night'];
+    scene.fog = new THREE.Fog(colors.fog, 28, 95);
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
 
     // 빛: 달빛 + 하늘빛 + 가운데 따뜻한 빛
@@ -306,7 +378,39 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     warm.position.set(0, 4.5, 0);
     scene.add(warm);
 
-    scene.add(buildSky());
+    scene.add(buildSky(colors));
+    // 진짜 달 (음력 날짜 모양)
+    const moonS = moonSprite(skyInfo?.phase ?? 0.5);
+    moonS.position.set(-48, 30, -110); // 처음 보는 방향 왼쪽 위에 보이게
+    scene.add(moonS);
+    // 별똥별: 보통 밤엔 가끔, 유성우·칠석엔 자주
+    const meteorRate = skyInfo?.special?.kind === 'meteor' ? 1.4 : 0.08; // 1초에 나올 확률
+    const meteorTex = canvasTex(256, 16, (c, w, h) => {
+      const lg = c.createLinearGradient(0, 0, w, 0);
+      lg.addColorStop(0, 'rgba(255,255,255,0)');
+      lg.addColorStop(1, 'rgba(255,246,220,1)');
+      c.fillStyle = lg;
+      c.fillRect(0, h / 2 - 2, w, 4);
+    });
+    const meteors = [];
+    const spawnMeteor = () => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(14, 0.35), new THREE.MeshBasicMaterial({ map: meteorTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
+      const a = Math.random() * Math.PI * 2;
+      m.position.set(Math.cos(a) * 70, 45 + Math.random() * 30, Math.sin(a) * 70);
+      const dir = new THREE.Vector3(-Math.cos(a) * 0.6 + (Math.random() - 0.5), -0.45, -Math.sin(a) * 0.6 + (Math.random() - 0.5)).normalize();
+      m.lookAt(m.position.clone().add(new THREE.Vector3(0, 0, 1)));
+      m.userData = { dir, age: 0, life: 1.1 + Math.random() * 0.6 };
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+      scene.add(m);
+      meteors.push(m);
+    };
+    // 오늘의 일진 석판 (입구 안쪽 오른편)
+    if (skyInfo) {
+      const st = iljiStone(skyInfo);
+      st.position.set(4.6, 0, 13.6);
+      st.rotation.y = -0.45;
+      scene.add(st);
+    }
 
     // 바닥
     const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 96), new THREE.MeshStandardMaterial({ map: groundTexture(), roughness: 0.95 }));
@@ -390,7 +494,8 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     // 하늘로 떠오르는 등불
     const sky = [];
     const skyMat = new THREE.SpriteMaterial({ map: glow('rgba(255,200,120,1)', 'rgba(255,140,60,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-    for (let i = 0; i < 28; i++) {
+    const skyCount = skyInfo?.special?.kind === 'lanterns' ? 70 : 28;
+    for (let i = 0; i < skyCount; i++) {
       const s = new THREE.Sprite(skyMat);
       s.scale.setScalar(0.5 + Math.random() * 0.5);
       s.position.set((Math.random() - 0.5) * 60, 4 + Math.random() * 40, (Math.random() - 0.5) * 60);
@@ -601,6 +706,12 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           addCountStar(randomSkyDir(fwd.setY(Math.max(0.4, fwd.y + 0.5)).normalize()));
           burst(player.position.clone().setY(1.2), 6);
         },
+        // 사진: 지금 장면을 한 번 그려 바로 이미지로 (preserveDrawingBuffer 없이도 같은 순간이면 됨)
+        snapshot: () => {
+          tag.visible = true;
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL('image/jpeg', 0.92);
+        },
         lantern: () => {
           const l = new THREE.Group();
           const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.42, 12, 1, true), lanternMat);
@@ -798,6 +909,20 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
         s.position.x += Math.sin(t * 0.3 + s.userData.v * 9) * 0.004;
         if (s.position.y > 48) s.position.y = 4;
       });
+      // 별똥별
+      if (Math.random() < meteorRate * dt) spawnMeteor();
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.userData.age += dt;
+        m.position.addScaledVector(m.userData.dir, dt * 60);
+        m.material.opacity = Math.max(0, 1 - m.userData.age / m.userData.life);
+        if (m.userData.age > m.userData.life) {
+          scene.remove(m);
+          m.geometry.dispose();
+          m.material.dispose();
+          meteors.splice(i, 1);
+        }
+      }
       // 반딧불 흔들림
       const fp = flies.geometry.attributes.position;
       for (let i = 0; i < FN; i++) fp.setY(i, fp.getY(i) + Math.sin(t * 1.5 + i) * 0.004);

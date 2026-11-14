@@ -4,6 +4,8 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
+import { skyState } from '../lib/byeolmaruSky.js';
+import { copyText, sendKakao } from '../lib/share.js';
 
 const Byeolmaru3D = lazy(() => import('../components/Byeolmaru3D.jsx'));
 
@@ -57,6 +59,47 @@ const saveStars = (n) => {
   }
 };
 const QI_SECONDS = 30;
+
+// 사진 카드: 지금 장면 + 아래 띠(별마루 낙관 · 이름 · 날짜 · 별 수 · 주소)
+async function composePhoto(shot, { nick, stars, ymd, special }) {
+  const img = new Image();
+  img.src = shot;
+  await img.decode();
+  const W = Math.min(1080, img.width);
+  const H = Math.round((img.height / img.width) * W);
+  const band = Math.round(W * 0.2);
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H + band;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0, W, H);
+  g.fillStyle = '#0d1028';
+  g.fillRect(0, H, W, band);
+  const u = W / 1080;
+  // 붉은 낙관 天文
+  g.fillStyle = '#c8352b';
+  g.fillRect(40 * u, H + 40 * u, 92 * u, 112 * u);
+  g.fillStyle = '#fce9c8';
+  g.textAlign = 'center';
+  g.font = `600 ${44 * u}px "ChosunSm", serif`;
+  g.fillText('天', 86 * u, H + 92 * u);
+  g.fillText('文', 86 * u, H + 140 * u);
+  g.textAlign = 'left';
+  g.fillStyle = '#F3E4BF';
+  g.font = `600 ${56 * u}px "ChosunSm", serif`;
+  g.fillText('별마루', 160 * u, H + 98 * u);
+  g.fillStyle = 'rgba(236,238,244,0.85)';
+  g.font = `500 ${32 * u}px "Pretendard Variable", Pretendard, sans-serif`;
+  g.fillText(`${nick} · ${ymd.replace(/-/g, '.')}${special ? ` · ${special}` : ''}`, 160 * u, H + 148 * u);
+  g.textAlign = 'right';
+  g.fillStyle = '#EBCB86';
+  g.font = `600 ${40 * u}px "Pretendard Variable", Pretendard, sans-serif`;
+  if (stars > 0) g.fillText(`★ ${stars}`, W - 40 * u, H + 98 * u);
+  g.fillStyle = 'rgba(236,238,244,0.6)';
+  g.font = `500 ${28 * u}px "Pretendard Variable", Pretendard, sans-serif`;
+  g.fillText('사주천문.com/byeolmaru', W - 40 * u, H + 148 * u);
+  return new Promise((res) => c.toBlob((b) => res(b), 'image/jpeg', 0.92));
+}
 
 // 숨 고르기 화면: 4초 들숨 · 4초 날숨, 30초
 function Breath({ onDone, onStop }) {
@@ -191,6 +234,9 @@ export default function Byeolmaru() {
   const [stars, setStars] = useState(loadStars);
   const [qi, setQi] = useState(null); // null | 'walk' | 'on'
   const [card, setCard] = useState(null); // { kind: 'word' | 'lantern' | 'stars' }
+  const [sky] = useState(skyState);
+  const [banner, setBanner] = useState(() => (sky.special ? sky.special : null));
+  const [photo, setPhoto] = useState(null); // { url, blob }
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [help, setHelp] = useState(true);
@@ -230,11 +276,43 @@ export default function Byeolmaru() {
       }
     } else if (a.id === 'lantern') api.lantern();
   };
+  // 사진 찍기 → 카드 만들기
+  const takePhoto = async () => {
+    const shot = apiRef.current?.snapshot?.();
+    if (!shot) return;
+    trackEvent('plaza_photo');
+    const blob = await composePhoto(shot, { nick, stars, ymd: sky.now.ymd, special: sky.special?.title });
+    if (!blob) return;
+    setPhoto((old) => {
+      if (old) URL.revokeObjectURL(old.url);
+      return { url: URL.createObjectURL(blob), blob };
+    });
+  };
+  const sharePhoto = async () => {
+    const file = new File([photo.blob], 'byeolmaru.jpg', { type: 'image/jpeg' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: '별마루', text: '별마루에서 별을 보고 있어요' });
+        trackEvent('plaza_share', { method: 'file' });
+        return;
+      }
+    } catch {
+      return;
+    }
+    await copyText('https://사주천문.com/byeolmaru');
+    notify?.('별마루 주소를 복사했어요. 사진은 저장해서 올려 주세요.');
+    trackEvent('plaza_share', { method: 'link' });
+  };
+  const kakaoPhoto = () => {
+    trackEvent('plaza_share', { method: 'kakao' });
+    sendKakao({ title: '별마루에서 별을 보고 있어요', description: '밤하늘 아래 천동이 곁에 잠깐 앉아 쉬어 가요. 같이 들어와요.', path: '/byeolmaru', button: '별마루 들어가기' });
+  };
+
   const qiDone = () => {
     apiRef.current?.stopQi();
     setQi(null);
     trackEvent('plaza_qi_done');
-    setCard({ kind: 'word', text: wordOfDay() });
+    setCard({ kind: 'word', text: wordOfDay(), ilji: sky.ilji });
   };
   const qiStop = () => {
     apiRef.current?.stopQi();
@@ -245,7 +323,7 @@ export default function Byeolmaru() {
     <div className="bm">
       {!failed ? (
         <Suspense fallback={null}>
-          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
+          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} sky={sky} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </Suspense>
       ) : (
         <div className="bm-fail">
@@ -277,7 +355,41 @@ export default function Byeolmaru() {
             ★ {stars} <small>/ {STAR_GOAL}</small>
           </span>
         )}
+        <button type="button" className="bm-icon-btn" onClick={takePhoto} aria-label="사진 찍기" disabled={!ready}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
+        </button>
       </div>
+
+      {ready && banner && (
+        <button type="button" className="bm-banner" onClick={() => setBanner(null)}>
+          <b>오늘은 {banner.title}</b> {banner.line}
+        </button>
+      )}
+
+      {photo && (
+        <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setPhoto(null)}>
+          <div className="bm-photo" role="dialog" aria-modal="true" aria-label="별마루 사진">
+            <img src={photo.url} alt="별마루에서 찍은 사진" />
+            <div className="bm-photo-actions">
+              <a className="bm-card-ghost" href={photo.url} download={`byeolmaru-${sky.now.ymd}.jpg`} onClick={() => trackEvent('plaza_photo_save')}>
+                저장하기
+              </a>
+              <button type="button" className="bm-card-ghost" onClick={kakaoPhoto}>
+                카카오톡
+              </button>
+              <button type="button" className="bm-card-main" onClick={sharePhoto}>
+                공유하기
+              </button>
+            </div>
+            <button type="button" className="bm-photo-close" onClick={() => setPhoto(null)}>
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
 
       {qi === 'walk' && <p className="bm-help">방석으로 가는 중이에요… 걸으면 멈춰요</p>}
       {qi === 'on' && <Breath onDone={qiDone} onStop={qiStop} />}
@@ -286,10 +398,11 @@ export default function Byeolmaru() {
         <div className="bm-card" role="dialog" aria-labelledby="bm-card-title">
           {card.kind === 'word' && (
             <>
-              <p className="bm-card-kicker">오늘의 한마디</p>
+              <p className="bm-card-kicker">오늘의 한마디 · {card.ilji?.ko}일 {card.ilji?.element}의 기운</p>
               <p id="bm-card-title" className="bm-card-text">
                 {card.text}
               </p>
+              {card.ilji && <p className="bm-card-sub">{card.ilji.line}</p>}
               <div className="bm-card-actions">
                 <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
                   닫기
