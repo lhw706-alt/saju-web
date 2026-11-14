@@ -31,7 +31,7 @@ import { passwordOk } from '../../src/lib/password.js';
 import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
-import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk } from '../../src/lib/wallet.js';
+import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk, cosmeticById } from '../../src/lib/wallet.js';
 import { walletOf, credit, grant, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
@@ -717,6 +717,39 @@ export default async (req, context) => {
     return json({ error: '잘못된 요청이에요.' }, 405);
   }
 
+  // ── 별마루 천동이 꾸미기 (2026-11-15) ── GET /api/cosmetics → { owned, equipped, balance }
+  //   POST /api/cosmetics/buy {id} (금전 차감, 이미 있으면 그대로) · POST /api/cosmetics/equip {slot, id|null}
+  if (path === '/api/cosmetics' || path.startsWith('/api/cosmetics/')) {
+    const s = secret ? verify(cookies(req)[SESSION], secret) : null;
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
+    const cst = getStore({ name: 'cosmetics', consistency: 'strong' });
+    const mine = (await cst.get(s.sub, { type: 'json' }).catch(() => null)) || { owned: [], equipped: {} };
+    if (req.method === 'GET') return json({ ...mine, balance: (await walletOf(s.sub)).balance || 0 });
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const body = await readJson();
+    if (path === '/api/cosmetics/buy') {
+      const item = cosmeticById(String(body?.id || ''));
+      if (!item) return json({ error: '없는 아이템이에요.' }, 400);
+      if (mine.owned.includes(item.id)) return json({ ...mine, balance: (await walletOf(s.sub)).balance || 0, already: true });
+      const r = await spend(s.sub, item.credits, `별마루 꾸미기 · ${item.label}`, `cos-${item.id}`);
+      if (!r.ok) return json({ error: '금전이 모자라요. 충전한 뒤 다시 시도해 주세요.', need: item.credits, balance: r.balance }, 402);
+      const next = { owned: [...mine.owned, item.id], equipped: { ...mine.equipped, [item.slot]: item.id } };
+      await cst.setJSON(s.sub, next);
+      return json({ ...next, balance: r.balance });
+    }
+    if (path === '/api/cosmetics/equip') {
+      const slot = String(body?.slot || '');
+      if (!['hat', 'color', 'cushion'].includes(slot)) return json({ error: '잘못된 요청이에요.' }, 400);
+      const id = body?.id ? String(body.id) : null;
+      if (id && (!mine.owned.includes(id) || cosmeticById(id)?.slot !== slot)) return json({ error: '가지고 있지 않은 아이템이에요.' }, 400);
+      const next = { ...mine, equipped: { ...mine.equipped, [slot]: id } };
+      await cst.setJSON(s.sub, next);
+      return json({ ...next, balance: (await walletOf(s.sub)).balance || 0 });
+    }
+    return json({ error: '잘못된 요청이에요.' }, 404);
+  }
+
   if (path === '/api/wallet' || path.startsWith('/api/pay/') || path.startsWith('/api/wallet/')) {
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
     const payOn = Boolean(process.env.TOSS_SECRET_KEY);
@@ -1079,6 +1112,7 @@ export default async (req, context) => {
       const { blobs: pk } = await pur.list({ prefix: `u/${s.sub}/` });
       await Promise.all(pk.map((b) => pur.delete(b.key)));
       await deleteAllRecords(s.sub).catch(() => {}); // 유료 풀이 기록
+      await getStore({ name: 'cosmetics', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 별마루 꾸미기
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });
@@ -1224,4 +1258,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

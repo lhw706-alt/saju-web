@@ -9,6 +9,7 @@ import { SKY_COLORS } from '../lib/byeolmaruSky.js';
 import { zodiacSvg } from '../brand/zodiacArt.js';
 import { MANSIONS, GROUPS as MANSION_GROUPS, mansionShape } from '../lib/byeolmaruCollect.js';
 import { cheondongBustSvg } from '../brand/cheondong.js';
+import { cosmeticById } from '../lib/wallet.js';
 
 const WORLD_R = 24; // 걸을 수 있는 반지름
 const SPEED = 4.4;
@@ -763,6 +764,54 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       });
     };
     let lastAct = 'walk';
+    // ── 천동이 꾸미기 (금전) ──
+    const BASE_COLOR = me.body.material.color.clone();
+    const gat = new THREE.Group();
+    {
+      const hatMat = new THREE.MeshStandardMaterial({ color: '#16161c', roughness: 0.5, transparent: true, opacity: 0.88 });
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.04, 40), hatMat);
+      brim.position.y = 1.22;
+      const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.55, 32), hatMat);
+      crown.position.y = 1.5;
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.49, 0.49, 0.08, 32), new THREE.MeshStandardMaterial({ color: '#3a2a14' }));
+      band.position.y = 1.27;
+      gat.add(brim, crown, band);
+      gat.rotation.z = -0.06;
+    }
+    const flower = new THREE.Group();
+    {
+      const petal = new THREE.MeshStandardMaterial({ color: '#ff9fb8', emissive: '#7a2a40', emissiveIntensity: 0.25, roughness: 0.5 });
+      for (let i = 0; i < 5; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), petal);
+        const a = (i / 5) * Math.PI * 2;
+        p.position.set(Math.cos(a) * 0.12, Math.sin(a) * 0.12, 0);
+        p.scale.z = 0.5;
+        flower.add(p);
+      }
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), new THREE.MeshStandardMaterial({ color: '#f0c45e', emissive: '#c48a1c', emissiveIntensity: 0.6 }));
+      core.position.z = 0.04;
+      flower.add(core);
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.6, 8), new THREE.MeshStandardMaterial({ color: '#e9b949', metalness: 0.6, roughness: 0.3 }));
+      pin.rotation.z = Math.PI / 2.6;
+      pin.position.set(-0.18, -0.08, -0.05);
+      flower.add(pin);
+      flower.position.set(0.62, 1.02, 0.42);
+      flower.rotation.y = 0.6;
+    }
+    const goldSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.66, 0.2, 24), new THREE.MeshStandardMaterial({ color: '#e2b14a', metalness: 0.35, roughness: 0.4, emissive: '#6b4a10', emissiveIntensity: 0.25 }));
+    goldSeat.visible = false;
+    scene.add(goldSeat);
+    let look = { hat: null, color: null, cushion: null };
+    const setLook = (l) => {
+      look = { hat: null, color: null, cushion: null, ...(l || {}) };
+      me.root.remove(gat);
+      me.root.remove(flower);
+      if (look.hat === 'gat') me.root.add(gat);
+      if (look.hat === 'flower') me.root.add(flower);
+      me.crescent.visible = look.hat !== 'gat'; // 갓을 쓰면 초승달 꼭지는 갓 속으로
+      const c = cosmeticById(look.color)?.color;
+      me.body.material.color.copy(c ? new THREE.Color(c) : BASE_COLOR);
+    };
 
     // 동작 상태
     let paused = false; // 자기 전 모드: 그리기를 멈춰 배터리 아낌
@@ -876,6 +925,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
         getPos: () => ({ x: player.position.x, z: player.position.z, a: mode === 'sit' ? 'sit' : lastAct }),
         setGhosts,
         setWishes,
+        setLook,
         teleport: (x, z) => {
           player.position.set(x, 0, z);
         },
@@ -1032,6 +1082,8 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       // 기운 받기 중: 내 둘레로 빛이 피어오름
       if (qiOn && Math.random() < dt * 9) burst(player.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.2, (Math.random() - 0.5) * 0.8)), 1, 0.7);
 
+      goldSeat.visible = mode === 'sit' && look.cushion === 'goldseat';
+      if (goldSeat.visible) goldSeat.position.set(player.position.x, 0.12, player.position.z);
       // 잔상: 차례로 나타났다 사라짐 (24초 한 바퀴)
       ghosts.forEach((g) => {
         const p = ((t + g.userData.phase) % 24) / 24;

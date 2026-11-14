@@ -30,4 +30,14 @@ export const WISH_OFFERS = [0, 5, 10, 30, 50];
 // 직접 입력은 1~1,000금전 (2026-11-15 사용자 지시)
 export const WISH_OFFER_MAX = 1000;
 export const wishOfferOk = (n) => Number.isInteger(n) && n >= 0 && n <= WISH_OFFER_MAX;
+// 별마루 천동이 꾸미기 (2026-11-15 '다 해줘' 5묶음) — 한 번 사면 그 계정에서 계속, 갈아입기 자유
+export const COSMETICS = [
+  { id: 'gat', slot: 'hat', label: '갓', credits: 20 },
+  { id: 'flower', slot: 'hat', label: '꽃비녀', credits: 15 },
+  { id: 'sky', slot: 'color', label: '하늘빛 옷', credits: 10, color: '#cfe0ff' },
+  { id: 'blossom', slot: 'color', label: '분홍빛 옷', credits: 10, color: '#ffd9e4' },
+  { id: 'gold', slot: 'color', label: '금빛 옷', credits: 30, color: '#f6dea0' },
+  { id: 'goldseat', slot: 'cushion', label: '금빛 방석', credits: 20 },
+];
+export const cosmeticById = (id) => COSMETICS.find((c) => c.id === id) || null;
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;

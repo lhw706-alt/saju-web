@@ -6,6 +6,9 @@ import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
 import { skyState } from '../lib/byeolmaruSky.js';
 import { copyText, sendKakao } from '../lib/share.js';
+import { COSMETICS, fmtCredits } from '../lib/wallet.js';
+import { PriceTag } from '../components/BokchaLink.jsx';
+import { askConfirm } from '../components/ConfirmHost.jsx';
 import { computeSaju } from '../lib/saju.js';
 import { MANSIONS, GROUPS as M_GROUPS, loadMansions, unlockToday, todayOracle, drawOracle } from '../lib/byeolmaruCollect.js';
 import { startAmbient, stopAmbient, startPad, stopPad, bowBell, starTing, stopAll } from '../lib/bmSound.js';
@@ -284,6 +287,8 @@ export default function Byeolmaru() {
   const [nearHut, setNearHut] = useState(false);
   const [hut, setHut] = useState(null); // null | { oracle, shaking }
   const [people, setPeople] = useState(null); // 지금 별마루에 있는 사람 수
+  const [dress, setDress] = useState(false);
+  const [wardrobe, setWardrobe] = useState(null); // { owned, equipped, balance }
   const setPref = (k, v) =>
     setPrefs((p) => {
       const n = { ...p, [k]: v };
@@ -355,6 +360,42 @@ export default function Byeolmaru() {
       clearInterval(iv);
     };
   }, [ready]);
+  // 꾸미기: 회원이면 산 것·입은 것을 불러와 내 천동이에 입힘
+  useEffect(() => {
+    if (!ready || !auth?.user) return;
+    fetch('/api/cosmetics', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setWardrobe(d);
+        apiRef.current?.setLook?.(d.equipped);
+      })
+      .catch(() => {});
+  }, [ready, auth?.user]);
+  const wear = async (item) => {
+    if (!auth?.user) return notify?.('천동이 꾸미기는 로그인하면 할 수 있어요.');
+    const own = wardrobe?.owned?.includes(item.id);
+    const on = wardrobe?.equipped?.[item.slot] === item.id;
+    let url = '/api/cosmetics/equip';
+    let body = { slot: item.slot, id: on ? null : item.id };
+    if (!own) {
+      const bal = wardrobe?.balance ?? 0;
+      if (bal < item.credits) {
+        if (await askConfirm({ title: '금전이 조금 모자라요', message: `${item.label}에는 ${fmtCredits(item.credits)}이 필요해요. 지금 ${fmtCredits(bal)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
+        return;
+      }
+      if (!(await askConfirm({ title: `${item.label}를 살까요?`, message: `${fmtCredits(item.credits)}을 쓰면 바로 입혀 드려요. 한 번 사면 계속 쓸 수 있어요.`, ok: `${fmtCredits(item.credits)}으로 사기` }))) return;
+      url = '/api/cosmetics/buy';
+      body = { id: item.id };
+    }
+    const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    if (!r?.ok) return notify?.(d?.error || '바꾸지 못했어요.');
+    setWardrobe(d);
+    apiRef.current?.setLook?.(d.equipped);
+    if (!own) trackEvent('plaza_cosmetic_buy', { id: item.id });
+  };
+
   // 하늘 소원 등불 응원
   const cheerWish = async (w) => {
     if (!auth?.user) return notify?.('소원을 응원하려면 로그인해 주세요.');
@@ -580,6 +621,45 @@ export default function Byeolmaru() {
         </div>
       )}
 
+      {dress && (
+        <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setDress(false)}>
+          <div className="bm-settings" role="dialog" aria-modal="true" aria-labelledby="bm-dress-title">
+            <h2 id="bm-dress-title" className="bm-set-title">
+              천동이 꾸미기 {wardrobe && <small>지금 {fmtCredits(wardrobe.balance)}</small>}
+            </h2>
+            {!auth?.user && <p className="bm-hut-say">로그인하면 금전으로 천동이를 꾸밀 수 있어요. 산 아이템은 그 계정에서 계속 쓸 수 있어요.</p>}
+            {[
+              ['hat', '머리'],
+              ['color', '옷 색'],
+              ['cushion', '방석'],
+            ].map(([slot, name]) => (
+              <div key={slot} className="bm-book-group">
+                <p className="bm-book-head">{name}</p>
+                <ul className="bm-dress-grid">
+                  {COSMETICS.filter((c) => c.slot === slot).map((c) => {
+                    const own = wardrobe?.owned?.includes(c.id);
+                    const on = wardrobe?.equipped?.[c.slot] === c.id;
+                    return (
+                      <li key={c.id}>
+                        <button type="button" className={`bm-dress-item${on ? ' is-on' : ''}`} onClick={() => wear(c)}>
+                          <span className={`bm-dress-sw sw-${c.id}`} aria-hidden="true" style={c.color ? { background: c.color } : undefined} />
+                          <b>{c.label}</b>
+                          <span className="bm-dress-state">{on ? '입는 중 · 벗기' : own ? '입기' : <PriceTag n={c.credits} size={14} />}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            <p className="bm-hut-note">금전으로 산 아이템은 바로 쓰는 디지털 콘텐츠라 환불이 어려워요.</p>
+            <button type="button" className="bm-photo-close" onClick={() => setDress(false)}>
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
       {book && (
         <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setBook(false)}>
           <div className="bm-settings bm-book" role="dialog" aria-modal="true" aria-labelledby="bm-book-title">
@@ -617,6 +697,9 @@ export default function Byeolmaru() {
         <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setSettings(false)}>
           <div className="bm-settings" role="dialog" aria-modal="true" aria-labelledby="bm-set-title">
             <h2 id="bm-set-title" className="bm-set-title">별마루 설정</h2>
+            <button type="button" className="bm-set-dress" onClick={() => { setSettings(false); setDress(true); trackEvent('plaza_dress_open'); }}>
+              천동이 꾸미기 <span>갓·꽃비녀·옷 색·금빛 방석</span>
+            </button>
             <label className="bm-set-row">
               <span>
                 <b>마당 소리</b>

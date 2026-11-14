@@ -2492,3 +2492,16 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .bm-card-big span { font-size: 12px; font-weight: 500; color: rgba(236, 238, 244, 0.7); }
 .bm-card-main:disabled { opacity: 0.7; cursor: default; }
 @media (max-width: 559px) { .bm-people { margin-left: 4px; padding-left: 6px; font-size: 12px; } }
+
+/* 별마루 5묶음: 천동이 꾸미기 (2026-11-15) */
+.bm-set-dress { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(226, 194, 122, 0.4); border-radius: 12px; background: rgba(226, 194, 122, 0.07); color: #F3E4BF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.bm-set-dress span { font-size: 12px; font-weight: 500; color: rgba(236, 238, 244, 0.7); }
+.bm-dress-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.bm-dress-item { display: grid; justify-items: center; gap: 4px; width: 100%; padding: 12px 6px 10px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: var(--text); font: inherit; cursor: pointer; }
+.bm-dress-item.is-on { border-color: var(--primary); background: rgba(226, 194, 122, 0.1); }
+.bm-dress-item b { font-size: 14px; font-weight: 600; }
+.bm-dress-state { font-size: 12px; color: rgba(236, 238, 244, 0.75); }
+.bm-dress-sw { width: 34px; height: 34px; border-radius: 50%; background: #2a2b33; display: grid; place-items: center; }
+.bm-dress-sw.sw-gat { border-radius: 50% 50% 8px 8px; background: radial-gradient(circle at 50% 70%, #16161c 55%, transparent 56%), linear-gradient(#16161c, #16161c) center 6px / 14px 16px no-repeat; }
+.bm-dress-sw.sw-flower { background: radial-gradient(circle, #f0c45e 22%, #ff9fb8 24%, #ff9fb8 55%, transparent 57%); }
+.bm-dress-sw.sw-goldseat { border-radius: 40%; background: linear-gradient(#f2cf74, #c8962f); }
