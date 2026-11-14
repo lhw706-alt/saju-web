@@ -188,5 +188,22 @@ export const NEWYEAR_MONTH_PARTS = [
   { id: 'nym2', label: `${NEXT_YEAR} 월별 상세 (7~12월)`, year: 'next', paid: 'newyearMonth', focus: `${NEXT_YEAR}년 7월~12월 달마다의 흐름`, format: monthFormat(7, 12) },
 ];
 
+// 무료 사주 (2026-11-15 사용자 지시) — 비용을 아주 적게: 짧은 한 편(서버 maxTokens 900). 맨 앞 json 은 화면 요약 칸용
+export const FREE_TOPIC = {
+  id: 'free',
+  label: '무료 사주',
+  maxTokens: 900,
+  focus: '일간으로 본 타고난 기질의 핵심, 오행 균형이 주는 생활 속 힌트, 올해 기억할 한마디',
+  format: `맨 앞에 아래 json 코드블록을 먼저 쓰고, 그다음 본문을 쓰세요.
+${'`'.repeat(3)}json
+{"keyword": "나를 한마디로(12자 안팎, 예: 단단한 바위 같은 사람)", "color": "어울리는 색 하나", "number": "행운의 숫자 하나(1~9)"}
+${'`'.repeat(3)}
+## 나는 이런 사람
+(3문장. 일간과 오행 근거를 한 번만 짧게 밝히고, 장점 위주로 따뜻하게)
+## 올해 기억할 한마디
+(2문장. 올해 세운과 연결한 가벼운 조언)
+전체 300~400자. 표·이모지·인사말 없이.`,
+};
+
 export const topicById = (id) =>
-  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || NEWYEAR_MONTH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : id === 'tti' ? TTI_TOPIC : null);
+  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || NEWYEAR_MONTH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : id === 'tti' ? TTI_TOPIC : id === 'free' ? FREE_TOPIC : null);

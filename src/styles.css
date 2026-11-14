@@ -2294,3 +2294,28 @@ button.wish-float { font: inherit; font-size: 13px; text-align: left; cursor: po
   .ny-fab-seal { width: 30px; height: 30px; font-size: 17px; }
   .ny-fab-text b { font-size: 13px; }
 }
+
+/* 무료 사주 (2026-11-15) */
+.free { padding: 20px 0 4px; }
+.free-hero .eyebrow { margin: 0; color: var(--primary); font-size: 14px; }
+.free-dm { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.free-title { margin: 0; font-family: var(--title); font-size: 26px; font-weight: 400; }
+.free-sub { margin: 4px 0 0; font-size: 15px; color: rgba(220, 222, 228, 0.85); }
+.free-keyword { margin: 18px 0 0; font-family: var(--title); font-size: 20px; color: #F3E4BF; }
+.free-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.free-facts li { display: grid; gap: 2px; padding: 12px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.free-facts span { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.free-facts b { font-size: 16px; font-weight: 600; }
+.free-sec { margin-top: 28px; }
+.free-h2 { margin: 0 0 10px; font-size: 17px; font-weight: 600; }
+.free-sec p { font-size: 15px; line-height: 1.8; }
+.free-next { margin-top: 32px; }
+.free-next-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 4px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.free-next-row:first-of-type { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.free-next-row span { display: grid; gap: 3px; min-width: 0; }
+.free-next-row b { font-size: 16px; font-weight: 600; }
+.free-next-row small { font-size: 13px; color: rgba(194, 196, 200, 0.85); }
+.free-next-row:hover b { color: var(--primary); }
+.free-tag { flex: none; padding: 2px 8px; border-radius: 6px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-style: normal; font-size: 13px; font-weight: 500; }
+.free-next-row .price-tag { display: inline-flex; flex: none; gap: 4px; }
+.free-next-row .price-tag b { font-size: 15px; }

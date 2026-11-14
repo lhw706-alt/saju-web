@@ -74,6 +74,10 @@ function base(id, { eyes = 'closed', mouth = 'none', brows = 'none' } = {}) {
 
 // 소품: [뒤(몸 뒤에 그림), 앞(손 위에 그림)]
 const PROPS = {
+  free: () => [
+    star(28, 30) + star(134, 26, 2.2),
+    `<g transform="translate(104 78)"><path d="M-9 4 C-15 9 -15 20 -9 23 C-4 26 4 26 9 23 C15 20 15 9 9 4 Z" fill="${RED}"/><path d="M-7 4 C-9 0 -7 -3 -4 -2 C-3 -4 -1 -4 0 -2 C1 -4 3 -4 4 -2 C7 -3 9 0 7 4 Z" fill="${RED}"/><rect x="-8" y="2.5" width="16" height="3" rx="1.5" fill="${GOLD}"/><circle cx="0" cy="14" r="4.6" fill="${GOLD}"/><text x="0" y="16.6" text-anchor="middle" font-size="6.4" fill="#7a1410" font-family="ChosunSm, serif">福</text></g>`,
+  ],
   life: () => [
     star(30, 30) + star(132, 24, 2.4),
     `<rect x="58" y="80" width="44" height="18" rx="2" fill="${PAPER}"/><rect x="54" y="78" width="6" height="22" rx="3" fill="${GOLD_D}"/><rect x="100" y="78" width="6" height="22" rx="3" fill="${GOLD_D}"/>
@@ -179,6 +183,7 @@ const PROPS = {
 
 // 콘텐츠별 표정
 const FACES = {
+  free: { eyes: 'happy', mouth: 'smile' },
   life: { eyes: 'closed', mouth: 'smile' },
   newyear: { eyes: 'happy', mouth: 'open' },
   tojeong: { eyes: 'smug', mouth: 'smirk', brows: 'firm' },

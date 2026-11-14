@@ -16,6 +16,7 @@ import ResultShare from '../components/ShareRow.jsx';
 import MemberCta from '../components/MemberCta.jsx';
 import NewYearMonthly from '../components/NewYearMonthly.jsx';
 import { NEXT_YEAR } from '../lib/topics.js';
+import FreeReport from '../components/FreeReport.jsx';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -89,6 +90,19 @@ export default function Result() {
             다른 사람 운세 보기
           </Link>
         </div>
+      </GlossaryProvider>
+    );
+  }
+
+  // 무료 사주 (2026-11-15 사용자 지시)
+  if (params.get('v') === 'free') {
+    const fdm = chart.dayMaster;
+    return (
+      <GlossaryProvider>
+        <FreshLoader />
+        <FreeReport chart={chart} input={input} member={member} image={DAY_MASTER_IMAGE[fdm.stem]} />
+        <MemberCta place="free" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
+        <ResultShare kakao={{ title: `나는 ${fdm.ko}${ELEMENT_KO[fdm.element]} 일간이래요`, description: `${DAY_MASTER_IMAGE[fdm.stem]}의 기운을 타고났대요. 나도 무료로 내 사주를 볼까요?`, button: '무료 사주 보기' }} />
       </GlossaryProvider>
     );
   }

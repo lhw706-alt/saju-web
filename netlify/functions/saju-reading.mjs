@@ -141,7 +141,7 @@ ${topic.format || TOPIC_FORMAT}`;
       try {
         const ms = client.beta.messages.stream({
           model: MODEL,
-          max_tokens: 6000,
+          max_tokens: topic.maxTokens || 6000, // 무료 사주는 900 (비용 최소)
           betas: ['server-side-fallback-2026-07-01'],
           fallbacks: 'default',
           output_config: { effort: 'low' },

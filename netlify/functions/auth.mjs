@@ -72,8 +72,8 @@ const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분
 // Netlify Blobs 'history': 키 = 회원번호/풀이키 해시, 값 = { key, input, topic, parts: { partId: text }, createdAt, updatedAt }
 // 같은 생년월일시·주제·연도로 다시 보면 새로 만들지 않고 이걸 보여 줌 (화면 src/lib/history.js). 탈퇴하면 지움.
 const historyStore = () => getStore({ name: 'history', consistency: 'strong' });
-const HISTORY_TOPICS = new Set(['life', 'newyearMonth', ...TOPICS.map((t) => t.id)]);
-const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'tti', 'match', 'match1', 'match2', 'nym1', 'nym2']);
+const HISTORY_TOPICS = new Set(['life', 'newyearMonth', 'free', ...TOPICS.map((t) => t.id)]);
+const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'tti', 'match', 'match1', 'match2', 'nym1', 'nym2', 'free']);
 const historyTopicOk = (t) =>
   HISTORY_TOPICS.has(t) ||
   (typeof t === 'string' && t.startsWith('match@') && t.length < 120) || // 궁합: 'match@상대키'
