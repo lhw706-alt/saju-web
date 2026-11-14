@@ -109,6 +109,11 @@ export default function Terms() {
         해결하고, 협의가 안 되면 대한민국 법령에 따라 민사소송법상 관할 법원에서 해결해요.
       </p>
 
+      <h2>제13조 (서비스 제공자)</h2>
+      <p>
+        {SITE.name}은(는) {SITE.business.name}이(가) 운영해요. 사업자등록번호 {SITE.business.regNo} · 이메일 {SITE.business.email}
+      </p>
+
       <h2>부칙</h2>
       <p>이 약관은 2026년 11월 14일부터 시행해요.</p>
     </article>

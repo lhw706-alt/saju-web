@@ -1677,3 +1677,7 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .tal-wish-go::after { content: ' →'; }
 @media (max-width: 400px) { .tal-info div { grid-template-columns: 1fr; gap: 4px; } }
 .tal .tal-actions .btn-primary { display: block; width: 260px; max-width: 100%; }
+
+/* 푸터 사업자 정보 (2026-11-14) */
+.footer-biz { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 14px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.7); }
+.footer-biz span { white-space: nowrap; }
