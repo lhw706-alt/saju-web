@@ -2,10 +2,10 @@
 // 결제창에서 돌아오면(?pay=success&paymentKey&orderId&amount) 서버 승인 후 잔액을 다시 불러옴. 주소의 결제 정보는 바로 지움.
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
-import { PACKAGES, PRICES, fmtCredits } from '../lib/wallet.js';
+import { PACKAGES, PRICES, fmtCredits, discountOf, listWon } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
-import { PouchIcon } from '../components/BokchaLink.jsx';
+import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -24,7 +24,10 @@ export default function Wallet() {
   const load = () =>
     fetch('/api/wallet', { cache: 'no-store' })
       .then((r) => r.json().catch(() => ({})))
-      .then((d) => setW(d))
+      .then((d) => {
+        setW(d);
+        announceBalance(d?.balance);
+      })
       .catch(() => setW({ error: true }));
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export default function Wallet() {
 
       <div className="wallet-balance">
         <span>내 복채</span>
-        <b>{w && !w.error ? fmtCredits(w.balance) : '…'}</b>
+        {w && !w.error ? <Coins n={w.balance} size={30} className="wallet-bal" /> : <b>…</b>}
       </div>
 
       {msg && (
@@ -105,9 +108,17 @@ export default function Wallet() {
         {PACKAGES.map((p) => (
           <li key={p.id}>
             <button type="button" role="radio" aria-checked={pick === p.id} className={pick === p.id ? 'on' : ''} onClick={() => setPick(p.id)}>
-              <b>{fmtCredits(p.credits)}</b>
-              <span>{p.label}</span>
-              {p.bonus && <em>{p.bonus}</em>}
+              <span className="wallet-radio" aria-hidden="true" />
+              <Coins n={p.credits} size={26} className="wallet-pkg-coins" />
+              <span className="wallet-pkg-price">
+                {discountOf(p) > 0 && (
+                  <span className="wallet-pkg-was">
+                    <s>{listWon(p).toLocaleString('ko-KR')}원</s>
+                    <em>{discountOf(p)}% 할인</em>
+                  </span>
+                )}
+                <b>{p.label}</b>
+              </span>
             </button>
           </li>
         ))}
@@ -121,7 +132,7 @@ export default function Wallet() {
         {Object.values(PRICES).map((p) => (
           <li key={p.label}>
             <span>{p.label}</span>
-            <b>{fmtCredits(p.credits)}</b>
+            <Coins n={p.credits} size={18} />
           </li>
         ))}
       </ul>
@@ -136,10 +147,7 @@ export default function Wallet() {
                   {e.item}
                   <small>{when(e.at)}</small>
                 </span>
-                <b className={e.amount > 0 ? 'is-plus' : ''}>
-                  {e.amount > 0 ? '+' : ''}
-                  {fmtCredits(e.amount)}
-                </b>
+                <Coins n={e.amount} size={16} sign className={e.amount > 0 ? 'is-plus' : ''} />
               </li>
             ))}
           </ul>

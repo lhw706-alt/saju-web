@@ -184,7 +184,7 @@ export default function Layout() {
         </nav>
         {/* 복채(복주머니) + 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         <div className="header-actions">
-        <BokchaLink />
+        <BokchaLink member={Boolean(auth.user)} />
         {auth.user ? (
           <UserMenu nick={auth.user.nick} onLogout={() => logout().then(() => pathname.startsWith('/my') && navigate('/'))} />
         ) : (

@@ -110,8 +110,6 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
   .nav { order: 2; width: calc(100% + 24px); margin: 0 -12px; justify-content: space-between; }
   .header-contact { order: 1; height: 32px; padding: 0 12px; font-size: 14px; }
   .header-actions { order: 1; gap: 6px; }
-  .bokcha-link { height: 32px; padding: 0 10px 0 4px; font-size: 14px; }
-  .bokcha-link .pouch-ic { width: 26px; height: 26px; }
   .nav a { padding: 0 12px; font-size: 15px; }
 }
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -1901,12 +1899,6 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-msg { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(255, 99, 99, 0.1); color: #ffb4b4; font-size: 14px; }
 .wallet-msg.is-ok { background: rgba(127, 224, 160, 0.12); color: #8fe3ad; }
 .wallet-h2 { margin: 28px 0 12px; font-size: 16px; font-weight: 600; color: var(--text); }
-.wallet-pkgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.wallet-pkgs button { display: grid; justify-items: start; gap: 2px; width: 100%; padding: 14px 12px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.wallet-pkgs button.on { border-color: var(--primary); }
-.wallet-pkgs b { font-size: 18px; font-weight: 600; }
-.wallet-pkgs span { font-size: 14px; color: var(--text-2); }
-.wallet-pkgs em { font-style: normal; font-size: 13px; color: var(--primary); }
 .wallet-pay { display: block; width: 100%; margin: 14px 0 0; }
 .wallet-prices, .wallet-ledger { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .wallet-prices li, .wallet-ledger li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 15px; }
@@ -1963,13 +1955,6 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 
 /* GNB 복채 버튼 — 복주머니 3D 아이콘 (2026-11-15 사용자 지시: 강조) */
 .header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
-.bokcha-link {
-  display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 12px 0 5px; border-radius: 10px;
-  border: 1px solid rgba(226, 194, 122, 0.55); background: linear-gradient(180deg, rgba(226, 194, 122, 0.16), rgba(226, 194, 122, 0.05));
-  color: var(--primary); font-size: 14px; font-weight: 600; letter-spacing: var(--ls-label); text-decoration: none;
-  box-shadow: 0 0 14px rgba(226, 194, 122, 0.18); transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.bokcha-link:hover { border-color: var(--primary); box-shadow: 0 0 18px rgba(226, 194, 122, 0.32); }
 .pouch-ic { flex: none; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); transform-origin: 50% 35%; animation: pouch-sway 3.2s ease-in-out infinite; }
 .bokcha-link:hover .pouch-ic { animation-duration: 0.9s; }
 .pouch-spark { transform-origin: 38.5px 11.7px; animation: pouch-spark 2.4s ease-in-out infinite; }
@@ -1982,8 +1967,38 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .coin-spark { transform-origin: 39px 9.7px; animation: pouch-spark 2.4s ease-in-out infinite; }
 @keyframes coin-bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-1.5px) rotate(4deg); } }
 @keyframes coin-flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.2); } 100% { transform: scaleX(1); } }
-.bokcha-link .coin-ic { width: 30px; height: 30px; }
-@media (max-width: 559px) { .bokcha-link .coin-ic { width: 26px; height: 26px; } }
 .wallet-pouch { display: block; width: 88px; margin: 8px 0 4px; }
 .wallet-pouch .pouch-ic { display: block; }
 @media (prefers-reduced-motion: reduce) { .coin-ic, .coin-spark { animation: none; } }
+
+/* GNB 복채 (2026-11-15 2차 사용자 지시): 테두리 없이 '복채' + 엽전·남은 금전 알약 */
+.bokcha-link { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 4px; color: var(--text); font-size: 15px; font-weight: 600; letter-spacing: var(--ls-label); text-decoration: none; }
+.bokcha-link:hover .bokcha-word { color: var(--primary); }
+.bokcha-pill { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px 0 4px; border-radius: 999px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-variant-numeric: tabular-nums; }
+.bokcha-pill:has(> svg:only-child) { padding: 0 4px; }
+.bokcha-pill b { font-size: 14px; font-weight: 600; }
+@media (max-width: 559px) { .bokcha-link { height: 32px; font-size: 14px; gap: 6px; } .bokcha-pill { height: 28px; } }
+
+/* 금전 아이콘 + 숫자 */
+.coins { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.coins b { font-weight: 600; }
+.coins .coin-ic { animation: none; }
+.wallet-bal b { font-size: 30px; color: var(--primary); }
+.wallet-prices .coins b { color: var(--primary); }
+.wallet-ledger .coins b { color: var(--text-2); }
+.wallet-ledger .coins.is-plus b { color: var(--primary); }
+
+/* 충전 금액 고르기 (2026-11-15: 줄 목록 + 동그라미 선택, 할인율) */
+.wallet-pkgs { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.wallet-pkgs button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 12px 14px 12px 6px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background 0.15s ease; }
+.wallet-pkgs button:hover { background: rgba(255, 255, 255, 0.03); }
+.wallet-pkgs button.on { background: rgba(226, 194, 122, 0.08); }
+.wallet-radio { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.3); display: grid; place-items: center; }
+.wallet-pkgs button.on .wallet-radio { border-color: var(--primary); }
+.wallet-pkgs button.on .wallet-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+.wallet-pkg-coins b { font-size: 20px; }
+.wallet-pkg-price { margin-left: auto; display: grid; justify-items: end; gap: 2px; }
+.wallet-pkg-price > b { font-size: 16px; font-weight: 600; }
+.wallet-pkg-was { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.wallet-pkg-was s { color: rgba(194, 196, 200, 0.7); }
+.wallet-pkg-was em { font-style: normal; font-weight: 600; color: #FF6B5E; }

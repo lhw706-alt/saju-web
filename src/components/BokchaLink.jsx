@@ -1,5 +1,6 @@
 // 상단 메뉴(GNB)의 복채 버튼 (2026-11-15 사용자 지시: 복주머니 모양 3D 아이콘으로 강조) → /wallet.
 // 아이콘은 그라데이션·빛·그림자로 입체감을 준 SVG 복주머니(붉은 비단 + 금 끈 + 福 금장).
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export function PouchIcon({ size = 30 }) {
@@ -94,11 +95,45 @@ export function CoinIcon({ size = 30 }) {
   );
 }
 
-export default function BokchaLink() {
+// 금전 아이콘 + 숫자 (예: 엽전 350) — 금액 표시는 이걸로 (2026-11-15 사용자 지시)
+export function Coins({ n, size = 20, sign = false, className = '' }) {
+  const v = Number(n || 0);
   return (
-    <Link to="/wallet" className="bokcha-link" aria-label="복채 충전 (금전)">
-      <CoinIcon />
-      <span>금전</span>
+    <span className={`coins ${className}`.trim()} aria-label={`${v.toLocaleString('ko-KR')}금전`}>
+      <CoinIcon size={size} />
+      <b>{sign && v > 0 ? '+' : ''}{v.toLocaleString('ko-KR')}</b>
+    </span>
+  );
+}
+// 잔액이 바뀌면 화면 어디서든 window 에 'saju:wallet' 이벤트(detail.balance)를 보내 GNB 숫자를 맞춤
+export const announceBalance = (balance) => {
+  if (typeof balance === 'number') window.dispatchEvent(new CustomEvent('saju:wallet', { detail: { balance } }));
+};
+
+// GNB 복채 버튼 (2026-11-15 사용자 지시: 테두리 없이 '복채' + 안에 엽전 아이콘과 남은 금전 숫자)
+export default function BokchaLink({ member = false }) {
+  const [bal, setBal] = useState(null);
+  useEffect(() => {
+    if (!member) return setBal(null);
+    let alive = true;
+    fetch('/api/wallet', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => alive && d && typeof d.balance === 'number' && setBal(d.balance))
+      .catch(() => {});
+    const on = (e) => typeof e.detail?.balance === 'number' && setBal(e.detail.balance);
+    window.addEventListener('saju:wallet', on);
+    return () => {
+      alive = false;
+      window.removeEventListener('saju:wallet', on);
+    };
+  }, [member]);
+  return (
+    <Link to="/wallet" className="bokcha-link" aria-label={bal === null ? '복채 충전' : `복채 충전, 남은 금전 ${bal}`}>
+      <span className="bokcha-word">복채</span>
+      <span className="bokcha-pill">
+        <CoinIcon size={22} />
+        {bal !== null && <b>{bal.toLocaleString('ko-KR')}</b>}
+      </span>
     </Link>
   );
 }

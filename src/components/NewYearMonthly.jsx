@@ -8,6 +8,7 @@ import { PRICES, fmtCredits } from '../lib/wallet.js';
 import { streamReading, END_MESSAGES } from '../lib/stream.js';
 import { localParts, rememberPart, serverParts } from '../lib/history.js';
 import Markdown from './Markdown.jsx';
+import { announceBalance } from './BokchaLink.jsx';
 import { trackEvent } from '../lib/analytics.js';
 
 const KEY = 'newyearMonth';
@@ -83,6 +84,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
     if (!r.ok) return window.alert(r.data.error || '열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     trackEvent('nym_buy');
     setState({ owned: true, balance: r.data.balance });
+    announceBalance(r.data.balance);
     load();
   };
 

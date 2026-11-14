@@ -11,6 +11,7 @@ import { dosaArtSvg } from '../brand/dosaArt.js';
 import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
+import { announceBalance } from '../components/BokchaLink.jsx';
 
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 const shuffle = (arr) => {
@@ -69,6 +70,7 @@ export default function Tarot() {
       }
       if (!window.confirm(`${count === 3 ? '타로 세 장 펼침' : '타로 한 장'}에 ${fmtCredits(cost)}을 쓸까요? (지금 ${fmtCredits(bal)})`)) return;
       usePay = true;
+      announceBalance(bal - cost); // GNB 숫자 (풀이를 못 만들면 서버가 돌려주고, 다음에 지갑을 열 때 맞춰짐)
     }
     setPaid(usePay);
     start(usePay);

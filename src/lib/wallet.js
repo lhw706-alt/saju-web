@@ -6,6 +6,10 @@ export const PACKAGES = [
   { id: 'p10', won: 10000, credits: 110, label: '10,000원', bonus: '10% 덤' },
   { id: 'p30', won: 30000, credits: 350, label: '30,000원', bonus: '약 17% 덤' },
 ];
+// 1금전 = 100원 기준으로 몇 % 싸게 사는지 (2026-11-15 사용자 지시: 덤 대신 할인율로 표기)
+export const WON_PER_CREDIT = 100;
+export const listWon = (p) => p.credits * WON_PER_CREDIT;
+export const discountOf = (p) => Math.max(0, Math.round((1 - p.won / listWon(p)) * 100));
 export const packageById = (id) => PACKAGES.find((p) => p.id === id) || null;
 
 // 쓰는 곳 (2026-11-15 사용자 지시: 타로·신년운세는 처음부터 유료)
