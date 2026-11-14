@@ -2613,3 +2613,9 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 @media (min-width: 560px) and (max-width: 759px) { .moon-gate { top: 0; right: -6%; } .moon-gate-orb { width: 120px; height: 120px; } }
 @media (max-width: 559px) { .moon-gate { top: -1%; right: -3%; } .moon-gate-orb { width: 82px; height: 82px; } .moon-gate-label { margin-top: -2px; font-size: 12px; } .moon-gate-label span { display: inline; } .moon-gate-label b { font-size: 13px; } }
 @media (max-width: 559px) { .moon-gate-label span { display: none; } }
+/* 달 3차 (2026-11-15 사용자 지시: 사주천문 톤 — 한지빛 달 + 금빛 선 구름 + 붉은 낙관) */
+.moon-gate-orb svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.moon-gate-cloud { transition: transform 0.6s cubic-bezier(.2,.8,.2,1); animation: moon-cloud 9s ease-in-out infinite; }
+.moon-gate:hover .moon-gate-cloud { transform: translateX(-14px); animation-play-state: paused; }
+@keyframes moon-cloud { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .moon-gate-cloud { animation: none; } }
