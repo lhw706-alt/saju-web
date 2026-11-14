@@ -7,6 +7,7 @@ import { saveTopic } from '../lib/storage.js';
 import { skyState } from '../lib/byeolmaruSky.js';
 import { copyText, sendKakao } from '../lib/share.js';
 import { computeSaju } from '../lib/saju.js';
+import { MANSIONS, GROUPS as M_GROUPS, loadMansions, unlockToday, todayOracle, drawOracle } from '../lib/byeolmaruCollect.js';
 import { startAmbient, stopAmbient, startPad, stopPad, bowBell, starTing, stopAll } from '../lib/bmSound.js';
 
 const Byeolmaru3D = lazy(() => import('../components/Byeolmaru3D.jsx'));
@@ -264,6 +265,10 @@ export default function Byeolmaru() {
   const [prefs, setPrefs] = useState(loadPrefs);
   const [settings, setSettings] = useState(false);
   const [sleep, setSleep] = useState(false);
+  const [mansions, setMansions] = useState(loadMansions);
+  const [book, setBook] = useState(false);
+  const [nearHut, setNearHut] = useState(false);
+  const [hut, setHut] = useState(null); // null | { oracle, shaking }
   const setPref = (k, v) =>
     setPrefs((p) => {
       const n = { ...p, [k]: v };
@@ -318,11 +323,12 @@ export default function Byeolmaru() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onEvent = (type) => {
+  const onEvent = function (type) {
     if (type === 'qi-walk') setQi('walk');
     else if (type === 'qi-start') setQi('on');
     else if (type === 'qi-cancel') setQi(null);
     else if (type === 'lantern-up') setCard({ kind: 'lantern' });
+    else if (type === 'hermitage') setNearHut(!!arguments[1]);
   };
   const act = (a) => {
     trackEvent('plaza_action', { type: a.id });
@@ -345,7 +351,10 @@ export default function Byeolmaru() {
       saveStars(n);
       if (n === STAR_GOAL) {
         trackEvent('plaza_star_done');
-        setCard({ kind: 'stars' });
+        const { list, added } = unlockToday();
+        setMansions(list);
+        if (added) apiRef.current?.addMansion?.(added.id);
+        setCard({ kind: 'stars', mansion: added });
       }
     } else if (a.id === 'lantern') api.lantern();
   };
@@ -396,7 +405,7 @@ export default function Byeolmaru() {
     <div className="bm">
       {!failed ? (
         <Suspense fallback={null}>
-          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} sky={sky} guardian={guardian} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
+          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} sky={sky} guardian={guardian} mansions={mansions} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </Suspense>
       ) : (
         <div className="bm-fail">
@@ -418,7 +427,7 @@ export default function Byeolmaru() {
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          나가기
+          <span className="bm-exit-text">나가기</span>
         </button>
         <span className="bm-place">
           별마루 <small>天文</small>
@@ -428,6 +437,16 @@ export default function Byeolmaru() {
             ★ {stars} <small>/ {STAR_GOAL}</small>
           </span>
         )}
+        <button type="button" className="bm-icon-btn" onClick={() => setBook(true)} aria-label={`별자리 도감 ${mansions.length}/28`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 18l5-7 4 4 3-6 4 9" />
+            <circle cx="4" cy="18" r="1.3" fill="currentColor" />
+            <circle cx="9" cy="11" r="1.3" fill="currentColor" />
+            <circle cx="13" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="16" cy="9" r="1.3" fill="currentColor" />
+            <circle cx="20" cy="18" r="1.3" fill="currentColor" />
+          </svg>
+        </button>
         <button type="button" className="bm-icon-btn" onClick={() => setSettings(true)} aria-label="소리·숨 고르기 설정">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
             <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
@@ -447,6 +466,97 @@ export default function Byeolmaru() {
         <button type="button" className="bm-banner" onClick={() => setBanner(null)}>
           <b>오늘은 {banner.title}</b> {banner.line}
         </button>
+      )}
+
+      {ready && nearHut && !hut && (
+        <button type="button" className="bm-enter" onClick={() => { setHut({ oracle: todayOracle(), shaking: false }); trackEvent('plaza_hut_enter'); }}>
+          천둥도사의 암자에 들어가기
+        </button>
+      )}
+
+      {hut && (
+        <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setHut(null)}>
+          <div className="bm-settings bm-hut" role="dialog" aria-modal="true" aria-labelledby="bm-hut-title">
+            <p className="bm-card-kicker">天動庵 · 천둥도사의 암자</p>
+            <h2 id="bm-hut-title" className="bm-set-title">오늘의 점괘</h2>
+            {!hut.oracle ? (
+              <>
+                <p className="bm-hut-say">마음속으로 궁금한 것 하나를 떠올리고, 산통을 흔들어 보거라.</p>
+                <div className={`bm-tong${hut.shaking ? ' is-shaking' : ''}`} aria-hidden="true">
+                  <span className="bm-tong-sticks"><i /><i /><i /><i /><i /></span>
+                  <span className="bm-tong-body">籤</span>
+                </div>
+                <button
+                  type="button"
+                  className="bm-set-sleep"
+                  disabled={hut.shaking}
+                  onClick={() => {
+                    setHut((h) => ({ ...h, shaking: true }));
+                    trackEvent('plaza_oracle');
+                    setTimeout(() => setHut({ oracle: drawOracle(), shaking: false }), 1600);
+                  }}
+                >
+                  {hut.shaking ? '산통을 흔드는 중…' : '산통 흔들기'}
+                  <small>하루에 한 번, 무료예요</small>
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="bm-oracle">
+                  <span className="bm-oracle-rank">{hut.oracle.rank}</span>
+                  <p className="bm-oracle-words">{hut.oracle.words}</p>
+                  <p className="bm-oracle-ko">{hut.oracle.ko}</p>
+                  <p className="bm-oracle-line">{hut.oracle.line}</p>
+                </div>
+                <p className="bm-hut-note">오늘의 점괘는 하루에 한 번이에요. 더 깊이 묻고 싶다면</p>
+                <div className="bm-card-actions">
+                  <button type="button" className="bm-card-ghost" onClick={() => navigate('/tarot')}>
+                    타로 보기
+                  </button>
+                  <button type="button" className="bm-card-main" onClick={() => { saveTopic('overall'); navigate('/start'); }}>
+                    평생 사주 보기
+                  </button>
+                </div>
+              </>
+            )}
+            <button type="button" className="bm-photo-close" onClick={() => setHut(null)}>
+              암자에서 나가기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {book && (
+        <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setBook(false)}>
+          <div className="bm-settings bm-book" role="dialog" aria-modal="true" aria-labelledby="bm-book-title">
+            <h2 id="bm-book-title" className="bm-set-title">
+              별자리 도감 <small>{mansions.length} / 28</small>
+            </h2>
+            <p className="bm-hut-say">하루에 별 108개를 헤아리면 동양 별자리 28수(二十八宿) 가운데 하나가 하늘에 그려져요.</p>
+            {M_GROUPS.map((g) => (
+              <div key={g.id} className="bm-book-group">
+                <p className="bm-book-head" style={{ color: g.color }}>
+                  {g.id} <small>{g.dir}</small>
+                </p>
+                <ul className="bm-book-grid">
+                  {MANSIONS.filter((m) => m.group === g.id).map((m) => {
+                    const got = mansions.find((x) => x.id === m.id);
+                    return (
+                      <li key={m.id} className={got ? 'is-got' : ''} style={got ? { borderColor: g.color } : undefined}>
+                        <b>{m.hanja}</b>
+                        <span>{got ? `${m.ko} · ${got.date.slice(5).replace('-', '.')}` : m.ko}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            <p className="bm-hut-note">하늘의 별자리 모양은 실제 별 배치가 아니라 그림이에요.</p>
+            <button type="button" className="bm-photo-close" onClick={() => setBook(false)}>
+              닫기
+            </button>
+          </div>
+        </div>
       )}
 
       {settings && (
@@ -580,6 +690,11 @@ export default function Byeolmaru() {
               <p id="bm-card-title" className="bm-card-text">
                 108개의 별을 모두 헤아렸어요. 내일도 별을 헤아리러 와요.
               </p>
+              {card.mansion && (
+                <p className="bm-card-sub">
+                  별자리 <b>{card.mansion.hanja}({card.mansion.ko})</b>가 하늘에 그려졌어요. 도감에서 볼 수 있어요.
+                </p>
+              )}
               <div className="bm-card-actions">
                 <button type="button" className="bm-card-main" onClick={() => setCard(null)}>
                   좋아요

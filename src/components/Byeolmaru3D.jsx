@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { buildCheondong } from './Mascot3D.jsx';
 import { SKY_COLORS } from '../lib/byeolmaruSky.js';
 import { zodiacSvg } from '../brand/zodiacArt.js';
+import { MANSIONS, GROUPS as MANSION_GROUPS, mansionShape } from '../lib/byeolmaruCollect.js';
 
 const WORLD_R = 24; // 걸을 수 있는 반지름
 const SPEED = 4.4;
@@ -165,6 +166,83 @@ function iljiStone(sky) {
   const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.45, 0.7), darkStone);
   base.position.y = 0.22;
   g.add(slab, base);
+  return g;
+}
+
+// 모은 별자리: 하늘 둘레에 방위색 선 + 별 + 한자 (그림 표현)
+function mansionGroup(id) {
+  const m = MANSIONS[id];
+  const color = MANSION_GROUPS.find((x) => x.id === m.group)?.color || '#ffffff';
+  const g = new THREE.Group();
+  const pts = mansionShape(id).map(([x, y]) => new THREE.Vector3(x * 9, y * 6, 0));
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.75, fog: false }));
+  g.add(line);
+  const starMat = new THREE.SpriteMaterial({ map: glow('rgba(255,250,230,1)', 'rgba(255,230,180,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+  pts.forEach((p) => {
+    const sp = new THREE.Sprite(starMat);
+    sp.position.copy(p);
+    sp.scale.setScalar(1.6);
+    g.add(sp);
+  });
+  const label = canvasTex(128, 128, (c, w) => {
+    c.clearRect(0, 0, w, w);
+    c.fillStyle = color;
+    c.globalAlpha = 0.9;
+    c.font = '600 84px "ChosunSm", serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(m.hanja, w / 2, w / 2 + 4);
+  });
+  document.fonts?.load('600 84px "ChosunSm"', m.hanja).then(() => label.userData.redraw()).catch(() => {});
+  const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map: label, transparent: true, depthWrite: false, fog: false }));
+  lab.scale.setScalar(4);
+  lab.position.set(0, -7.5, 0);
+  g.add(lab);
+  const a = (id / 28) * Math.PI * 2;
+  const el = 0.45 + (id % 3) * 0.16;
+  g.position.set(Math.cos(a) * Math.cos(el) * 95, Math.sin(el) * 95, Math.sin(a) * Math.cos(el) * 95);
+  g.lookAt(0, g.position.y * 0.3, 0);
+  return g;
+}
+
+// 천둥도사의 암자: 작은 기와집 + 따뜻한 문 + 현판
+function hermitage() {
+  const g = new THREE.Group();
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 3.2), new THREE.MeshStandardMaterial({ color: '#d9cdb4', roughness: 0.9 }));
+  wall.position.y = 1.3;
+  const beamMat = new THREE.MeshStandardMaterial({ color: '#3b2418', roughness: 0.8 });
+  [-2.1, 2.1].forEach((x) => {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.7, 0.22), beamMat);
+    p.position.set(x, 1.35, 1.62);
+    g.add(p);
+  });
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 1.6, 4), new THREE.MeshStandardMaterial({ color: '#23263a', roughness: 0.8 }));
+  roof.position.y = 3.35;
+  roof.rotation.y = Math.PI / 4;
+  roof.scale.set(1.25, 1, 1);
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), new THREE.MeshStandardMaterial({ color: '#ffcf8a', emissive: '#ff9f4a', emissiveIntensity: 1.3 }));
+  door.position.set(0, 0.95, 1.61);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow('rgba(255,190,100,0.5)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.scale.setScalar(4);
+  halo.position.set(0, 1, 1.8);
+  const signTex = canvasTex(256, 96, (c, w, h) => {
+    c.fillStyle = '#1f3a32';
+    c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#c9a65a';
+    c.lineWidth = 6;
+    c.strokeRect(6, 6, w - 12, h - 12);
+    c.fillStyle = '#f3e4bf';
+    c.font = '600 54px "ChosunSm", serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('天動庵', w / 2, h / 2 + 3);
+  });
+  document.fonts?.load('600 54px "ChosunSm"', '天動庵').then(() => signTex.userData.redraw()).catch(() => {});
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.56), new THREE.MeshStandardMaterial({ map: signTex, emissive: '#ffffff', emissiveMap: signTex, emissiveIntensity: 0.3 }));
+  sign.position.set(0, 2.3, 1.62);
+  const step = new THREE.Mesh(new THREE.BoxGeometry(2, 0.18, 0.8), stoneMat);
+  step.position.set(0, 0.09, 2.0);
+  g.add(wall, roof, door, halo, sign, step);
   return g;
 }
 
@@ -347,7 +425,7 @@ const COLLIDERS = [
 
 // apiRef.current = { qi(), stopQi(), bow(), star(), lantern() } — 화면의 동작 버튼이 부름
 // onEvent(type, data): 'qi-walk'(방석으로 가는 중) · 'qi-start' · 'qi-cancel' · 'star'({n}) · 'lantern-up'
-export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, sky: skyInfo, guardian = null, onReady, onFail }) {
+export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, sky: skyInfo, guardian = null, mansions = [], onReady, onFail }) {
   const mount = useRef(null);
   useEffect(() => {
     const el = mount.current;
@@ -514,6 +592,24 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       t.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
       scene.add(t);
     }
+
+    // 모은 별자리
+    const mansionDrawn = new Set();
+    const drawMansion = (id) => {
+      if (mansionDrawn.has(id) || !MANSIONS[id]) return;
+      mansionDrawn.add(id);
+      scene.add(mansionGroup(id));
+    };
+    mansions.forEach((m) => drawMansion(m.id ?? m));
+    // 천둥도사의 암자 (오른쪽 뒤) — 문이 마당 가운데를 바라봄
+    const HUT = new THREE.Vector3(15, 0, -10);
+    const hut = hermitage();
+    hut.position.copy(HUT);
+    hut.lookAt(0, 0, 0);
+    scene.add(hut);
+    colliders.push([HUT.x, HUT.z, 2.6]);
+    const hutDoor = HUT.clone().add(new THREE.Vector3(-HUT.x, 0, -HUT.z).normalize().multiplyScalar(3.4));
+    let nearHut = false;
 
     // 반딧불
     const FN = 90;
@@ -715,6 +811,10 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           } else onEvent?.('qi-walk');
         },
         stopQi: () => stopSit(true),
+        addMansion: (id) => drawMansion(id),
+        teleport: (x, z) => {
+          player.position.set(x, 0, z);
+        },
         setPaused: (v) => {
           paused = !!v;
         },
@@ -750,6 +850,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
         },
       };
 
+    if (import.meta.env.DEV && apiRef) window.__bmApi = apiRef.current; // 로컬 미리보기 점검용 (빌드에는 안 들어감)
     const clock = new THREE.Clock();
     let raf;
     let facing = Math.PI;
@@ -863,6 +964,12 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       // 기운 받기 중: 내 둘레로 빛이 피어오름
       if (qiOn && Math.random() < dt * 9) burst(player.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.2, (Math.random() - 0.5) * 0.8)), 1, 0.7);
 
+      // 암자 문 앞
+      const nh = Math.hypot(player.position.x - hutDoor.x, player.position.z - hutDoor.z) < 2.6;
+      if (nh !== nearHut) {
+        nearHut = nh;
+        onEvent?.('hermitage', nh);
+      }
       // 수호신: 내 왼쪽 뒤를 따라옴
       if (buddy) {
         const side = facing + Math.PI * 0.75;

@@ -2445,3 +2445,43 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .bm-sleep-text { font-family: var(--title); font-size: 20px; color: rgba(243, 228, 191, 0.85); }
 .bm-sleep-hint { font-size: 13px; color: rgba(236, 238, 244, 0.5); }
 @media (max-width: 559px) { .bm-settings { width: 100%; border-radius: 20px 20px 0 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); } }
+
+/* 별마루 3묶음: 암자·별자리 도감 (2026-11-15) */
+.bm-enter { position: absolute; z-index: 6; left: 0; right: 0; bottom: 108px; margin: 0 auto; width: max-content; padding: 12px 20px; border: 1px solid rgba(255, 207, 138, 0.6); border-radius: 999px; background: rgba(40, 26, 14, 0.85); color: #ffe2b0; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; animation: wish-appear 0.3s ease-out both; box-shadow: 0 0 22px rgba(255, 170, 90, 0.3); }
+.bm-hut-say { margin: 4px 0 12px; font-size: 14px; line-height: 1.65; color: rgba(236, 238, 244, 0.85); word-break: keep-all; }
+.bm-hut-note { margin: 14px 0 0; font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.bm-tong { position: relative; width: 74px; height: 120px; margin: 6px auto 14px; }
+.bm-tong-body { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; display: grid; place-items: center; border-radius: 12px 12px 18px 18px; background: linear-gradient(90deg, #6b3a1f, #a0602f 45%, #6b3a1f); color: #fce9c8; font-family: 'ChosunSm', serif; font-size: 28px; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2); }
+.bm-tong-sticks { position: absolute; left: 14px; right: 14px; bottom: 60px; display: flex; justify-content: space-between; }
+.bm-tong-sticks i { display: block; width: 6px; height: 56px; border-radius: 3px; background: #e9d2a3; }
+.bm-tong-sticks i:nth-child(2) { height: 64px; } .bm-tong-sticks i:nth-child(4) { height: 60px; }
+.bm-tong.is-shaking { animation: bm-shake 0.18s ease-in-out infinite; }
+@keyframes bm-shake { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
+.bm-oracle { display: grid; justify-items: center; gap: 6px; padding: 18px 12px; border-radius: 16px; border: 1px solid rgba(226, 194, 122, 0.35); background: rgba(226, 194, 122, 0.06); text-align: center; }
+.bm-oracle-rank { padding: 2px 12px; border-radius: 999px; background: #c8352b; color: #fce9c8; font-size: 13px; font-weight: 600; }
+.bm-oracle-words { margin: 4px 0 0; font-family: 'ChosunSm', serif; font-size: 34px; letter-spacing: 0.08em; color: #f6dc9a; }
+.bm-oracle-ko { margin: 0; font-size: 14px; color: rgba(236, 238, 244, 0.75); }
+.bm-oracle-line { margin: 6px 0 0; font-family: var(--title); font-size: 17px; line-height: 1.6; color: #F3E4BF; word-break: keep-all; }
+.bm-book { max-height: min(86vh, 720px); overflow-y: auto; overscroll-behavior: contain; }
+.bm-set-title small { margin-left: 6px; font-family: inherit; font-size: 14px; color: var(--primary); }
+.bm-book-group { margin-top: 12px; }
+.bm-book-head { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.bm-book-head small { margin-left: 4px; font-weight: 400; color: rgba(194, 196, 200, 0.75); }
+.bm-book-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bm-book-grid li { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.02); opacity: 0.45; }
+.bm-book-grid li.is-got { opacity: 1; background: rgba(226, 194, 122, 0.08); }
+.bm-book-grid b { font-family: 'ChosunSm', serif; font-size: 20px; font-weight: 400; color: #F3E4BF; }
+.bm-book-grid span { font-size: 11px; color: rgba(236, 238, 244, 0.75); white-space: nowrap; }
+@media (max-width: 559px) { .bm-book { max-height: calc(100dvh - 24px); } .bm-book-grid { gap: 4px; } .bm-book-grid span { font-size: 10px; } .bm-enter { bottom: 100px; } }
+/* 별마루 위 줄: 휴대폰에서 한 줄에 다 들어가게 */
+.bm-stars, .bm-place, .bm-exit { white-space: nowrap; flex: none; }
+@media (max-width: 559px) {
+  .bm-top { gap: 6px; left: 10px; right: 10px; }
+  .bm-exit { width: 38px; padding: 0; justify-content: center; }
+  .bm-exit-text { display: none; }
+  .bm-place { padding: 0 10px; font-size: 15px; }
+  .bm-place small { display: none; }
+  .bm-stars { padding: 0 10px; font-size: 14px; }
+  .bm-icon-btn { width: 38px; height: 38px; }
+  .bm-exit, .bm-place, .bm-stars { height: 38px; }
+}
