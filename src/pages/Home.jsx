@@ -51,7 +51,7 @@ export default function Home() {
   useEffect(() => {
     if (!hash) return;
     const el = document.getElementById(decodeURIComponent(hash.slice(1)));
-    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: el.id.startsWith('card-') ? 'center' : 'start' }), 50);
   }, [hash]);
 
   // 쓸 수 있는 카드: 항상 입력 화면(/start)부터 → 다 입력한 뒤에 결과·로딩

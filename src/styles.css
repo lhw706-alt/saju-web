@@ -2548,3 +2548,12 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .content-grid li.has-bubble .card-bubble { top: auto; right: 22px; bottom: 74px; padding: 5px 10px; border: 0; border-radius: 10px; background: #ECE6D8; color: #2a2620; font-size: 12px; font-weight: 500; box-shadow: none; transform: rotate(-2deg); animation: none; }
 .content-grid li.has-bubble .card-bubble::after { bottom: -4px; right: 24px; width: 8px; height: 8px; background: #ECE6D8; border: 0; border-radius: 0 0 2px 0; transform: rotate(45deg); }
 @media (max-width: 559px) { .content-grid li.has-bubble .card-bubble { right: 12px; bottom: 66px; font-size: 11.5px; padding: 4px 8px; } .content-grid li.has-bubble .card-bubble::after { right: 20px; } }
+
+/* PC GNB 원래 버전 (2026-11-15 사용자 지시: 1281px 이상은 압축 전 — 사주·운세·궁합·행운·풀이·별마루, 전체 버튼 없음) */
+.nav .nav-pc { display: none; }
+@media (min-width: 1281px) { .nav .nav-pc { display: inline-flex; } .nav .nav-m, .nav .nav-all { display: none; } }
+/* 말풍선 4차: 천동이와 조금 더 떨어지게 + 둥둥 */
+.content-grid li.has-bubble .card-bubble { bottom: 86px; animation: bubble-float 3.2s ease-in-out infinite; }
+@keyframes bubble-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(-1deg); } }
+@media (max-width: 559px) { .content-grid li.has-bubble .card-bubble { bottom: 71px; right: 8px; padding: 3px 7px; font-size: 11px; } }
+@media (prefers-reduced-motion: reduce) { .content-grid li.has-bubble .card-bubble { animation: none; } }

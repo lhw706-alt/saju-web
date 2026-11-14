@@ -24,6 +24,15 @@ function setHeadTag(selector, create, update) {
   update(el);
 }
 
+// PC 상단 메뉴 (1281px 이상, 압축 전 원래 버전)
+const PC_NAV = [
+  { label: '사주', to: 'saju' },
+  { label: '운세', to: 'fortune' },
+  { label: '궁합', to: 'card-match' },
+  { label: '행운', to: 'luck' },
+  { label: '풀이', to: 'card-tarot' },
+];
+
 export default function Layout() {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
@@ -173,9 +182,23 @@ export default function Layout() {
         </Link>
         {/* GNB: 메인 카드 분류로 이동 (모바일은 헤더 아래 한 줄) */}
         <nav className="nav" aria-label="주요 메뉴">
+          {/* PC(1281px 이상)는 원래 메뉴 5개 (2026-11-15 사용자 지시) — 궁합·풀이는 메인의 그 카드로 */}
+          {PC_NAV.map((n) => (
+            <Link
+              key={n.to}
+              className="nav-pc"
+              to={`/#${n.to}`}
+              onClick={() => {
+                if (pathname === '/') document.getElementById(n.to)?.scrollIntoView({ behavior: 'smooth', block: n.to.startsWith('card-') ? 'center' : 'start' });
+              }}
+            >
+              {n.label}
+            </Link>
+          ))}
           {GROUPS.map((g) => (
             <Link
               key={g.id}
+              className="nav-m"
               to={`/#${g.id}`}
               onClick={() => {
                 if (pathname === '/') document.getElementById(g.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
