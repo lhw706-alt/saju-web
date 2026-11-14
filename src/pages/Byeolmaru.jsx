@@ -3,8 +3,89 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics.js';
+import { saveTopic } from '../lib/storage.js';
 
 const Byeolmaru3D = lazy(() => import('../components/Byeolmaru3D.jsx'));
+
+// 기운 받기 뒤 '오늘의 한마디' — 풀이 비용 없이 고정 문장, 날짜(KST)마다 하나
+const WORDS_OF_DAY = [
+  '서두르지 않아도 괜찮아요. 오늘은 한 걸음이면 충분해요.',
+  '마음에 걸린 일 하나만 내려놓아도 하루가 가벼워져요.',
+  '지금 곁에 있는 사람에게 고맙다고 말해 보세요.',
+  '잘하고 싶은 마음이 크다는 건, 이미 잘하고 있다는 뜻이에요.',
+  '오늘의 피곤함은 내일의 단단함이 될 거예요.',
+  '작은 약속 하나를 지키는 날로 만들어 보세요.',
+  '비교는 잠시 멈추고, 어제의 나만 바라봐요.',
+  '쉬어 가는 것도 앞으로 가는 방법이에요.',
+  '좋은 일은 생각보다 조용히 다가와요.',
+  '오늘 들은 칭찬 하나를 오래 기억해 두세요.',
+  '마음이 흔들릴 땐, 숨을 세 번만 천천히 쉬어 보세요.',
+  '정리된 책상 하나가 생각보다 큰 힘이 돼요.',
+  '미뤄 둔 연락 하나가 반가운 소식을 데려올 거예요.',
+  '나에게 다정한 말을 건네는 하루가 되길 바라요.',
+  '물처럼 부드럽게, 바위처럼 단단하게 가 보세요.',
+  '지금 고민은 언젠가 웃으며 꺼낼 이야기가 될 거예요.',
+  '오늘은 맛있는 걸 먹고 일찍 자는 것도 좋은 선택이에요.',
+  '하고 싶은 말은 부드럽게, 하기 싫은 말은 짧게 해 보세요.',
+  '별은 어두울수록 더 잘 보여요. 지금도 그래요.',
+  '나를 웃게 하는 작은 것 하나를 찾아보세요.',
+  '천천히 가도 멈추지만 않으면 도착해요.',
+];
+const kstToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+const wordOfDay = () => {
+  const d = kstToday();
+  let h = 0;
+  for (const ch of d) h = (h * 31 + ch.charCodeAt(0)) % 9973;
+  return WORDS_OF_DAY[h % WORDS_OF_DAY.length];
+};
+// 오늘 헤아린 별 (이 브라우저, 날짜가 바뀌면 0)
+const STAR_KEY = 'saju:bm-stars';
+const STAR_GOAL = 108;
+const loadStars = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem(STAR_KEY) || 'null');
+    return v && v.d === kstToday() ? v.n : 0;
+  } catch {
+    return 0;
+  }
+};
+const saveStars = (n) => {
+  try {
+    localStorage.setItem(STAR_KEY, JSON.stringify({ d: kstToday(), n }));
+  } catch {
+    /* 무시 */
+  }
+};
+const QI_SECONDS = 30;
+
+// 숨 고르기 화면: 4초 들숨 · 4초 날숨, 30초
+function Breath({ onDone, onStop }) {
+  const [left, setLeft] = useState(QI_SECONDS);
+  useEffect(() => {
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      const l = QI_SECONDS - Math.floor((Date.now() - t0) / 1000);
+      setLeft(Math.max(0, l));
+      if (l <= 0) {
+        clearInterval(iv);
+        onDone();
+      }
+    }, 250);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const phase = Math.floor((QI_SECONDS - left) / 4) % 2 === 0 ? '숨을 천천히 들이쉬어요' : '천천히 내쉬어요';
+  return (
+    <div className="bm-breath" role="status" aria-live="polite">
+      <span className="bm-breath-ring" aria-hidden="true" />
+      <p className="bm-breath-say">{phase}</p>
+      <p className="bm-breath-left">{left}초</p>
+      <button type="button" className="bm-breath-stop" onClick={onStop}>
+        그만하기
+      </button>
+    </div>
+  );
+}
 
 const WORDS = ['고요한', '반짝이는', '포근한', '맑은', '느긋한', '다정한', '조용한', '따스한'];
 const NOUNS = ['별', '바람', '등불', '구름', '달빛', '물결', '새벽', '이슬'];
@@ -106,6 +187,10 @@ export default function Byeolmaru() {
   const navigate = useNavigate();
   const { auth, notify } = useOutletContext();
   const joyRef = useRef({ x: 0, y: 0 });
+  const apiRef = useRef(null);
+  const [stars, setStars] = useState(loadStars);
+  const [qi, setQi] = useState(null); // null | 'walk' | 'on'
+  const [card, setCard] = useState(null); // { kind: 'word' | 'lantern' | 'stars' }
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [help, setHelp] = useState(true);
@@ -118,16 +203,49 @@ export default function Byeolmaru() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const onEvent = (type) => {
+    if (type === 'qi-walk') setQi('walk');
+    else if (type === 'qi-start') setQi('on');
+    else if (type === 'qi-cancel') setQi(null);
+    else if (type === 'lantern-up') setCard({ kind: 'lantern' });
+  };
   const act = (a) => {
     trackEvent('plaza_action', { type: a.id });
-    notify?.(`'${a.label}'는 곧 열려요. 지금은 마당을 둘러보세요.`);
+    const api = apiRef.current;
+    if (!api) return;
+    setCard(null);
+    if (a.id === 'qi') {
+      if (qi) return;
+      api.qi();
+    } else if (a.id === 'bow') api.bow();
+    else if (a.id === 'star') {
+      if (stars >= STAR_GOAL) return notify?.('오늘의 별 108개를 모두 헤아렸어요. 내일 또 와요.');
+      api.star();
+      const n = stars + 1;
+      setStars(n);
+      saveStars(n);
+      if (n === STAR_GOAL) {
+        trackEvent('plaza_star_done');
+        setCard({ kind: 'stars' });
+      }
+    } else if (a.id === 'lantern') api.lantern();
+  };
+  const qiDone = () => {
+    apiRef.current?.stopQi();
+    setQi(null);
+    trackEvent('plaza_qi_done');
+    setCard({ kind: 'word', text: wordOfDay() });
+  };
+  const qiStop = () => {
+    apiRef.current?.stopQi();
+    setQi(null);
   };
 
   return (
     <div className="bm">
       {!failed ? (
         <Suspense fallback={null}>
-          <Byeolmaru3D nick={nick} joyRef={joyRef} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
+          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </Suspense>
       ) : (
         <div className="bm-fail">
@@ -154,7 +272,65 @@ export default function Byeolmaru() {
         <span className="bm-place">
           별마루 <small>天文</small>
         </span>
+        {stars > 0 && (
+          <span className="bm-stars" aria-label={`오늘 헤아린 별 ${stars}개`}>
+            ★ {stars} <small>/ {STAR_GOAL}</small>
+          </span>
+        )}
       </div>
+
+      {qi === 'walk' && <p className="bm-help">방석으로 가는 중이에요… 걸으면 멈춰요</p>}
+      {qi === 'on' && <Breath onDone={qiDone} onStop={qiStop} />}
+
+      {card && (
+        <div className="bm-card" role="dialog" aria-labelledby="bm-card-title">
+          {card.kind === 'word' && (
+            <>
+              <p className="bm-card-kicker">오늘의 한마디</p>
+              <p id="bm-card-title" className="bm-card-text">
+                {card.text}
+              </p>
+              <div className="bm-card-actions">
+                <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
+                  닫기
+                </button>
+                <button type="button" className="bm-card-main" onClick={() => { saveTopic('today'); navigate('/start'); }}>
+                  오늘의 운세도 보기
+                </button>
+              </div>
+            </>
+          )}
+          {card.kind === 'lantern' && (
+            <>
+              <p className="bm-card-kicker">등불이 하늘로 올라가요</p>
+              <p id="bm-card-title" className="bm-card-text">
+                이 등불에 소원을 담아 볼까요?
+              </p>
+              <div className="bm-card-actions">
+                <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
+                  나중에
+                </button>
+                <button type="button" className="bm-card-main" onClick={() => navigate('/wish?write=1')}>
+                  소원 쓰기
+                </button>
+              </div>
+            </>
+          )}
+          {card.kind === 'stars' && (
+            <>
+              <p className="bm-card-kicker">오늘의 별</p>
+              <p id="bm-card-title" className="bm-card-text">
+                108개의 별을 모두 헤아렸어요. 내일도 별을 헤아리러 와요.
+              </p>
+              <div className="bm-card-actions">
+                <button type="button" className="bm-card-main" onClick={() => setCard(null)}>
+                  좋아요
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {ready && help && (
         <p className="bm-help" role="status">
@@ -168,7 +344,7 @@ export default function Byeolmaru() {
       {/* 아래: 동작 버튼 4개 */}
       <nav className="bm-actions" aria-label="별마루 동작">
         {ACTIONS.map((a) => (
-          <button key={a.id} type="button" onClick={() => act(a)}>
+          <button key={a.id} type="button" onClick={() => act(a)} className={a.id === 'qi' && qi ? 'on' : ''} aria-pressed={a.id === 'qi' ? !!qi : undefined}>
             <ActionIcon id={a.id} />
             <span>{a.label}</span>
           </button>

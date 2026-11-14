@@ -2375,3 +2375,39 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
   .bm-actions { left: 12px; right: 12px; transform: none; justify-content: space-between; }
   .bm-actions button { flex: 1; width: auto; }
 }
+
+/* 별마루 동작 (2026-11-15) */
+.bm-stars { pointer-events: auto; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(226, 194, 122, 0.35); background: rgba(14, 16, 34, 0.62); color: #F3E4BF; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bm-stars small { font-size: 12px; font-weight: 500; color: rgba(236, 238, 244, 0.65); }
+.bm-actions button.on { background: rgba(226, 194, 122, 0.16); color: #F3E4BF; }
+.bm-breath { position: absolute; z-index: 6; left: 50%; top: 18%; transform: translateX(-50%); display: grid; justify-items: center; gap: 6px; pointer-events: none; text-align: center; }
+.bm-breath-ring { width: 120px; height: 120px; border-radius: 50%; border: 1.5px solid rgba(243, 228, 191, 0.75); box-shadow: 0 0 40px rgba(226, 194, 122, 0.35), inset 0 0 30px rgba(226, 194, 122, 0.2); animation: bm-breathe 8s ease-in-out infinite; }
+@keyframes bm-breathe { 0%, 100% { transform: scale(0.62); opacity: 0.6; } 50% { transform: scale(1); opacity: 1; } }
+.bm-breath-say { margin: 6px 0 0; font-family: var(--title); font-size: 20px; color: #F3E4BF; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
+.bm-breath-left { margin: 0; font-size: 14px; color: rgba(236, 238, 244, 0.75); font-variant-numeric: tabular-nums; }
+.bm-breath-stop { pointer-events: auto; margin-top: 6px; padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(14, 16, 34, 0.55); color: rgba(236, 238, 244, 0.85); font: inherit; font-size: 13px; cursor: pointer; }
+.bm-card { position: absolute; z-index: 7; left: 50%; bottom: 110px; transform: translateX(-50%); width: min(92vw, 380px); padding: 20px 20px 16px; border-radius: 18px; border: 1px solid rgba(226, 194, 122, 0.3); background: rgba(16, 18, 38, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); animation: wish-appear 0.35s ease-out both; }
+.bm-card-kicker { margin: 0; font-size: 13px; color: var(--primary); }
+.bm-card-text { margin: 8px 0 0; font-family: var(--title); font-size: 19px; line-height: 1.55; color: #F3E4BF; word-break: keep-all; }
+.bm-card-actions { display: flex; gap: 8px; margin-top: 16px; }
+.bm-card-actions button { flex: 1; height: 44px; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.bm-card-ghost { background: rgba(255, 255, 255, 0.08); color: rgba(236, 238, 244, 0.9); }
+.bm-card-main { background: #ECE6D8; color: #1B1C1E; }
+@media (max-width: 559px) { .bm-card { bottom: 100px; } .bm-breath { top: 14%; } .bm-breath-ring { width: 96px; height: 96px; } }
+.bm-breath { top: 70px; }
+.bm-breath-ring { width: 84px; height: 84px; }
+@media (max-width: 559px) { .bm-breath { top: 64px; } .bm-breath-ring { width: 72px; height: 72px; } }
+/* 별마루 보정: 가운데 정렬은 transform 대신 margin (나타나는 애니메이션이 transform 을 덮어씀) */
+.bm-card { left: 0; right: 0; transform: none; margin: 0 auto; }
+.bm-help { left: 0; right: 0; transform: none; margin: 0 auto; width: max-content; max-width: calc(100% - 32px); }
+.bm-breath { top: auto; bottom: 118px; left: 0; right: 0; transform: none; margin: 0 auto; width: max-content; padding: 14px 22px 12px; border-radius: 18px; background: rgba(14, 16, 34, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.bm-breath-ring { width: 56px; height: 56px; }
+.bm-breath-say { font-size: 18px; }
+@media (max-width: 559px) { .bm-breath { top: auto; bottom: 104px; } .bm-breath-ring { width: 48px; height: 48px; } }
+/* 숨 고르기: 위쪽 얇은 한 줄 (캐릭터·큰 천동이를 가리지 않게) */
+.bm-breath { top: 64px; bottom: auto; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 12px; border-radius: 999px; }
+.bm-breath-ring { width: 30px; height: 30px; box-shadow: 0 0 14px rgba(226, 194, 122, 0.4); }
+.bm-breath-say { margin: 0; font-size: 16px; }
+.bm-breath-left { min-width: 34px; font-size: 13px; }
+.bm-breath-stop { margin: 0; }
+@media (max-width: 559px) { .bm-breath { top: 62px; bottom: auto; gap: 8px; } .bm-breath-say { font-size: 14px; } .bm-breath-ring { width: 24px; height: 24px; } }

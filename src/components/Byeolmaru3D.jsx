@@ -274,7 +274,9 @@ const COLLIDERS = [
   [2.4, 17, 0.45], // 문 기둥
 ];
 
-export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady, onFail }) {
+// apiRef.current = { qi(), stopQi(), bow(), star(), lantern() } — 화면의 동작 버튼이 부름
+// onEvent(type, data): 'qi-walk'(방석으로 가는 중) · 'qi-start' · 'qi-cancel' · 'star'({n}) · 'lantern-up'
+export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, onReady, onFail }) {
   const mount = useRef(null);
   useEffect(() => {
     const el = mount.current;
@@ -290,6 +292,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     el.appendChild(renderer.domElement);
+    const colliders = COLLIDERS.map((c) => [...c]);
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog('#141a3d', 28, 95);
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
@@ -326,7 +329,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
       const l = stoneLantern();
       l.position.set(x, 0, z);
       scene.add(l);
-      COLLIDERS.push([x, z, 0.45]);
+      colliders.push([x, z, 0.45]);
     });
 
     // 입구 천문문
@@ -353,11 +356,13 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
     scene.add(altarGlow);
 
     // 방석 자리 (돌단 둘레 12개)
+    const seats = [];
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2 + Math.PI / 12;
       const c = cushion(i % 3 === 0 ? '#8c2f2a' : '#6b2a3a');
       c.position.set(Math.sin(a) * 5.4, 0, Math.cos(a) * 5.4);
       scene.add(c);
+      seats.push(c.position.clone());
     }
 
     // 소원 연못 + 물 위 등불
@@ -436,6 +441,68 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
     player.rotation.y = Math.PI;
     scene.add(player);
 
+    // ── 동작 효과 ──
+    const sparkTex = glow('rgba(255,236,180,1)', 'rgba(255,200,120,0)');
+    const bursts = []; // { s, v, life }
+    const burst = (at, n = 14, up = 1) => {
+      for (let i = 0; i < n; i++) {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: sparkTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+        sp.scale.setScalar(0.18 + Math.random() * 0.14);
+        sp.position.copy(at);
+        const a = Math.random() * Math.PI * 2;
+        const r = 0.6 + Math.random() * 1.2;
+        bursts.push({ s: sp, v: new THREE.Vector3(Math.cos(a) * r, (0.8 + Math.random() * 1.6) * up, Math.sin(a) * r), life: 1.2 + Math.random() * 0.6, age: 0 });
+        scene.add(sp);
+      }
+    };
+    // 헤아린 별: 하늘에 남는 반짝이 (오늘 켠 수만큼 다시 그림)
+    const countStarTex = canvasTex(128, 128, (g2, w) => {
+      g2.clearRect(0, 0, w, w);
+      const r = g2.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+      r.addColorStop(0, 'rgba(255,248,220,1)');
+      r.addColorStop(0.18, 'rgba(255,226,150,0.9)');
+      r.addColorStop(1, 'rgba(255,200,120,0)');
+      g2.fillStyle = r;
+      g2.fillRect(0, 0, w, w);
+      g2.strokeStyle = 'rgba(255,240,200,0.85)';
+      g2.lineWidth = 3;
+      g2.beginPath();
+      g2.moveTo(w / 2, 6);
+      g2.lineTo(w / 2, w - 6);
+      g2.moveTo(6, w / 2);
+      g2.lineTo(w - 6, w / 2);
+      g2.stroke();
+    });
+    const counted = [];
+    const addCountStar = (dir, instant = false) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: countStarTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      sp.position.copy(dir).multiplyScalar(90);
+      sp.userData = { size: 6 + Math.random() * 3, age: instant ? 9 : 0, ph: Math.random() * 6 };
+      sp.scale.setScalar(instant ? sp.userData.size : 0.01);
+      scene.add(sp);
+      counted.push(sp);
+    };
+    const randomSkyDir = (around) => {
+      const d = new THREE.Vector3();
+      for (let k = 0; k < 20; k++) {
+        d.set((Math.random() - 0.5) * 2, 0.35 + Math.random() * 0.6, (Math.random() - 0.5) * 2);
+        if (around) d.lerp(around, 0.55);
+        d.normalize();
+        if (d.y > 0.25) break;
+      }
+      return d;
+    };
+    for (let i = 0; i < Math.min(108, starCount); i++) addCountStar(randomSkyDir(), true);
+    // 띄운 등불
+    const lanterns = [];
+    const lanternMat = new THREE.MeshStandardMaterial({ color: '#ffd59a', emissive: '#ff9f4a', emissiveIntensity: 1.8, roughness: 0.6 });
+
+    // 동작 상태
+    let mode = 'walk'; // walk | auto(방석으로 걸어가는 중) | sit
+    let seatAt = null;
+    let bowT = -1;
+    let qiOn = false;
+
     // ── 입력 ──
     const keys = new Set();
     const onKey = (e) => {
@@ -495,6 +562,62 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
     const ro = new ResizeObserver(resize);
     ro.observe(el);
 
+    const nearestSeat = () => {
+      let best = null;
+      let bd = Infinity;
+      seats.forEach((p) => {
+        const d = p.distanceTo(player.position);
+        if (d < bd) {
+          bd = d;
+          best = p;
+        }
+      });
+      return best;
+    };
+    const stopSit = (silent) => {
+      const was = mode !== 'walk';
+      mode = 'walk';
+      seatAt = null;
+      qiOn = false;
+      if (was && !silent) onEvent?.('qi-cancel');
+    };
+    if (apiRef)
+      apiRef.current = {
+        qi: () => {
+          seatAt = nearestSeat();
+          mode = player.position.distanceTo(seatAt) < 0.5 ? 'sit' : 'auto';
+          if (mode === 'sit') {
+            qiOn = true;
+            onEvent?.('qi-start');
+          } else onEvent?.('qi-walk');
+        },
+        stopQi: () => stopSit(true),
+        bow: () => {
+          if (bowT < 0) bowT = 0;
+        },
+        star: () => {
+          const fwd = new THREE.Vector3();
+          camera.getWorldDirection(fwd);
+          addCountStar(randomSkyDir(fwd.setY(Math.max(0.4, fwd.y + 0.5)).normalize()));
+          burst(player.position.clone().setY(1.2), 6);
+        },
+        lantern: () => {
+          const l = new THREE.Group();
+          const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.42, 12, 1, true), lanternMat);
+          const cap = new THREE.Mesh(new THREE.CircleGeometry(0.22, 12), lanternMat);
+          cap.rotation.x = -Math.PI / 2;
+          cap.position.y = 0.21;
+          const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow('rgba(255,190,100,0.75)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+          halo.scale.setScalar(1.6);
+          l.add(body, cap, halo);
+          l.position.copy(player.position).setY(1.6);
+          l.userData = { age: 0, sway: Math.random() * 6, told: false };
+          scene.add(l);
+          lanterns.push(l);
+          burst(player.position.clone().setY(1), 10);
+        },
+      };
+
     const clock = new THREE.Clock();
     let raf;
     let facing = Math.PI;
@@ -518,8 +641,33 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
         ix += joy.x;
         iz += joy.y;
       }
-      const mag = Math.min(1, Math.hypot(ix, iz));
-      const moving = mag > 0.05;
+      let mag = Math.min(1, Math.hypot(ix, iz));
+      if (mag > 0.05 && mode !== 'walk') stopSit(false); // 걷기 시작하면 앉기·기운 받기 멈춤
+      // 방석으로 알아서 걸어가기
+      if (mode === 'auto' && seatAt) {
+        const tx = seatAt.x - player.position.x;
+        const tz = seatAt.z - player.position.z;
+        const d = Math.hypot(tx, tz);
+        if (d < 0.35) {
+          player.position.x = seatAt.x;
+          player.position.z = seatAt.z;
+          mode = 'sit';
+          qiOn = true;
+          onEvent?.('qi-start');
+        } else {
+          // 카메라 기준 입력값으로 바꿔 아래 이동 코드를 그대로 씀
+          const wx = tx / d;
+          const wz = tz / d;
+          const fx0 = -Math.sin(yaw);
+          const fz0 = -Math.cos(yaw);
+          const rx0 = Math.cos(yaw);
+          const rz0 = -Math.sin(yaw);
+          iz = wx * fx0 + wz * fz0;
+          ix = wx * rx0 + wz * rz0;
+          mag = Math.min(1, d);
+        }
+      }
+      const moving = mag > 0.05 && mode !== 'sit';
       if (moving) {
         const fx = -Math.sin(yaw);
         const fz = -Math.cos(yaw);
@@ -536,7 +684,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
           nx = (nx / rr) * WORLD_R;
           nz = (nz / rr) * WORLD_R;
         }
-        COLLIDERS.forEach(([cx, cz, cr]) => {
+        colliders.forEach(([cx, cz, cr]) => {
           const ddx = nx - cx;
           const ddz = nz - cz;
           const d = Math.hypot(ddx, ddz);
@@ -556,19 +704,38 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
       } else {
         walkT += dt * 1.2;
       }
+      if (mode === 'sit') {
+        // 돌단(가운데)을 바라봄
+        const target = Math.atan2(-player.position.x, -player.position.z);
+        let diff = target - facing;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        facing += diff * Math.min(1, dt * 5);
+      }
       player.rotation.y = facing;
-      // 걸을 때 통통, 서 있으면 숨쉬기
-      const hop = moving ? Math.abs(Math.sin(walkT)) * 0.16 : Math.sin(walkT) * 0.02;
-      me.root.position.y = 1.06 * ME + hop;
+      // 걸을 때 통통, 서 있으면 숨쉬기, 앉으면 낮게 + 천천히 깊은 숨
+      const breathe = mode === 'sit' ? Math.sin(t * 0.785) * 0.035 : Math.sin(walkT) * 0.02;
+      const hop = moving ? Math.abs(Math.sin(walkT)) * 0.16 : breathe;
+      me.root.position.y = 1.06 * ME + hop + (mode === 'sit' ? 0.02 : 0);
       me.root.rotation.z = moving ? Math.sin(walkT) * 0.08 : 0;
-      me.root.rotation.x = moving ? 0.08 : 0;
-      shadow.scale.setScalar(1 - hop * 0.8);
+      let lean = moving ? 0.08 : 0;
+      if (bowT >= 0) {
+        bowT += dt;
+        const p = Math.min(1, bowT / 1.3);
+        lean += Math.sin(p * Math.PI) * 0.6;
+        if (bowT > 0.55 && bowT - dt <= 0.55) burst(player.position.clone().setY(1.1), 12);
+        if (p >= 1) bowT = -1;
+      }
+      me.root.rotation.x = lean;
+      shadow.scale.setScalar(1 - Math.max(0, hop) * 0.8);
+      // 기운 받기 중: 내 둘레로 빛이 피어오름
+      if (qiOn && Math.random() < dt * 9) burst(player.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.2, (Math.random() - 0.5) * 0.8)), 1, 0.7);
 
       // 큰 천동이: 숨쉬기 + 오행 빛글자 돌기
       big.body.scale.set(1, 1 + Math.sin(t * 1.4) * 0.015, 1);
       big.spirits.children.forEach((sp) => {
         const u = sp.userData;
-        const a = u.angle + t * 0.35;
+        u.spin = (u.spin || 0) + dt * (qiOn ? 0.9 : 0.35);
+        const a = u.angle + u.spin;
         sp.position.set(Math.cos(a) * 2.3, u.height + Math.sin(t + u.phase) * 0.15, Math.sin(a) * 2.3);
       });
       const sp = big.sparks.geometry.attributes.position;
@@ -579,6 +746,45 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
       }
       sp.needsUpdate = true;
       altarGlow.material.opacity = 0.8 + Math.sin(t * 1.2) * 0.2;
+      const glowTo = qiOn ? 17 : 12;
+      altarGlow.scale.setScalar(altarGlow.scale.x + (glowTo - altarGlow.scale.x) * Math.min(1, dt * 2));
+      warm.intensity += ((qiOn ? 30 : 18) - warm.intensity) * Math.min(1, dt * 2);
+      // 빛 터짐
+      for (let i = bursts.length - 1; i >= 0; i--) {
+        const b = bursts[i];
+        b.age += dt;
+        b.s.position.addScaledVector(b.v, dt);
+        b.v.multiplyScalar(1 - dt * 1.2);
+        b.s.material.opacity = Math.max(0, 1 - b.age / b.life);
+        if (b.age >= b.life) {
+          scene.remove(b.s);
+          b.s.material.dispose();
+          bursts.splice(i, 1);
+        }
+      }
+      // 헤아린 별: 반짝 켜지고 계속 깜빡
+      counted.forEach((c) => {
+        const u = c.userData;
+        u.age += dt;
+        const pop = u.age < 0.5 ? u.size * (1.8 - (u.age / 0.5) * 0.8) * Math.min(1, u.age / 0.12) : u.size;
+        c.scale.setScalar(pop * (0.85 + Math.sin(t * 2.4 + u.ph) * 0.15));
+      });
+      // 띄운 등불: 천천히 하늘로, 흔들리며 작아짐
+      for (let i = lanterns.length - 1; i >= 0; i--) {
+        const l = lanterns[i];
+        const u = l.userData;
+        u.age += dt;
+        l.position.y += dt * (0.9 + u.age * 0.12);
+        l.position.x += Math.sin(t * 0.8 + u.sway) * dt * 0.25;
+        if (!u.told && u.age > 2.6) {
+          u.told = true;
+          onEvent?.('lantern-up');
+        }
+        if (l.position.y > 70) {
+          scene.remove(l);
+          lanterns.splice(i, 1);
+        }
+      }
       // 연못 등불 맴돌기
       floats.forEach((f) => {
         f.userData.a += f.userData.s * dt;
@@ -598,9 +804,20 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, onReady
       fp.needsUpdate = true;
       flies.material.opacity = 0.6 + Math.sin(t * 2) * 0.3;
 
-      // 카메라: 뒤에서 따라가기
-      camTarget.set(player.position.x, 1.3, player.position.z);
-      camPos.set(camTarget.x + Math.sin(yaw) * Math.cos(pitch) * dist, camTarget.y + Math.sin(pitch) * dist, camTarget.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+      // 카메라: 뒤에서 따라가기 (앉으면 등 뒤로 다가가 돌단을 함께 봄)
+      if (mode === 'sit') {
+        let want = facing + Math.PI;
+        let dy = want - yaw;
+        dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+        yaw += dy * Math.min(1, dt * 2.5);
+        pitch += (0.36 - pitch) * Math.min(1, dt * 2);
+      }
+      const useDist = mode === 'sit' ? (camera.aspect < 1 ? 5.4 : 6.4) : dist;
+      tag.visible = mode !== 'sit'; // 앉아 있을 땐 이름표 숨김
+      // 앉으면 나와 큰 천동이 사이를 바라봐 둘 다 화면에 들어오게
+      if (mode === 'sit') { const k = camera.aspect < 1 ? 0.7 : 0.82; camTarget.set(player.position.x * k, camera.aspect < 1 ? 1.9 : 1.5, player.position.z * k); } // 가로 화면은 나 쪽으로 더 낮게 봐서 내 천동이가 버튼에 안 가리게
+      else camTarget.set(player.position.x, 1.3, player.position.z);
+      camPos.set(camTarget.x + Math.sin(yaw) * Math.cos(pitch) * useDist, camTarget.y + Math.sin(pitch) * useDist, camTarget.z + Math.cos(yaw) * Math.cos(pitch) * useDist);
       if (firstFrame) camera.position.copy(camPos);
       else camera.position.lerp(camPos, Math.min(1, dt * 8));
       camera.lookAt(camTarget);
