@@ -6,6 +6,8 @@ import { wishProblem } from '../../src/lib/wish.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
 import { sessionOf } from '../lib/session.mjs';
 import { getStore } from '@netlify/blobs';
+import { spend, refundSpend } from '../lib/wallet.mjs';
+import { PRICES } from '../../src/lib/wallet.js';
 
 // 하루 2번 (2026-11-14 사용자 지시 — 풀이 비용). 회원은 회원번호, 비회원은 접속 IP 로 셈. KST 자정에 다시 2번.
 export const TAROT_DAILY = 2;
@@ -36,7 +38,7 @@ export default async (req, context) => {
   // 오늘 남은 횟수 (화면이 카드를 섞기 전에 물어봄)
   if (req.method === 'GET') {
     const used = Number(await store.get(countKey).catch(() => 0)) || 0;
-    return json({ left: Math.max(0, TAROT_DAILY - used), daily: TAROT_DAILY });
+    return json({ left: Math.max(0, TAROT_DAILY - used), daily: TAROT_DAILY, prices: { three: PRICES.tarot3.credits, extra: PRICES.tarotExtra.credits } });
   }
   if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
   if (!allowedOrigin(req)) return json({ error: '허용되지 않은 출처예요.' }, 403);
@@ -56,15 +58,26 @@ export default async (req, context) => {
   if (q.length > TAROT_Q_MAX) return json({ error: `질문은 ${TAROT_Q_MAX}자까지 적을 수 있어요.` }, 400);
   if (q && q.length >= 2 && wishProblem(q)) return json({ error: wishProblem(q) }, 400);
 
+  // 복채 (2026-11-14): 세 장 = 15천(무료 횟수와 별개), 한 장은 하루 무료 2번 · 그 뒤로는 한 번에 10천. 복채는 회원만.
   const used = Number(await store.get(countKey).catch(() => 0)) || 0;
-  if (used >= TAROT_DAILY) return json({ error: `타로는 하루에 ${TAROT_DAILY}번까지 볼 수 있어요. 내일 다시 카드를 펼쳐 주세요.`, reason: 'daily_limit', left: 0 }, 429);
+  const three = spread.pos.length === 3;
+  const price = three ? PRICES.tarot3 : used >= TAROT_DAILY ? PRICES.tarotExtra : null;
+  const member = sessionOf(req);
+  if (price && !member) return json({ error: three ? '세 장 펼침은 복채로 볼 수 있어요. 로그인해 주세요.' : `타로는 하루에 ${TAROT_DAILY}번까지 무료예요. 로그인하면 복채로 더 볼 수 있어요.`, reason: 'login', login: true, need: price.credits }, 401);
+  if (price && body?.pay !== true) return json({ error: `${price.label}에 복채 ${price.credits}천이 들어요.`, reason: 'pay_required', need: price.credits }, 402);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: '풀이가 아직 준비되지 않았어요.', reason: 'disabled' }, 503);
   const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
   if (rateLimited(ip)) return json({ error: '요청이 많아요. 1분 뒤에 다시 시도해 주세요.', reason: 'rate_limited' }, 429);
 
-  await store.set(countKey, String(used + 1)); // 풀이를 시작할 때 한 번으로 셈
+  let paidRef = null;
+  if (price) {
+    paidRef = `tarot-${Date.now().toString(36)}`;
+    const sp = await spend(member.sub, price.credits, price.label, paidRef);
+    if (!sp.ok) return json({ error: '복채가 모자라요. 충전한 뒤 다시 시도해 주세요.', reason: 'no_credit', need: price.credits, balance: sp.balance }, 402);
+  }
+  if (!three || !price) await store.set(countKey, String(used + 1)); // 무료 한 장·추가 한 장은 하루 횟수로 셈 (세 장은 따로)
 
   const lines = picked.map((p, i) => `- ${spread.pos[i]}: ${p.card.ko}(${p.card.en}) ${p.rev ? '역방향' : '정방향'} — 핵심어: ${p.rev ? p.card.rev : p.card.up}`).join('\n');
   const one = spread.pos.length === 1;
@@ -103,11 +116,15 @@ ${one ? '' : '## 세 장을 이어 보면\n(3~4문장. 흐름이 어떻게 이�
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') send(event.delta.text);
         }
         const final = await ms.finalMessage();
-        if (final.stop_reason === 'refusal') send('\n\n[[END:refusal]]');
+        if (final.stop_reason === 'refusal') {
+          if (paidRef) await refundSpend(member.sub, price.credits, `${price.label} 돌려받음`, paidRef).catch(() => {});
+          send('\n\n[[END:refusal]]');
+        }
         else if (final.stop_reason === 'max_tokens') send('\n\n[[END:truncated]]');
       } catch (error) {
         const timeout = abort.signal.aborted || error instanceof Anthropic.APIUserAbortError || error instanceof Anthropic.APIConnectionTimeoutError;
         console.error('tarot failed:', timeout ? 'timeout' : error?.status || 'unknown');
+        if (paidRef) await refundSpend(member.sub, price.credits, `${price.label} 돌려받음`, paidRef).catch(() => {}); // 풀이를 못 만들면 복채 돌려줌
         send(`\n\n[[END:${timeout ? 'timeout' : 'error'}]]`);
       } finally {
         clearTimeout(timer);

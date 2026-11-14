@@ -7,5 +7,6 @@ Disallow: /api/
 Disallow: /admin
 Disallow: /my
 Disallow: /reset
+Disallow: /wallet
 
 Sitemap: https://xn--z92bt3ho9hczd.com/sitemap.xml

@@ -144,6 +144,7 @@ const ROUTES = [
   // 개인 결과·계정 화면: 검색에 올리지 않음 (robots.txt 와 함께)
   { path: '/result', title: `사주 풀이 결과 | ${SITE.name}`, noindex: true },
   { path: '/my', title: `마이페이지 | ${SITE.name}`, noindex: true },
+  { path: '/wallet', title: `복채 충전 | ${SITE.name}`, noindex: true },
   { path: '/admin', title: `관리자 | ${SITE.name}`, noindex: true },
   { path: '/reset', title: `비밀번호 재설정 | ${SITE.name}`, noindex: true },
 ];

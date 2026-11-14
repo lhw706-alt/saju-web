@@ -31,6 +31,8 @@ import { passwordOk } from '../../src/lib/password.js';
 import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
+import { PACKAGES, packageById, PRICES } from '../../src/lib/wallet.js';
+import { walletOf, credit, spend, purchaseKey, owned, markOwned } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -70,8 +72,8 @@ const inquiryLimited = createRateLimiter(5, 10 * 60_000); // 같은 회원 10분
 // Netlify Blobs 'history': 키 = 회원번호/풀이키 해시, 값 = { key, input, topic, parts: { partId: text }, createdAt, updatedAt }
 // 같은 생년월일시·주제·연도로 다시 보면 새로 만들지 않고 이걸 보여 줌 (화면 src/lib/history.js). 탈퇴하면 지움.
 const historyStore = () => getStore({ name: 'history', consistency: 'strong' });
-const HISTORY_TOPICS = new Set(['life', ...TOPICS.map((t) => t.id)]);
-const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'tti', 'match', 'match1', 'match2']);
+const HISTORY_TOPICS = new Set(['life', 'newyearMonth', ...TOPICS.map((t) => t.id)]);
+const HISTORY_PARTS = new Set([...REPORT_PARTS.map((p) => p.id), ...TOPICS.map((t) => t.id), ...DAY_TOPICS.map((t) => t.id), 'tti', 'match', 'match1', 'match2', 'nym1', 'nym2']);
 const historyTopicOk = (t) =>
   HISTORY_TOPICS.has(t) ||
   (typeof t === 'string' && t.startsWith('match@') && t.length < 120) || // 궁합: 'match@상대키'
@@ -695,6 +697,79 @@ export default async (req, context) => {
     return json({ date, numbers: rec.numbers, already: false });
   }
 
+  // ── 복채 (충전식 유료, 2026-11-14) ── 토스페이먼츠 결제창. 화면 /wallet (src/pages/Wallet.jsx)
+  // GET  /api/wallet           → { enabled, balance, ledger, packages } (회원)
+  // POST /api/pay/order {pkg}  → 주문 만들기 { orderId, amount, orderName, customerKey } — Blobs 'orders'(키 = 주문번호, 5년 보관)
+  // POST /api/pay/confirm {paymentKey, orderId, amount} → 금액 확인 후 토스 승인 API → 복채 적립 (같은 주문은 한 번만)
+  // POST /api/wallet/owned {item, input} · /api/wallet/buy {item, input} → 신년운세 월별 상세처럼 사람·해마다 한 번 사는 상품
+  if (path === '/api/wallet' || path.startsWith('/api/pay/') || path.startsWith('/api/wallet/')) {
+    const s = secret ? verify(cookies(req)[SESSION], secret) : null;
+    const payOn = Boolean(process.env.TOSS_SECRET_KEY);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true, enabled: payOn }, 401);
+    if (historyLimited(s.sub)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
+    const orders = getStore({ name: 'orders', consistency: 'strong' });
+    if (req.method === 'GET' && path === '/api/wallet') {
+      const w = await walletOf(s.sub);
+      return json({ enabled: payOn, balance: w.balance || 0, ledger: (w.ledger || []).slice(0, 50), packages: PACKAGES });
+    }
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const body = await readJson();
+    if (path === '/api/pay/order') {
+      if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);
+      const pkg = packageById(body?.pkg);
+      if (!pkg) return json({ error: '충전 금액을 다시 골라 주세요.' }, 400);
+      const orderId = `sc-${Date.now().toString(36)}-${randomBytes(6).toString('hex')}`;
+      await orders.setJSON(orderId, { uid: s.sub, pkg: pkg.id, won: pkg.won, credits: pkg.credits, status: 'ready', createdAt: new Date().toISOString() });
+      const customerKey = createHash('sha256').update(`cust:${s.sub}:${secret}`).digest('base64url').slice(0, 40);
+      return json({ orderId, amount: pkg.won, orderName: `사주천문 복채 ${pkg.credits}천`, customerKey });
+    }
+    if (path === '/api/pay/confirm') {
+      if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);
+      const orderId = String(body?.orderId || '');
+      const paymentKey = String(body?.paymentKey || '');
+      const amount = Number(body?.amount);
+      const o = /^sc-[a-z0-9]+-[0-9a-f]{12}$/.test(orderId) ? await orders.get(orderId, { type: 'json' }) : null;
+      if (!o || o.uid !== s.sub) return json({ error: '주문을 찾지 못했어요.' }, 404);
+      if (o.status === 'done') {
+        const w = await walletOf(s.sub);
+        return json({ ok: true, balance: w.balance, credits: o.credits, already: true });
+      }
+      if (amount !== o.won || !paymentKey || paymentKey.length > 200) return json({ error: '결제 금액이 주문과 달라요. 결제가 취소돼요.' }, 400);
+      const res = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
+        method: 'POST',
+        headers: { authorization: `Basic ${Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString('base64')}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ paymentKey, orderId, amount }),
+      }).catch(() => null);
+      const pay = await res?.json().catch(() => null);
+      if (!res?.ok || pay?.status !== 'DONE') {
+        await orders.setJSON(orderId, { ...o, status: 'failed', failCode: pay?.code || 'network', failedAt: new Date().toISOString() });
+        console.error('pay confirm failed:', pay?.code || res?.status || 'network');
+        return json({ error: pay?.message || '결제를 승인하지 못했어요. 결제된 금액이 있다면 자동으로 취소돼요.' }, 400);
+      }
+      await orders.setJSON(orderId, { ...o, status: 'done', paymentKey, method: pay.method || null, approvedAt: pay.approvedAt || new Date().toISOString() });
+      const c = await credit(s.sub, o.credits, `충전 ${o.won.toLocaleString('ko-KR')}원`, orderId);
+      return json({ ok: true, balance: c.balance, credits: o.credits });
+    }
+    if (path === '/api/wallet/owned' || path === '/api/wallet/buy') {
+      const item = String(body?.item || '');
+      const price = PRICES[item];
+      if (!price || item !== 'newyearMonth') return json({ error: '잘못된 상품이에요.' }, 400);
+      let key;
+      try {
+        key = purchaseKey(s.sub, item, body?.input, String(new Date().getFullYear() + 1));
+      } catch {
+        return json({ error: '생년월일 정보를 다시 확인해 주세요.' }, 400);
+      }
+      if (await owned(key)) return json({ owned: true, balance: (await walletOf(s.sub)).balance });
+      if (path === '/api/wallet/owned') return json({ owned: false, price: price.credits, balance: (await walletOf(s.sub)).balance });
+      const r2 = await spend(s.sub, price.credits, price.label, key.split('/').pop());
+      if (!r2.ok) return json({ error: '복채가 모자라요. 충전한 뒤 다시 시도해 주세요.', need: price.credits, balance: r2.balance }, 402);
+      await markOwned(key, { item, credits: price.credits });
+      return json({ owned: true, balance: r2.balance });
+    }
+    return json({ error: '잘못된 요청이에요.' }, 404);
+  }
+
   // ── 활동 배지 (2026-11-14) ── GET /api/badges (회원): 활동 수를 세서 돌려줌. 기준은 src/lib/badges.js
   if (path === '/api/badges') {
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
@@ -970,6 +1045,11 @@ export default async (req, context) => {
       const { blobs: gk } = await wishes.list({ prefix: `g/${s.sub}/` }); // 내가 응원한 기록
       await Promise.all(gk.map((b) => wishes.delete(b.key)));
       await getStore({ name: 'visits', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 방문 기록(배지)
+      // 복채 지갑·산 상품 기록 (결제 원본 'orders' 는 전자상거래법상 5년 보관으로 남김)
+      await getStore({ name: 'wallet', consistency: 'strong' }).delete(s.sub).catch(() => {});
+      const pur = getStore({ name: 'purchases', consistency: 'strong' });
+      const { blobs: pk } = await pur.list({ prefix: `u/${s.sub}/` });
+      await Promise.all(pk.map((b) => pur.delete(b.key)));
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });
@@ -1095,4 +1175,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm'] };

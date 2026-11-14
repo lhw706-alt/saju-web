@@ -1886,3 +1886,45 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
   .term.chart-col-btn { font-size: 13px; }
   .tarot-title, .nm-title, .wish-title { font-size: 23px; }
 }
+
+.tarot-price { margin-top: 2px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--primary); }
+
+/* 복채 충전 /wallet (2026-11-14) — 담백하게: 큰 잔액 · 패키지 세 칸 · 얇은 줄 목록 */
+.wallet { padding: 24px 0 8px; max-width: 560px; margin: 0 auto; }
+.wallet-login { display: block; width: min(100%, 320px); margin: 20px auto 0; }
+.wallet-balance { display: flex; justify-content: space-between; align-items: baseline; margin-top: 22px; padding: 18px 2px; border-top: 1px solid rgba(255, 255, 255, 0.12); border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.wallet-balance span { font-size: 15px; color: var(--text-2); }
+.wallet-balance b { font-size: 30px; font-weight: 600; color: var(--primary); font-variant-numeric: tabular-nums; }
+.wallet-msg { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(255, 99, 99, 0.1); color: #ffb4b4; font-size: 14px; }
+.wallet-msg.is-ok { background: rgba(127, 224, 160, 0.12); color: #8fe3ad; }
+.wallet-h2 { margin: 28px 0 12px; font-size: 16px; font-weight: 600; color: var(--text); }
+.wallet-pkgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.wallet-pkgs button { display: grid; justify-items: start; gap: 2px; width: 100%; padding: 14px 12px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.wallet-pkgs button.on { border-color: var(--primary); }
+.wallet-pkgs b { font-size: 18px; font-weight: 600; }
+.wallet-pkgs span { font-size: 14px; color: var(--text-2); }
+.wallet-pkgs em { font-style: normal; font-size: 13px; color: var(--primary); }
+.wallet-pay { display: block; width: 100%; margin: 14px 0 0; }
+.wallet-prices, .wallet-ledger { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.wallet-prices li, .wallet-ledger li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 15px; }
+.wallet-prices b { color: var(--primary); font-weight: 600; white-space: nowrap; }
+.wallet-ledger-what { display: grid; gap: 2px; }
+.wallet-ledger-what small { font-size: 13px; color: var(--text-2); }
+.wallet-ledger b { white-space: nowrap; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.wallet-ledger b.is-plus { color: var(--primary); }
+.wallet-notice { margin-top: 28px; }
+.wallet-notice p { margin: 0 0 8px; font-size: 13px; line-height: 1.7; color: var(--text-2); word-break: keep-all; }
+.wallet-notice a { color: var(--text); }
+@media (max-width: 400px) { .wallet-pkgs { grid-template-columns: 1fr; } }
+/* 신년운세 월별 상세 (유료) */
+.nym { margin: 32px 0 8px; padding: 20px 0 4px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.nym-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.nym-kicker { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--primary); }
+.nym-head h2 { margin: 4px 0 0; font-family: var(--title); font-size: 22px; font-weight: 400; }
+.nym-desc { margin: 6px 0 0; max-width: 460px; font-size: 14px; line-height: 1.6; color: var(--text-2); word-break: keep-all; }
+.nym-btn { margin: 0; }
+.nym-body { margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.nym-month { padding: 16px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.nym-month h3 { margin: 0 0 6px; font-family: var(--title); font-size: 18px; font-weight: 400; color: var(--primary); }
+.nym-month p { font-size: 15px; line-height: 1.8; }
+@media (max-width: 559px) { .nym-btn { width: 100%; } }

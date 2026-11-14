@@ -20,6 +20,7 @@ import NameMatch from './pages/NameMatch.jsx';
 import Wish from './pages/Wish.jsx';
 import Talisman from './pages/Talisman.jsx';
 import Tarot from './pages/Tarot.jsx';
+import Wallet from './pages/Wallet.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { loadFonts } from './lib/fonts.js';
@@ -49,6 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/wish" element={<Wish />} />
           <Route path="/talisman" element={<Talisman />} />
           <Route path="/tarot" element={<Tarot />} />
+          <Route path="/wallet" element={<Wallet />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/my/:tab?" element={<My />} />
           <Route path="/reset" element={<Reset />} />

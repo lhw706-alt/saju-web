@@ -8,6 +8,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { computeSaju, chartSummary, dayLuck, dayLuckSummary, SajuInputError } from '../../src/lib/saju.js';
 import { topicById, TOPIC_FORMAT, ttiYears } from '../../src/lib/topics.js';
 import { json, allowedOrigin, createRateLimiter } from '../lib/guard.mjs';
+import { sessionOf } from '../lib/session.mjs';
+import { purchaseKey, owned } from '../lib/wallet.mjs';
 
 const MODEL = process.env.SAJU_MODEL || 'claude-opus-5-5';
 const TIME_LIMIT_MS = 55_000;
@@ -73,6 +75,13 @@ export default async (req, context) => {
       return json({ error: '운세를 볼 날짜를 다시 골라 주세요. 오늘부터 1년 안의 날만 볼 수 있어요.' }, 400);
     }
     day = dayLuck(chart, ymd);
+  }
+
+  // 유료 주제(신년운세 월별 상세): 이 회원이 이 사람·이 해 상품을 샀는지 확인 (2026-11-14)
+  if (topic.paid) {
+    const s = sessionOf(req);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (!(await owned(purchaseKey(s.sub, topic.paid, body?.input, String(new Date().getFullYear() + 1))))) return json({ error: '먼저 복채로 열어 주세요.', reason: 'not_owned' }, 402);
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;

@@ -12,6 +12,7 @@ import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
 import MatchReport from '../components/MatchReport.jsx';
 import DayReport from '../components/DayReport.jsx';
 import PollCard from '../components/PollCard.jsx';
+import NewYearMonthly from '../components/NewYearMonthly.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import MemberCta from '../components/MemberCta.jsx';
 
@@ -22,7 +23,7 @@ const DAY_MASTER_IMAGE = {
 
 export default function Result() {
   const input = loadInput();
-  const { auth } = useOutletContext();
+  const { auth, openLogin } = useOutletContext();
   const member = !!auth.user;
   const [params] = useSearchParams();
   const life = params.get("v") === "life"; // 평생 사주 리포트 화면
@@ -183,6 +184,7 @@ export default function Result() {
       <section className="block">
         <h2 className="section-title">천둥도사의 사주 풀이</h2>
         <Reading input={inp} initialTopic={initialTopic} member={member} />
+        <NewYearMonthly input={inp} member={member} openLogin={openLogin} />
       </section>
       <MemberCta place="topic" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
       <ResultShare kakao={{ title: `나는 ${dm.ko}${ELEMENT_KO[dm.element]} 일간이래요`, description: `${DAY_MASTER_IMAGE[dm.stem]}의 기운을 타고났대요. 천둥도사에게 내 사주도 물어볼까요?`, button: '내 사주 보기' }} />

@@ -54,6 +54,9 @@ export default function UserMenu({ nick, onLogout }) {
           <Link role="menuitem" to="/my" onClick={() => setOpen(false)}>
             마이페이지
           </Link>
+          <Link role="menuitem" to="/wallet" onClick={() => setOpen(false)}>
+            복채 충전
+          </Link>
           <Link role="menuitem" to="/my/support" onClick={() => setOpen(false)}>
             1:1 문의
           </Link>

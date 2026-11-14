@@ -174,5 +174,15 @@ ${MATCH_COMMON}
   },
 ];
 
+// 신년운세 월별 상세 리포트 (유료 — 복채 40천, 2026-11-14). 두 부분 동시 요청: 1~6월 / 7~12월. 서버가 산 기록을 확인한 뒤에만 풀이.
+const monthFormat = (from, to) => `${NEXT_YEAR}년 ${from}월부터 ${to}월까지, 달마다 아래 형식을 그대로 반복해서 쓴다.
+## ${NEXT_YEAR}년 N월
+(그달의 월건이 원국과 만나는 흐름을 근거로 3~4문장: 일·돈·관계 가운데 그달에 힘을 쓰면 좋은 것과 조심할 것)
+그달마다 다르게, 겁주는 예언 없이. 전체 ${(to - from + 1) * 150}~${(to - from + 1) * 210}자.`;
+export const NEWYEAR_MONTH_PARTS = [
+  { id: 'nym1', label: `${NEXT_YEAR} 월별 상세 (1~6월)`, year: 'next', paid: 'newyearMonth', focus: `${NEXT_YEAR}년 1월~6월 달마다의 흐름`, format: monthFormat(1, 6) },
+  { id: 'nym2', label: `${NEXT_YEAR} 월별 상세 (7~12월)`, year: 'next', paid: 'newyearMonth', focus: `${NEXT_YEAR}년 7월~12월 달마다의 흐름`, format: monthFormat(7, 12) },
+];
+
 export const topicById = (id) =>
-  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : id === 'tti' ? TTI_TOPIC : null);
+  TOPICS.find((t) => t.id === id) || DAY_TOPICS.find((t) => t.id === id) || REPORT_PARTS.find((t) => t.id === id) || MATCH_PARTS.find((t) => t.id === id) || NEWYEAR_MONTH_PARTS.find((t) => t.id === id) || (id === 'match' ? MATCH_TOPIC : id === 'tti' ? TTI_TOPIC : null);

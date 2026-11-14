@@ -20,8 +20,8 @@ export function streamNameMatch({ me, partner, relation, part, signal, onText })
 }
 
 // 타로 (/api/tarot): 뽑은 카드·장수·분야·질문
-export function streamTarot({ cards, spread, topic, question, signal, onText }) {
-  return streamPost('/api/tarot', { cards, spread, topic, question }, signal, onText);
+export function streamTarot({ cards, spread, topic, question, pay = false, signal, onText }) {
+  return streamPost('/api/tarot', { cards, spread, topic, question, pay }, signal, onText);
 }
 
 async function streamPost(url, body, signal, onText) {

@@ -2,7 +2,8 @@
 // → 한 장씩 뒤집기 → 천둥도사의 풀이(스트리밍, /api/tarot). 카드 그림은 src/lib/tarot.js 창작 디자인. 질문은 저장하지 않음.
 // 디자인: 반짝임·유리·이모지 없이 종이 카드와 얇은 선, 글자 계층(사용자 지시 'AI 티 없이').
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { PRICES, fmtCredits } from '../lib/wallet.js';
 import { TAROT, TAROT_TOPICS, TAROT_SPREADS, TAROT_Q_MAX, tarotById, tarotFaceSvg, TAROT_BACK } from '../lib/tarot.js';
 import { wishProblem } from '../lib/wish.js';
 import { streamTarot, END_MESSAGES } from '../lib/stream.js';
@@ -32,7 +33,9 @@ const sectionsOf = (text) => {
 };
 
 export default function Tarot() {
-  const { notify } = useOutletContext();
+  const { auth, openLogin, notify } = useOutletContext();
+  const navigate = useNavigate();
+  const [paid, setPaid] = useState(false); // 이번 판에 복채를 쓰기로 했는지
   const [left, setLeft] = useState(null); // 오늘 남은 횟수 (서버 /api/tarot GET)
   const loadLeft = () =>
     fetch('/api/tarot', { cache: 'no-store' })
@@ -58,15 +61,29 @@ export default function Tarot() {
   const spread = TAROT_SPREADS[count];
   const picks = useMemo(() => chosen.map((k) => ({ ...deck[k], card: tarotById(deck[k].id) })), [chosen, deck]);
 
-  const start = () => {
+  // 복채가 드는 판인지: 세 장 = 15천, 한 장은 하루 무료 2번 뒤 10천 (2026-11-14)
+  const cost = count === 3 ? PRICES.tarot3.credits : left === 0 ? PRICES.tarotExtra.credits : 0;
+  const begin = async () => {
     const q = question.trim();
     if (q && wishProblem(q) && q.length >= 2) return setQErr(wishProblem(q));
-    if (left === 0) {
-      trackEvent('tarot_limit');
-      notify('타로는 하루에 2번까지 볼 수 있어요. 내일 다시 카드를 펼쳐 주세요.');
-      return;
+    let usePay = false;
+    if (cost) {
+      if (!auth?.user) return openLogin(count === 3 ? '세 장 펼침은 복채로 볼 수 있어요. 로그인해 주세요.' : '오늘 무료 타로를 다 보셨어요. 로그인하면 복채로 더 볼 수 있어요.');
+      const w = await fetch('/api/wallet', { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
+      const bal = w?.balance ?? 0;
+      if (bal < cost) {
+        trackEvent('tarot_need_credit', { cost });
+        if (window.confirm(`복채가 ${fmtCredits(cost - bal)} 모자라요. 충전하러 갈까요? (지금 ${fmtCredits(bal)})`)) navigate('/wallet');
+        return;
+      }
+      if (!window.confirm(`${count === 3 ? '세 장 펼침' : '타로 한 번 더'}에 복채 ${fmtCredits(cost)}을 쓸까요? (지금 ${fmtCredits(bal)})`)) return;
+      usePay = true;
     }
-    trackEvent('tarot_start', { topic, count });
+    setPaid(usePay);
+    start(usePay);
+  };
+  const start = (usePay) => {
+    trackEvent('tarot_start', { topic, count, paid: usePay ? 'yes' : 'no' });
     setDeck(shuffle(TAROT.map((c) => ({ id: c.id, rev: Math.random() < 0.3 })))); // 30% 는 역방향
     setChosen([]);
     setShown(0);
@@ -93,7 +110,7 @@ export default function Tarot() {
     ctrl.current = new AbortController();
     setReading({ text: '', status: 'loading', error: '', end: null });
     try {
-      const r = await streamTarot({ cards, spread: count, topic, question: question.trim(), signal: ctrl.current.signal, onText: (text) => setReading((x) => ({ ...x, text })) });
+      const r = await streamTarot({ cards, spread: count, topic, question: question.trim(), pay: paid, signal: ctrl.current.signal, onText: (text) => setReading((x) => ({ ...x, text })) });
       setReading({ text: r.text, status: r.error ? 'error' : 'done', error: r.error || '', end: r.end });
       loadLeft();
     } catch (e) {
@@ -157,6 +174,7 @@ export default function Tarot() {
                       <span className="tarot-count-txt">
                         <b>{TAROT_SPREADS[n].label}</b>
                         <span>{TAROT_SPREADS[n].desc}</span>
+                        {n === 3 && <em className="tarot-price">{fmtCredits(PRICES.tarot3.credits)}</em>}
                       </span>
                     </button>
                   ))}
@@ -184,10 +202,16 @@ export default function Tarot() {
               </div>
             </li>
           </ol>
-          <button type="button" className="btn-primary tarot-go" onClick={start} disabled={left === 0}>
-            카드 섞기
+          <button type="button" className="btn-primary tarot-go" onClick={begin}>
+            {cost ? `복채 ${fmtCredits(cost)}으로 카드 섞기` : '카드 섞기'}
           </button>
-          <p className="tarot-left">{left === 0 ? '오늘은 두 번 모두 보셨어요. 내일 다시 카드를 펼쳐 주세요.' : '타로는 하루에 2번까지 볼 수 있어요.'}</p>
+          <p className="tarot-left">
+            {count === 3
+              ? '세 장 펼침은 복채로 볼 수 있어요.'
+              : left === 0
+                ? '오늘 무료 두 번을 모두 보셨어요. 복채로 한 번 더 볼 수 있어요.'
+                : '한 장 타로는 하루에 2번까지 무료예요.'}
+          </p>
         </section>
       )}
 

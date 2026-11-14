@@ -20,6 +20,7 @@ const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
   { id: 'badges', label: '내 배지', to: '/my/badges' },
+  { id: 'wallet', label: '복채', to: '/wallet' },
   { id: 'charms', label: '부적 도감', to: '/my/charms' },
   { id: 'support', label: '고객센터', to: '/my/support' },
 ];
