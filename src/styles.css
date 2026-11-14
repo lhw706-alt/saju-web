@@ -2411,3 +2411,7 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .bm-breath-left { min-width: 34px; font-size: 13px; }
 .bm-breath-stop { margin: 0; }
 @media (max-width: 559px) { .bm-breath { top: 62px; bottom: auto; gap: 8px; } .bm-breath-say { font-size: 14px; } .bm-breath-ring { width: 24px; height: 24px; } }
+/* 말풍선 담백하게 (2026-11-15 사용자 지시: 너무 과함) — 진한 주황·HOT 대신 어두운 바탕 + 얇은 금테 + 금빛 글자, 작게 */
+.card-bubble { top: -11px; right: 18px; gap: 0; padding: 4px 10px; background: #26272b; border: 1px solid rgba(226, 194, 122, 0.55); color: #EBCB86; font-size: 12px; font-weight: 500; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); animation: none; }
+.card-bubble::after { bottom: -4px; right: 22px; width: 7px; height: 7px; background: #26272b; border-right: 1px solid rgba(226, 194, 122, 0.55); border-bottom: 1px solid rgba(226, 194, 122, 0.55); border-radius: 0 0 2px 0; }
+@media (max-width: 559px) { .card-bubble { top: -10px; right: 12px; font-size: 12px; padding: 3px 9px; } }

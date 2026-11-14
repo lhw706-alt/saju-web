@@ -34,7 +34,6 @@ export default function ContentCards({ onOpen }) {
                 {/* 카드 위 말풍선 (contents.js bubble, 2026-11-15 사용자 지시: 신년운세 강조) */}
                 {c.bubble && c.status === 'live' && (
                   <span className="card-bubble" aria-hidden="true">
-                    <b>HOT</b>
                     {c.bubble}
                   </span>
                 )}
