@@ -48,28 +48,46 @@ export const roman = (n) => {
   return s;
 };
 
-// 카드 앞면 SVG (200×330) — 크림색 종이, 이중 먹선 테두리, 모서리 꽃잎, 숫자·한자 문양·이름
+// 카드 그림 (2026-11-14 사용자 레퍼런스 톤: 짙은 보랏빛 우주 + 금빛 장식 테두리·모서리 고리·별)
+const STARS = [[30, 60], [168, 44], [44, 140], [160, 120], [26, 230], [174, 210], [60, 286], [142, 300], [100, 36], [92, 312], [130, 82], [72, 104]];
+const frame = (id) => `
+  <defs>
+    <linearGradient id="${id}-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a1d63"/><stop offset=".5" stop-color="#4a3596"/><stop offset="1" stop-color="#1b1449"/></linearGradient>
+    <radialGradient id="${id}-glow" cx="50%" cy="48%" r="50%"><stop offset="0" stop-color="#b9a0ff" stop-opacity=".45"/><stop offset="1" stop-color="#b9a0ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${id}-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6df9c"/><stop offset=".5" stop-color="#d9ad52"/><stop offset="1" stop-color="#f3d68a"/></linearGradient>
+  </defs>
+  <rect x="1" y="1" width="198" height="328" rx="12" fill="url(#${id}-bg)"/>
+  <rect x="1" y="1" width="198" height="328" rx="12" fill="url(#${id}-glow)"/>
+  ${STARS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? 0.9 : 1.6}" fill="#fff4d6" opacity="${0.5 + (i % 4) / 8}"/>`).join('')}
+  <rect x="8" y="8" width="184" height="314" rx="9" fill="none" stroke="url(#${id}-gold)" stroke-width="2.2"/>
+  <rect x="15" y="15" width="170" height="300" rx="6" fill="none" stroke="url(#${id}-gold)" stroke-width="0.9"/>
+  ${[[15, 15], [185, 15], [15, 315], [185, 315]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="#2a1d63" stroke="url(#${id}-gold)" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="3.2" fill="url(#${id}-gold)"/>`).join('')}`;
+const rays = (cx, cy, r1, r2, id) => Array.from({ length: 24 }, (_, i) => {
+  const a = (i / 24) * Math.PI * 2;
+  const r = i % 2 ? r2 * 0.8 : r2;
+  return `<path d="M${(cx + Math.cos(a) * r1).toFixed(1)} ${(cy + Math.sin(a) * r1).toFixed(1)} L${(cx + Math.cos(a) * r).toFixed(1)} ${(cy + Math.sin(a) * r).toFixed(1)}" stroke="url(#${id}-gold)" stroke-width="1"/>`;
+}).join('');
+
+// 앞면 (200×330): 숫자 · 빛살 속 금빛 한자 문양 · 이름
 export function tarotFaceSvg(c) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 330">
-  <rect x="1" y="1" width="198" height="328" rx="12" fill="#f3ead8" stroke="#2b2530" stroke-width="2"/>
-  <rect x="11" y="11" width="178" height="308" rx="6" fill="none" stroke="#2b2530" stroke-width="1"/>
-  ${[[16, 16], [184, 16], [16, 314], [184, 314]].map(([x, y]) => `<path d="M${x} ${y - 5} L${x + 5} ${y} L${x} ${y + 5} L${x - 5} ${y}Z" fill="#b8862b"/>`).join('')}
-  <text x="100" y="46" text-anchor="middle" font-family="Georgia, serif" font-size="17" letter-spacing="3" fill="#2b2530">${roman(c.id)}</text>
-  <path d="M60 58 H140" stroke="#2b2530" stroke-width=".8"/>
-  <circle cx="100" cy="160" r="62" fill="none" stroke="#2b2530" stroke-width="1"/>
-  <circle cx="100" cy="160" r="56" fill="none" stroke="#b8862b" stroke-width=".8" stroke-dasharray="2 4"/>
-  <text x="100" y="190" text-anchor="middle" font-family="ChosunSm, serif" font-size="84" fill="#23284a">${c.han}</text>
-  <path d="M60 252 H140" stroke="#2b2530" stroke-width=".8"/>
-  <text x="100" y="278" text-anchor="middle" font-family="ChosunSm, serif" font-size="21" fill="#2b2530">${c.ko}</text>
-  <text x="100" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="10" letter-spacing="1.5" fill="#6b6170">${c.en.toUpperCase()}</text>
+  const id = `tf${c.id}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 330">${frame(id)}
+  <text x="100" y="48" text-anchor="middle" font-family="Georgia, serif" font-size="16" letter-spacing="3" fill="url(#${id}-gold)">${roman(c.id)}</text>
+  ${rays(100, 158, 50, 74, id)}
+  <circle cx="100" cy="158" r="48" fill="#24195a" stroke="url(#${id}-gold)" stroke-width="1.6"/>
+  <circle cx="100" cy="158" r="42" fill="none" stroke="url(#${id}-gold)" stroke-width=".7" stroke-dasharray="2 3"/>
+  <text x="100" y="184" text-anchor="middle" font-family="ChosunSm, serif" font-size="68" fill="url(#${id}-gold)">${c.han}</text>
+  <path d="M58 250 H142" stroke="url(#${id}-gold)" stroke-width=".8"/>
+  <path d="M100 245 l4 5 -4 5 -4 -5z" fill="url(#${id}-gold)"/>
+  <text x="100" y="278" text-anchor="middle" font-family="ChosunSm, serif" font-size="20" fill="#f6e7c0">${c.ko}</text>
+  <text x="100" y="298" text-anchor="middle" font-family="Georgia, serif" font-size="9.5" letter-spacing="1.5" fill="#cbbcf0">${c.en.toUpperCase()}</text>
 </svg>`;
 }
-// 카드 뒷면 SVG — 짙은 남색, 가는 금선, 별자리 무늬, 가운데 초승달
-export const TAROT_BACK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 330">
-  <rect x="1" y="1" width="198" height="328" rx="12" fill="#1f2340" stroke="#b8862b" stroke-width="1.5"/>
-  <rect x="11" y="11" width="178" height="308" rx="6" fill="none" stroke="#b8862b" stroke-width=".8"/>
-  <path d="M100 30 L170 165 L100 300 L30 165Z" fill="none" stroke="#b8862b" stroke-width=".7" opacity=".7"/>
-  ${[[52, 70], [148, 84], [62, 252], [140, 262], [100, 50], [100, 282], [40, 165], [160, 165]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#e2c27a"/>`).join('')}
-  <path d="M112 140 a28 28 0 1 0 0 50 a22 22 0 1 1 0 -50z" fill="#e2c27a"/>
-  <text x="100" y="236" text-anchor="middle" font-family="ChosunSm, serif" font-size="15" letter-spacing="6" fill="#e2c27a">天文</text>
+// 뒷면: 금빛 빛살 속 마름모와 눈 문양
+export const TAROT_BACK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 330">${frame('tb')}
+  ${rays(100, 165, 30, 62, 'tb')}
+  <path d="M100 110 L136 165 L100 220 L64 165Z" fill="#24195a" stroke="url(#tb-gold)" stroke-width="1.6"/>
+  <path d="M74 165 Q100 140 126 165 Q100 190 74 165Z" fill="none" stroke="url(#tb-gold)" stroke-width="1.4"/>
+  <circle cx="100" cy="165" r="8" fill="url(#tb-gold)"/>
+  <text x="100" y="268" text-anchor="middle" font-family="ChosunSm, serif" font-size="14" letter-spacing="6" fill="url(#tb-gold)">天文</text>
 </svg>`;

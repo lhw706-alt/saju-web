@@ -472,6 +472,83 @@ export function buildTarotTable() {
   return g;
 }
 
+// 타로 카드 (2026-11-14 사용자 레퍼런스: 보랏빛 우주 + 금빛 장식 테두리) — 천동이 둘레를 도는 큰 카드 6장
+export function buildTarotCards() {
+  const g = new THREE.Group();
+  const tex = canvasTexture(512, (c, S) => {
+    const W = S * 0.62, H = S, x0 = (S - W) / 2;
+    c.clearRect(0, 0, S, S);
+    const bg = c.createLinearGradient(x0, 0, x0 + W, H);
+    bg.addColorStop(0, '#2a1d63');
+    bg.addColorStop(0.5, '#4a3596');
+    bg.addColorStop(1, '#1d1550');
+    c.fillStyle = bg;
+    c.beginPath();
+    c.roundRect(x0, 0, W, H, 18);
+    c.fill();
+    for (let i = 0; i < 70; i++) {
+      c.fillStyle = `rgba(255,240,210,${0.25 + (i % 5) / 8})`;
+      c.beginPath();
+      c.arc(x0 + ((i * 97) % W), (i * 151) % H, (i % 3) * 0.7 + 0.6, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.strokeStyle = '#e8c56f';
+    c.lineWidth = 5;
+    c.beginPath();
+    c.roundRect(x0 + 14, 14, W - 28, H - 28, 12);
+    c.stroke();
+    c.lineWidth = 2;
+    c.beginPath();
+    c.roundRect(x0 + 26, 26, W - 52, H - 52, 8);
+    c.stroke();
+    for (const [cx, cy] of [[x0 + 26, 26], [x0 + W - 26, 26], [x0 + 26, H - 26], [x0 + W - 26, H - 26]]) {
+      c.beginPath();
+      c.arc(cx, cy, 16, 0, Math.PI * 2);
+      c.stroke();
+      c.beginPath();
+      c.arc(cx, cy, 6, 0, Math.PI * 2);
+      c.fillStyle = '#e8c56f';
+      c.fill();
+    }
+    const mx = S / 2, my = H / 2;
+    c.lineWidth = 2;
+    for (let a = 0; a < 16; a++) {
+      const ang = (a / 16) * Math.PI * 2;
+      c.beginPath();
+      c.moveTo(mx + Math.cos(ang) * 46, my + Math.sin(ang) * 46);
+      c.lineTo(mx + Math.cos(ang) * (a % 2 ? 70 : 92), my + Math.sin(ang) * (a % 2 ? 70 : 92));
+      c.stroke();
+    }
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(mx, my - 52);
+    c.lineTo(mx + 34, my);
+    c.lineTo(mx, my + 52);
+    c.lineTo(mx - 34, my);
+    c.closePath();
+    c.stroke();
+    c.beginPath();
+    c.arc(mx, my, 14, 0, Math.PI * 2);
+    c.fillStyle = '#f3dc9a';
+    c.fill();
+  });
+  const face = new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.35, metalness: 0.25, emissive: '#2a1d63', emissiveIntensity: 0.35, side: THREE.DoubleSide });
+  const glowMap = radial([[0, 'rgba(180,150,255,0.55)'], [0.4, 'rgba(232,197,111,0.18)'], [1, 'rgba(0,0,0,0)']]);
+  const heights = [0.95, 0.15, -0.45, 0.6, -0.15, 1.05];
+  for (let i = 0; i < 6; i++) {
+    const item = new THREE.Group();
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.78), face); // 정사각 텍스처 안에 카드 비율로 그림
+    item.add(card);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowMap, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    glow.scale.setScalar(1.05);
+    glow.position.z = -0.02;
+    item.add(glow);
+    item.userData = { angle: (i / 6) * Math.PI * 2, height: heights[i], phase: i * 1.1, spin: 0.7 };
+    g.add(item);
+  }
+  return g;
+}
+
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -672,16 +749,13 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     scene.add(glowLight);
 
     const m = buildCheondong();
-    const lucky = prop === 'lotto' || prop === 'names' || prop === 'stars'; // 행운의 번호·이름 궁합·소원빌기: 더 크게 둥둥 + 둘레를 도는 소품
+    const lucky = prop === 'lotto' || prop === 'names' || prop === 'stars' || prop === 'tarot'; // 행운의 번호·이름 궁합·소원빌기: 더 크게 둥둥 + 둘레를 도는 소품
     let balls = null;
     let clover = null;
-    let tarot = null;
+    const tarot = null; // (예전 탁자 — 2026-11-14 사용자 지시로 없앰: 천동이가 탁자에 박혀 보였음)
     if (prop === 'tarot') {
-      tarot = buildTarotTable();
-      tarot.position.set(0, -0.66, 1.05);
-      tarot.rotation.x = 0.3; // 카드가 잘 보이게 탁자를 보는 쪽으로 살짝 기울임
-      tarot.scale.setScalar(0.92);
-      m.root.add(tarot);
+      balls = buildTarotCards(); // 보랏빛 카드가 둘레를 돎 (섞을 때 빠르게)
+      m.root.add(balls);
     }
     if (prop === 'stars') {
       balls = buildWishStars();

@@ -145,8 +145,15 @@ export default function Tarot() {
                 <div className="tarot-count" role="radiogroup" aria-label="카드 장수">
                   {[1, 3].map((n) => (
                     <button key={n} type="button" role="radio" aria-checked={count === n} className={count === n ? 'on' : ''} onClick={() => setCount(n)}>
-                      <b>{TAROT_SPREADS[n].label}</b>
-                      <span>{TAROT_SPREADS[n].desc}</span>
+                      <span className={`tarot-count-ic n${n}`} aria-hidden="true">
+                        {Array.from({ length: n }, (_, i) => (
+                          <i key={i} />
+                        ))}
+                      </span>
+                      <span className="tarot-count-txt">
+                        <b>{TAROT_SPREADS[n].label}</b>
+                        <span>{TAROT_SPREADS[n].desc}</span>
+                      </span>
                     </button>
                   ))}
                 </div>
