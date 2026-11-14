@@ -107,7 +107,6 @@ export default function NewYearMonthly({ input, member, openLogin }) {
             {!state.owned && (
               <span className="pay-cta-price">
                 <PriceTag n={price} size={18} />
-                <small>{(price * 100).toLocaleString('ko-KR')}원</small>
               </span>
             )}
           </button>

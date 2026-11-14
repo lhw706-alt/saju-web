@@ -24,6 +24,8 @@ export async function credit(uid, amount, item, ref) {
   if (ref && (w.ledger || []).some((e) => e.type === 'charge' && e.ref === ref)) return { ok: true, balance: w.balance, dup: true };
   return apply(uid, amount, 'charge', item, ref);
 }
+// 운영자 지급 (관리자 화면, 2026-11-15) — 결제가 아니라 환불 대상이 아님
+export const grant = (uid, amount, item) => apply(uid, Math.abs(amount), 'grant', item, `grant-${Date.now().toString(36)}`);
 // 사용 (잔액이 모자라면 ok:false)
 export const spend = (uid, amount, item, ref) => apply(uid, -Math.abs(amount), 'spend', item, ref);
 // 사용 취소 (풀이를 못 만들었을 때 돌려줌)

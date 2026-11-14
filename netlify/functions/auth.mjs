@@ -31,8 +31,8 @@ import { passwordOk } from '../../src/lib/password.js';
 import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
-import { PACKAGES, packageById, PRICES, PAID_ITEMS, WISH_OFFERS } from '../../src/lib/wallet.js';
-import { walletOf, credit, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
+import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk } from '../../src/lib/wallet.js';
+import { walletOf, credit, grant, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -901,7 +901,10 @@ export default async (req, context) => {
       // 내가 응원한 소원 표시
       const ids = list.slice(0, 120).map((w) => w.id);
       const cheered = s ? new Set((await Promise.all(ids.map(async (id) => ((await ws.get(`c/${id}/${s.sub}`)) ? id : null)))).filter(Boolean)) : new Set();
-      return json({ stats, week, top: top.map((w) => ({ ...pub(w), cheered: cheered.has(w.id) })), wishes: list.slice(0, 120).map((w) => ({ ...pub(w), cheered: cheered.has(w.id) })) });
+      // 맨 위 강조 3개 (2026-11-15 사용자 지시): 금전 많이 넣은 순, 금전이 없으면 최신순 — 종류 거르기와 상관없이 전체에서
+      const pinned = all.filter((w) => w.pub && !w.hidden).sort((a, b) => (b.offer || 0) - (a.offer || 0) || b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
+      const pinCheer = s ? new Set((await Promise.all(pinned.map(async (w) => ((await ws.get(`c/${w.id}/${s.sub}`)) ? w.id : null)))).filter(Boolean)) : new Set();
+      return json({ stats, week, pinned: pinned.map((w) => ({ ...pub(w), cheered: pinCheer.has(w.id) })), top: top.map((w) => ({ ...pub(w), cheered: cheered.has(w.id) })), wishes: list.slice(0, 120).map((w) => ({ ...pub(w), cheered: cheered.has(w.id) })) });
     }
     if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
     if (wishLimited(s.sub) || wishLimited(ip)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
@@ -913,12 +916,12 @@ export default async (req, context) => {
       const bad = wishProblem(text);
       if (bad) return json({ error: bad }, 400);
       if (!wishCat(body?.cat)) return json({ error: '소원의 종류를 골라 주세요.' }, 400);
+      const offer = Number(body?.offer || 0);
+      if (!wishOfferOk(offer)) return json({ error: '넣을 금전은 0~1,000 사이 숫자로 적어 주세요.' }, 400);
       const { blobs: mineKeys } = await ws.list({ prefix: `u/${s.sub}/` });
       const today = kstDay();
       const mine = (await Promise.all(mineKeys.map((b) => ws.get(`w/${b.key.split('/')[2]}`, { type: 'json' })))).filter(Boolean);
       if (mine.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length >= WISH_DAILY) return json({ error: `소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.` }, 429);
-      const offer = Number(body?.offer || 0);
-      if (!WISH_OFFERS.includes(offer)) return json({ error: '넣을 금전을 다시 골라 주세요.' }, 400);
       const id = (9999999999999 - Date.now()).toString(36) + randomBytes(3).toString('hex');
       // 소원에 금전 넣기 (2026-11-15) — 먼저 금전을 쓰고, 모자라면 띄우지 않음
       if (offer > 0) {
@@ -1118,7 +1121,27 @@ export default async (req, context) => {
     const lucky = (await Promise.all(lkb.filter((b) => b.key.endsWith(`/${today}`)).map(async (b) => ({ userId: b.key.split('/')[1], ...(await lk.get(b.key, { type: 'json' })) }))))
       .map((x) => ({ ...x, nick: nickOf[x.userId] || '-' }))
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    // 회원별 남은 금전 (관리자 '금전' 탭)
+    await Promise.all(list.map(async (u) => (u.balance = (await walletOf(u.id)).balance || 0)));
     return json({ total: list.length, users: list, inquiries: inqs, lucky, luckyDate: today });
+  }
+
+  // 관리자: 회원에게 금전 넣어 주기 (2026-11-15 사용자 지시) — POST {userId, amount(1~100,000), memo}
+  if (path === '/api/admin/credit') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const admin = process.env.ADMIN_PASSWORD;
+    const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (!admin) return json({ error: '관리자 비밀번호가 설정되지 않았어요.' }, 503);
+    if (adminLimited(ip)) return json({ error: '시도가 너무 많아요. 10분 뒤 다시 해 주세요.' }, 429);
+    if (!sameSecret(given, admin)) return json({ error: '비밀번호가 맞지 않아요.' }, 401);
+    const body = await readJson();
+    const userId = String(body?.userId || '');
+    const amount = Number(body?.amount);
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(userId) || !(await users().get(userId))) return json({ error: '회원을 찾지 못했어요.' }, 404);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 100000) return json({ error: '1~100,000 사이 숫자로 적어 주세요.' }, 400);
+    const memo = String(body?.memo || '').trim().slice(0, 30);
+    const r = await grant(userId, amount, memo ? `운영자 지급 · ${memo}` : '운영자 지급');
+    return json({ ok: true, balance: r.balance });
   }
 
   // 관리자: 회원의 오늘 행운의 번호 지우기 (다시 뽑을 수 있게) — POST {userId}
@@ -1201,4 +1224,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records'] };

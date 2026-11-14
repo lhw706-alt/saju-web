@@ -10,7 +10,7 @@ const when = (iso) => {
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
-const KIND = { charge: '충전', spend: '사용', return: '돌려받음' };
+const KIND = { charge: '충전', spend: '사용', return: '돌려받음', grant: '지급' };
 const FILTERS = [
   { id: 'all', label: '전체' },
   { id: 'charge', label: '충전' },
@@ -32,7 +32,7 @@ export default function WalletHistory() {
       .catch((e) => setW({ error: e.message || '복채 정보를 불러오지 못했어요.' }));
   }, []);
 
-  const ledger = (w?.ledger || []).filter((e) => filter === 'all' || (filter === 'spend' ? e.type !== 'charge' : e.type === filter));
+  const ledger = (w?.ledger || []).filter((e) => filter === 'all' || (filter === 'spend' ? e.type === 'spend' || e.type === 'return' : e.type === 'charge' || e.type === 'grant'));
 
   return (
     <section className="mw" aria-labelledby="mw-title">

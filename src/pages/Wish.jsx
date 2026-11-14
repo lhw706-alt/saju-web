@@ -10,7 +10,7 @@ import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
 import Select from '../components/Select.jsx';
 import { PriceTag, CoinIcon, announceBalance } from '../components/BokchaLink.jsx';
-import { WISH_OFFERS, fmtCredits } from '../lib/wallet.js';
+import { WISH_OFFERS, WISH_OFFER_MAX, fmtCredits } from '../lib/wallet.js';
 
 // 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -36,11 +36,21 @@ const api = async (url, opts = {}) => {
   return { ok: !!r?.ok, status: r?.status || 0, data: d || {} };
 };
 
-function WishCard({ w, member, onCheer, onReport }) {
+// 소원 한 줄 (2026-11-15 사용자 지시: 누르면 긴 글이 펼쳐지고 바로 응원)
+function WishCard({ w, member, onCheer, onReport, rank = 0 }) {
   const c = wishCat(w.cat);
+  const [open, setOpen] = useState(false);
+  const long = w.text.length > 46;
+  const press = () => {
+    setOpen(true);
+    onCheer(w, true);
+  };
   return (
-    <li className={`wish-row${w.done ? ' is-done' : ''}${w.mine ? ' is-mine' : ''}`}>
-      <p className="wish-row-text">{w.text}</p>
+    <li className={`wish-row${w.done ? ' is-done' : ''}${w.mine ? ' is-mine' : ''}${rank ? ' is-pin' : ''}`}>
+      <button type="button" className="wish-row-main" onClick={press} aria-label={`${w.text} — 눌러서 응원하기`}>
+        {rank > 0 && <span className="wish-pin-rank">{rank}</span>}
+        <span className={`wish-row-text${open || !long ? ' is-open' : ''}`}>{w.text}</span>
+      </button>
       <div className="wish-row-foot">
         <span className="wish-row-meta">
           {c?.label} · {ago(w.createdAt)}
@@ -48,7 +58,7 @@ function WishCard({ w, member, onCheer, onReport }) {
           {w.done && <em className="is-done"> · 이루어졌어요</em>}
         </span>
         {w.offer > 0 && <PriceTag n={w.offer} size={15} className="wish-offer" />}
-        <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={() => onCheer(w)} aria-pressed={!!w.cheered} disabled={!!w.cheered}>
+        <button type="button" className={`wish-row-cheer${w.cheered ? ' on' : ''}`} onClick={press} aria-pressed={!!w.cheered}>
           {w.cheered ? '응원했어요' : '응원하기'} <b>{w.cheers}</b>
         </button>
         {member && !w.mine && (
@@ -71,6 +81,8 @@ export default function Wish() {
   const [feed, setFeed] = useState(null);
   const [stats, setStats] = useState({ total: 0, today: 0 });
   const [top, setTop] = useState([]); // 이번 주 응원 많이 받은 소원 TOP 5
+  const [pinned, setPinned] = useState([]); // 맨 위 강조 3개 (금전 많이 넣은 순, 없으면 최신순)
+  const [customOffer, setCustomOffer] = useState(''); // 금전 직접 입력
   const [week, setWeek] = useState(null);
   const [openTop, setOpenTop] = useState(null);
   const [mine, setMine] = useState(null);
@@ -116,6 +128,7 @@ export default function Wish() {
       setFeed(r.data.wishes || []);
       setStats(r.data.stats || { total: 0, today: 0 });
       setTop(r.data.top || []);
+      setPinned(r.data.pinned || []);
       setWeek(r.data.week || null);
     } else setFeed([]);
   }, [sort, cat]);
@@ -185,18 +198,21 @@ export default function Wish() {
     setWcat('');
     setPub(true);
     setOffer(0);
+    setCustomOffer('');
     loadFeed();
     loadMine();
   };
 
-  const cheer = async (w) => {
+  const cheer = async (w, quiet = false) => {
     if (!member) return openLogin('소원을 응원하려면 로그인해 주세요.');
-    if (w.cheered) return;
+    if (w.cheered) return quiet ? notify('이미 응원한 소원이에요.') : undefined;
     const r = await api('/api/wish/cheer', { method: 'POST', body: JSON.stringify({ id: w.id }) });
     if (!r.ok) return notify(r.data.error || '응원하지 못했어요.', 'negative');
     trackEvent('wish_cheer');
     setFeed((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
     setTop((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
+    setPinned((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
+    if (!r.data.already) notify('소원을 응원했어요.');
     setMine((m) => (m ? m.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)) : m));
   };
   const report = async (w) => {
@@ -276,6 +292,19 @@ export default function Wish() {
         </button>
       </nav>
 
+      {tab === 'feed' && pinned.length > 0 && (
+        <section className="wish-pin" aria-labelledby="wish-pin-title">
+          <h2 id="wish-pin-title" className="wish-pin-title">
+            {pinned.some((w) => w.offer > 0) ? '정성을 가장 많이 담은 소원' : '방금 하늘에 뜬 소원'}
+          </h2>
+          <ul className="wish-pin-list">
+            {pinned.map((w, i) => (
+              <WishCard key={w.id} w={w} member={member} onCheer={cheer} onReport={report} rank={i + 1} />
+            ))}
+          </ul>
+        </section>
+      )}
+
       {tab === 'feed' && top.length > 0 && (
         <section className="wish-top" aria-labelledby="wish-top-title">
           <div className="wish-top-head">
@@ -348,7 +377,7 @@ export default function Wish() {
             </div>
           ) : (
             <ul className="wish-list">
-              {feed.map((w) => (
+              {feed.filter((w) => !pinned.some((p) => p.id === w.id)).map((w) => (
                 <WishCard key={w.id} w={w} member={member} onCheer={cheer} onReport={report} />
               ))}
             </ul>
@@ -480,7 +509,7 @@ export default function Wish() {
             <p className="nm-label">금전 넣기 <small>선택</small></p>
             <div className="wish-offer-pick" role="radiogroup" aria-label="넣을 금전">
               {WISH_OFFERS.map((n) => (
-                <button key={n} type="button" role="radio" aria-checked={offer === n} className={offer === n ? 'on' : ''} onClick={() => setOffer(n)}>
+                <button key={n} type="button" role="radio" aria-checked={customOffer === '' && offer === n} className={customOffer === '' && offer === n ? 'on' : ''} onClick={() => { setCustomOffer(''); setOffer(n); }}>
                   {n === 0 ? '안 넣기' : (
                     <>
                       <CoinIcon size={16} />
@@ -489,6 +518,21 @@ export default function Wish() {
                   )}
                 </button>
               ))}
+              <label className={`wish-offer-custom${customOffer !== '' ? ' on' : ''}`}>
+                <CoinIcon size={16} />
+                <input
+                  inputMode="numeric"
+                  placeholder="직접 입력"
+                  aria-label="넣을 금전 직접 입력"
+                  value={customOffer}
+                  maxLength={4}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                    setCustomOffer(v);
+                    setOffer(Math.min(WISH_OFFER_MAX, Number(v || 0)));
+                  }}
+                />
+              </label>
             </div>
             <p className="wish-seg-desc">
               {offer > 0 ? `정성을 담아 ${fmtCredits(offer)}을 넣어요. 소원 옆에 넣은 금전이 보이고, 넣은 금전은 돌려받을 수 없어요.` : '금전을 넣으면 소원 옆에 정성이 보이고, 복채순으로 위에 떠요.'}

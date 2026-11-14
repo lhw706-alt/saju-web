@@ -27,4 +27,7 @@ export const PAID_ITEMS = { newyearMonth: { perYear: true, kind: 'newyear', pref
 export const PRICE_TAGS = { tarot: `${PRICES.tarot1.credits}${UNIT}부터`, newyear: `${PRICES.newyearMonth.credits}${UNIT}` };
 // 소원에 넣는 금전 (2026-11-15 사용자 지시) — 0 은 넣지 않음. 넣은 금전은 돌려받지 않음
 export const WISH_OFFERS = [0, 5, 10, 30, 50];
+// 직접 입력은 1~1,000금전 (2026-11-15 사용자 지시)
+export const WISH_OFFER_MAX = 1000;
+export const wishOfferOk = (n) => Number.isInteger(n) && n >= 0 && n <= WISH_OFFER_MAX;
 export const fmtCredits = (n) => `${Number(n || 0).toLocaleString('ko-KR')}${UNIT}`;

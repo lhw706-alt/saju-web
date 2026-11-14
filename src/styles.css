@@ -2111,3 +2111,36 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 /* 풀이 글 속 용어 밑줄 → 누르면 설명 창 (2026-11-15) */
 .md-term { display: inline; padding: 0; margin: 0; border: 0; background: none; font: inherit; color: inherit; line-height: inherit; letter-spacing: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-color: rgba(226, 194, 122, 0.75); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
 .md-term:hover, .md-term:focus-visible { color: var(--primary); text-decoration-style: solid; outline: none; }
+
+/* 크림색 작은 버튼 (2026-11-15 사용자 지시: 결제 버튼의 크림색이 좋아서 충전하기·운세 보러 가기도 같은 결로) */
+.mw-charge, .rec-go { display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 10px; background: #ECE6D8; color: #1B1C1E; font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.15s ease; }
+.mw-charge:hover, .rec-go:hover { background: #F6F1E6; }
+.mw-kind.is-grant { color: var(--primary); }
+
+/* 소원 2차 (2026-11-15): 누르면 펼치고 응원, 긴 글은 세 줄까지, 맨 위 강조 3개, 금전 직접 입력 */
+.wish-row-main { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.wish-row-main .wish-row-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.wish-row-main .wish-row-text.is-open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.wish-row-main:hover .wish-row-text { color: #fff; }
+.wish-pin { margin-top: 18px; }
+.wish-pin-title { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--primary); }
+.wish-pin-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(226, 194, 122, 0.35); }
+.wish-row.is-pin { position: relative; padding-left: 4px; border-bottom-color: rgba(226, 194, 122, 0.18); background: linear-gradient(90deg, rgba(226, 194, 122, 0.07), transparent 70%); }
+.wish-row.is-pin .wish-row-text { font-size: 19px; color: #F3E7C9; }
+.wish-pin-rank { flex: none; width: 22px; padding-top: 2px; font-family: var(--title); font-size: 20px; line-height: 1.3; color: var(--primary); text-align: center; }
+.wish-row.is-pin .wish-row-foot { padding-left: 34px; }
+.wish-offer-custom { display: inline-flex; align-items: center; gap: 4px; height: 38px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; }
+.wish-offer-custom.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.08); }
+.wish-offer-custom input { width: 72px; border: 0; background: none; color: var(--text); font: inherit; font-size: 14px; outline: none; }
+.wish-offer-custom input::placeholder { color: rgba(194, 196, 200, 0.7); }
+
+/* 관리자 금전 탭 (2026-11-15) */
+.admin-credit-search { width: 100%; margin: 10px 0; }
+.admin-credit-list { margin: 8px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.admin-credit-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px 140px auto; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.admin-credit-who { display: grid; min-width: 0; }
+.admin-credit-who small { font-size: 13px; color: rgba(194, 196, 200, 0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-credit-bal { font-size: 14px; color: var(--primary); white-space: nowrap; }
+.admin-credit-list .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
+.admin-credit-list .btn-primary.inline { margin: 0; height: 38px; }
+@media (max-width: 640px) { .admin-credit-list li { grid-template-columns: 1fr auto; } .admin-credit-list .contact-input { grid-column: span 1; } }
