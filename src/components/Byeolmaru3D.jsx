@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildCheondong } from './Mascot3D.jsx';
 import { SKY_COLORS } from '../lib/byeolmaruSky.js';
+import { zodiacSvg } from '../brand/zodiacArt.js';
 
 const WORLD_R = 24; // 걸을 수 있는 반지름
 const SPEED = 4.4;
@@ -346,7 +347,7 @@ const COLLIDERS = [
 
 // apiRef.current = { qi(), stopQi(), bow(), star(), lantern() } — 화면의 동작 버튼이 부름
 // onEvent(type, data): 'qi-walk'(방석으로 가는 중) · 'qi-start' · 'qi-cancel' · 'star'({n}) · 'lantern-up'
-export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, sky: skyInfo, onReady, onFail }) {
+export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef, onEvent, starCount = 0, sky: skyInfo, guardian = null, onReady, onFail }) {
   const mount = useRef(null);
   useEffect(() => {
     const el = mount.current;
@@ -542,6 +543,22 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     const tag = nameTag(nick);
     tag.position.y = 1.75;
     player.add(tag);
+    // 내 띠 수호신 (마이페이지에 내 사주 정보가 있는 회원) — 2D 십이지신 그림을 늘 카메라를 보는 판으로
+    let buddy = null;
+    if (guardian) {
+      const btex = new THREE.Texture();
+      btex.colorSpace = THREE.SRGBColorSpace;
+      const im = new Image();
+      im.onload = () => {
+        btex.image = im;
+        btex.needsUpdate = true;
+      };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(zodiacSvg(guardian, 'good').replace('<svg ', '<svg width="256" height="272" '));
+      buddy = new THREE.Sprite(new THREE.SpriteMaterial({ map: btex, transparent: true, depthWrite: false }));
+      buddy.scale.set(1.15, 1.22, 1);
+      buddy.position.set(1.1, 0.6, 22);
+      scene.add(buddy);
+    }
     player.position.set(0, 0, 21);
     player.rotation.y = Math.PI;
     scene.add(player);
@@ -603,6 +620,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     const lanternMat = new THREE.MeshStandardMaterial({ color: '#ffd59a', emissive: '#ff9f4a', emissiveIntensity: 1.8, roughness: 0.6 });
 
     // 동작 상태
+    let paused = false; // 자기 전 모드: 그리기를 멈춰 배터리 아낌
     let mode = 'walk'; // walk | auto(방석으로 걸어가는 중) | sit
     let seatAt = null;
     let bowT = -1;
@@ -697,6 +715,9 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           } else onEvent?.('qi-walk');
         },
         stopQi: () => stopSit(true),
+        setPaused: (v) => {
+          paused = !!v;
+        },
         bow: () => {
           if (bowT < 0) bowT = 0;
         },
@@ -739,6 +760,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(clock.getDelta(), 0.05);
+      if (paused) return;
       const t = clock.elapsedTime;
       // 이동 입력 (키보드 + 조이스틱)
       let ix = 0;
@@ -841,6 +863,15 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       // 기운 받기 중: 내 둘레로 빛이 피어오름
       if (qiOn && Math.random() < dt * 9) burst(player.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.2, (Math.random() - 0.5) * 0.8)), 1, 0.7);
 
+      // 수호신: 내 왼쪽 뒤를 따라옴
+      if (buddy) {
+        const side = facing + Math.PI * 0.75;
+        const tx = player.position.x + Math.sin(side) * 1.25;
+        const tz = player.position.z + Math.cos(side) * 1.25;
+        buddy.position.x += (tx - buddy.position.x) * Math.min(1, dt * 3.5);
+        buddy.position.z += (tz - buddy.position.z) * Math.min(1, dt * 3.5);
+        buddy.position.y = 0.62 + Math.abs(Math.sin(t * (moving ? 8 : 1.6))) * (moving ? 0.12 : 0.03);
+      }
       // 큰 천동이: 숨쉬기 + 오행 빛글자 돌기
       big.body.scale.set(1, 1 + Math.sin(t * 1.4) * 0.015, 1);
       big.spirits.children.forEach((sp) => {

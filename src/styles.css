@@ -2430,3 +2430,18 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .bm-photo-actions > * { flex: 1; display: grid; place-items: center; height: 46px; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
 .bm-photo-close { display: block; margin: 10px auto 0; padding: 6px 12px; border: 0; background: none; color: rgba(236, 238, 244, 0.7); font: inherit; font-size: 14px; cursor: pointer; }
 @media (max-width: 559px) { .bm-photo-overlay { align-items: flex-end; padding: 0; } .bm-photo { width: 100%; border-radius: 20px 20px 0 0; padding-bottom: calc(14px + env(safe-area-inset-bottom)); } }
+
+/* 별마루 2묶음: 설정·자기 전 모드 (2026-11-15) */
+.bm-settings { width: min(92vw, 420px); padding: 22px 20px 12px; border-radius: 20px; background: #16182c; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text); }
+.bm-set-title { margin: 0 0 8px; font-family: var(--title); font-size: 20px; font-weight: 400; }
+.bm-set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); cursor: pointer; }
+.bm-set-row.is-col { display: grid; gap: 10px; cursor: default; }
+.bm-set-row b { display: block; font-size: 15px; font-weight: 600; }
+.bm-set-row small { display: block; margin-top: 2px; font-size: 13px; color: rgba(194, 196, 200, 0.85); }
+.bm-set-sleep { display: grid; gap: 2px; width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 12px; background: #ECE6D8; color: #1B1C1E; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.bm-set-sleep small { font-size: 13px; font-weight: 500; color: rgba(27, 28, 30, 0.65); }
+.bm-sleep { position: absolute; inset: 0; z-index: 30; display: grid; place-content: center; justify-items: center; gap: 12px; border: 0; background: radial-gradient(ellipse at 50% 38%, rgba(20, 24, 60, 0.92), rgba(2, 3, 10, 0.98) 70%); color: rgba(236, 238, 244, 0.85); font: inherit; cursor: pointer; }
+.bm-sleep-moon { width: 54px; height: 54px; border-radius: 50%; box-shadow: inset -14px -4px 0 0 rgba(226, 194, 122, 0.85); animation: bm-breathe 8s ease-in-out infinite; }
+.bm-sleep-text { font-family: var(--title); font-size: 20px; color: rgba(243, 228, 191, 0.85); }
+.bm-sleep-hint { font-size: 13px; color: rgba(236, 238, 244, 0.5); }
+@media (max-width: 559px) { .bm-settings { width: 100%; border-radius: 20px 20px 0 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); } }

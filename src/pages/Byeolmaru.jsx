@@ -6,6 +6,8 @@ import { trackEvent } from '../lib/analytics.js';
 import { saveTopic } from '../lib/storage.js';
 import { skyState } from '../lib/byeolmaruSky.js';
 import { copyText, sendKakao } from '../lib/share.js';
+import { computeSaju } from '../lib/saju.js';
+import { startAmbient, stopAmbient, startPad, stopPad, bowBell, starTing, stopAll } from '../lib/bmSound.js';
 
 const Byeolmaru3D = lazy(() => import('../components/Byeolmaru3D.jsx'));
 
@@ -58,7 +60,28 @@ const saveStars = (n) => {
     /* 무시 */
   }
 };
-const QI_SECONDS = 30;
+const QI_OPTIONS = [
+  { s: 30, label: '30초' },
+  { s: 180, label: '3분' },
+  { s: 300, label: '5분' },
+  { s: 600, label: '10분' },
+];
+const PREF_KEY = 'saju:bm-prefs';
+const loadPrefs = () => {
+  try {
+    return { sound: false, pad: false, qi: 30, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') };
+  } catch {
+    return { sound: false, pad: false, qi: 30 };
+  }
+};
+const savePrefs = (p) => {
+  try {
+    localStorage.setItem(PREF_KEY, JSON.stringify(p));
+  } catch {
+    /* 무시 */
+  }
+};
+const fmtLeft = (sec) => (sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : `${sec}초`);
 
 // 사진 카드: 지금 장면 + 아래 띠(별마루 낙관 · 이름 · 날짜 · 별 수 · 주소)
 async function composePhoto(shot, { nick, stars, ymd, special }) {
@@ -102,7 +125,8 @@ async function composePhoto(shot, { nick, stars, ymd, special }) {
 }
 
 // 숨 고르기 화면: 4초 들숨 · 4초 날숨, 30초
-function Breath({ onDone, onStop }) {
+function Breath({ seconds = 30, onDone, onStop }) {
+  const QI_SECONDS = seconds;
   const [left, setLeft] = useState(QI_SECONDS);
   useEffect(() => {
     const t0 = Date.now();
@@ -122,7 +146,7 @@ function Breath({ onDone, onStop }) {
     <div className="bm-breath" role="status" aria-live="polite">
       <span className="bm-breath-ring" aria-hidden="true" />
       <p className="bm-breath-say">{phase}</p>
-      <p className="bm-breath-left">{left}초</p>
+      <p className="bm-breath-left">{fmtLeft(left)}</p>
       <button type="button" className="bm-breath-stop" onClick={onStop}>
         그만하기
       </button>
@@ -237,6 +261,51 @@ export default function Byeolmaru() {
   const [sky] = useState(skyState);
   const [banner, setBanner] = useState(() => (sky.special ? sky.special : null));
   const [photo, setPhoto] = useState(null); // { url, blob }
+  const [prefs, setPrefs] = useState(loadPrefs);
+  const [settings, setSettings] = useState(false);
+  const [sleep, setSleep] = useState(false);
+  const setPref = (k, v) =>
+    setPrefs((p) => {
+      const n = { ...p, [k]: v };
+      savePrefs(n);
+      return n;
+    });
+  // 내 띠 수호신: 마이페이지에 내 사주 정보를 등록한 회원
+  const guardian = (() => {
+    try {
+      return auth?.user?.birth ? computeSaju(auth.user.birth).animal : null;
+    } catch {
+      return null;
+    }
+  })();
+  // 소리: 켜 두면 들어올 때·누를 때 이어짐 (브라우저 규칙상 첫 누름 뒤에만 실제로 남)
+  useEffect(() => {
+    if (prefs.sound) startAmbient();
+    else stopAmbient();
+  }, [prefs.sound]);
+  useEffect(() => {
+    if (prefs.pad) startPad();
+    else stopPad();
+  }, [prefs.pad]);
+  useEffect(() => () => stopAll(), []);
+  // 브라우저는 누른 뒤에만 소리를 허락함 → 첫 누름·키 입력 때 켜 둔 소리를 다시 깨움
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+  useEffect(() => {
+    const wake = () => {
+      if (prefsRef.current.sound) startAmbient();
+      if (prefsRef.current.pad) startPad();
+    };
+    window.addEventListener('pointerdown', wake, { once: true });
+    window.addEventListener('keydown', wake, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', wake);
+      window.removeEventListener('keydown', wake);
+    };
+  }, []);
+  useEffect(() => {
+    apiRef.current?.setPaused?.(sleep);
+  }, [sleep]);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [help, setHelp] = useState(true);
@@ -263,10 +332,14 @@ export default function Byeolmaru() {
     if (a.id === 'qi') {
       if (qi) return;
       api.qi();
-    } else if (a.id === 'bow') api.bow();
+    } else if (a.id === 'bow') {
+      api.bow();
+      if (prefs.sound) setTimeout(bowBell, 450);
+    }
     else if (a.id === 'star') {
       if (stars >= STAR_GOAL) return notify?.('오늘의 별 108개를 모두 헤아렸어요. 내일 또 와요.');
       api.star();
+      if (prefs.sound) starTing();
       const n = stars + 1;
       setStars(n);
       saveStars(n);
@@ -323,7 +396,7 @@ export default function Byeolmaru() {
     <div className="bm">
       {!failed ? (
         <Suspense fallback={null}>
-          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} sky={sky} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
+          <Byeolmaru3D nick={nick} joyRef={joyRef} apiRef={apiRef} onEvent={onEvent} starCount={stars} sky={sky} guardian={guardian} onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </Suspense>
       ) : (
         <div className="bm-fail">
@@ -355,6 +428,13 @@ export default function Byeolmaru() {
             ★ {stars} <small>/ {STAR_GOAL}</small>
           </span>
         )}
+        <button type="button" className="bm-icon-btn" onClick={() => setSettings(true)} aria-label="소리·숨 고르기 설정">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+            <circle cx="16" cy="7" r="2" />
+            <circle cx="10" cy="17" r="2" />
+          </svg>
+        </button>
         <button type="button" className="bm-icon-btn" onClick={takePhoto} aria-label="사진 찍기" disabled={!ready}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" />
@@ -366,6 +446,71 @@ export default function Byeolmaru() {
       {ready && banner && (
         <button type="button" className="bm-banner" onClick={() => setBanner(null)}>
           <b>오늘은 {banner.title}</b> {banner.line}
+        </button>
+      )}
+
+      {settings && (
+        <div className="contact-overlay bm-photo-overlay" onMouseDown={(e) => e.target === e.currentTarget && setSettings(false)}>
+          <div className="bm-settings" role="dialog" aria-modal="true" aria-labelledby="bm-set-title">
+            <h2 id="bm-set-title" className="bm-set-title">별마루 설정</h2>
+            <label className="bm-set-row">
+              <span>
+                <b>마당 소리</b>
+                <small>바람·풀벌레·풍경 소리</small>
+              </span>
+              <span className="toggle">
+                <input type="checkbox" role="switch" checked={prefs.sound} onChange={(e) => setPref('sound', e.target.checked)} />
+                <span className="toggle-track" aria-hidden="true">
+                  <span className="toggle-knob" />
+                </span>
+              </span>
+            </label>
+            <label className="bm-set-row">
+              <span>
+                <b>명상 소리</b>
+                <small>숨 고르기와 같은 박자로 낮게 깔리는 소리</small>
+              </span>
+              <span className="toggle">
+                <input type="checkbox" role="switch" checked={prefs.pad} onChange={(e) => setPref('pad', e.target.checked)} />
+                <span className="toggle-track" aria-hidden="true">
+                  <span className="toggle-knob" />
+                </span>
+              </span>
+            </label>
+            <div className="bm-set-row is-col">
+              <b>숨 고르기 길이</b>
+              <div className="saved-seg">
+                {QI_OPTIONS.map((o) => (
+                  <button key={o.s} type="button" className={prefs.qi === o.s ? 'on' : ''} onClick={() => setPref('qi', o.s)}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="bm-set-sleep"
+              onClick={() => {
+                setSettings(false);
+                setSleep(true);
+                trackEvent('plaza_sleep');
+              }}
+            >
+              자기 전 모드 켜기
+              <small>화면을 어둡게 하고 소리만 남겨요</small>
+            </button>
+            <button type="button" className="bm-photo-close" onClick={() => setSettings(false)}>
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {sleep && (
+        <button type="button" className="bm-sleep" onClick={() => setSleep(false)} aria-label="자기 전 모드 끄기">
+          <span className="bm-sleep-moon" aria-hidden="true" />
+          <span className="bm-sleep-text">편안한 밤 되세요</span>
+          <span className="bm-sleep-hint">화면을 누르면 마당으로 돌아와요</span>
         </button>
       )}
 
@@ -392,7 +537,7 @@ export default function Byeolmaru() {
       )}
 
       {qi === 'walk' && <p className="bm-help">방석으로 가는 중이에요… 걸으면 멈춰요</p>}
-      {qi === 'on' && <Breath onDone={qiDone} onStop={qiStop} />}
+      {qi === 'on' && <Breath seconds={prefs.qi} onDone={qiDone} onStop={qiStop} />}
 
       {card && (
         <div className="bm-card" role="dialog" aria-labelledby="bm-card-title">
