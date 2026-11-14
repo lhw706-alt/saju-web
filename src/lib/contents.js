@@ -38,7 +38,7 @@ export const CONTENTS = [
 
   { id: 'ask', group: 'ask', title: '천둥도사에게 묻기', desc: '내 사주로 궁금한 걸 물어봐요', glyph: '問', el: 'water', status: 'soon' },
   { id: 'dream', group: 'ask', title: '꿈해몽', desc: '해몽 풀이에 내 사주를 더해서', glyph: '夢', el: 'water', status: 'soon' },
-  { id: 'tarot', group: 'ask', title: '타로', desc: '카드를 골라 지금 고민의 답을', glyph: '牌', el: 'metal', status: 'soon' },
+  { id: 'tarot', group: 'ask', title: '타로', desc: '카드를 골라 천둥도사에게 묻기', glyph: '牌', el: 'metal', status: 'live', path: '/tarot' },
   { id: 'psych', group: 'ask', title: '심리풀이', desc: '몇 가지 질문으로 보는 지금 내 마음', glyph: '心', el: 'fire', status: 'soon' },
   { id: 'name', group: 'ask', title: '이름풀이', desc: '내 이름에 담긴 뜻과 기운', glyph: '名', el: 'wood', status: 'hold' },
   { id: 'face', group: 'ask', title: '관상', desc: '얼굴에 적힌 운명 알아보기', glyph: '相', el: 'earth', status: 'hold' },

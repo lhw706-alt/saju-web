@@ -424,6 +424,54 @@ export function buildWishStars() {
   return g;
 }
 
+// 타로 화면 소품 (2026-11-14): 천동이 앞 둥근 나무 탁자 + 부채꼴로 놓인 카드 7장(뒷면: 남색·금선·초승달)
+export function buildTarotTable() {
+  const g = new THREE.Group();
+  const wood = new THREE.MeshStandardMaterial({ color: '#3a2618', roughness: 0.55, metalness: 0.05 });
+  const cloth = new THREE.MeshStandardMaterial({ color: '#2b2f5c', roughness: 0.9 });
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, 0.09, 64), wood);
+  g.add(top);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.035, 10, 80), new THREE.MeshStandardMaterial({ color: '#b8862b', roughness: 0.35, metalness: 0.7 }));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.045;
+  g.add(rim);
+  const runner = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.012, 64), cloth);
+  runner.position.y = 0.052;
+  g.add(runner);
+  const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.3, 0.9, 24), wood);
+  leg.position.y = -0.48;
+  g.add(leg);
+  const backTex = canvasTexture(256, (c, size) => {
+    const w = size * 0.6, h = size, x0 = (size - w) / 2;
+    c.clearRect(0, 0, size, size);
+    c.fillStyle = '#1f2340';
+    c.fillRect(x0, 0, w, h);
+    c.strokeStyle = '#b8862b';
+    c.lineWidth = 4;
+    c.strokeRect(x0 + 6, 6, w - 12, h - 12);
+    c.fillStyle = '#e2c27a';
+    c.beginPath();
+    c.arc(size / 2, h / 2, 26, 0.6, Math.PI * 2 - 0.6);
+    c.arc(size / 2 + 12, h / 2, 20, Math.PI * 2 - 0.9, 0.9, true);
+    c.fill();
+  });
+  const back = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.6 });
+  const edge = new THREE.MeshStandardMaterial({ color: '#efe6d2', roughness: 0.7 });
+  const cards = new THREE.Group();
+  const geo = new THREE.BoxGeometry(0.36, 0.012, 0.6);
+  for (let i = 0; i < 7; i++) {
+    const card = new THREE.Mesh(geo, [edge, edge, back, edge, edge, edge]);
+    const a = (i - 3) * 0.2;
+    card.position.set(Math.sin(a) * 0.95, 0.07 + i * 0.004, 0.55 - Math.cos(a) * 0.35);
+    card.rotation.y = -a;
+    card.userData = { base: card.position.clone(), a, i };
+    cards.add(card);
+  }
+  g.add(cards);
+  g.userData.cards = cards;
+  return g;
+}
+
 // 로또 공: 번호가 적힌 반짝이는 공 (번호 고르는 동안 천동이 둘레를 빙글빙글)
 const lottoColor = (n) => (n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aab0b6' : '#b0d840');
 export function buildLottoBalls(count = 8) {
@@ -627,6 +675,14 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
     const lucky = prop === 'lotto' || prop === 'names' || prop === 'stars'; // 행운의 번호·이름 궁합·소원빌기: 더 크게 둥둥 + 둘레를 도는 소품
     let balls = null;
     let clover = null;
+    let tarot = null;
+    if (prop === 'tarot') {
+      tarot = buildTarotTable();
+      tarot.position.set(0, -0.66, 1.05);
+      tarot.rotation.x = 0.3; // 카드가 잘 보이게 탁자를 보는 쪽으로 살짝 기울임
+      tarot.scale.setScalar(0.92);
+      m.root.add(tarot);
+    }
     if (prop === 'stars') {
       balls = buildWishStars();
       m.root.add(balls);
@@ -781,7 +837,22 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
         });
       }
       if (clover) clover.userData.head.rotation.z = Math.sin(t * (drawing ? 9 : 1.4)) * (drawing ? 0.25 : 0.08) * s;
-      m.spirits.visible = !balls; // 행운의 번호 화면에선 오행 빛글자 숨김
+      m.spirits.visible = !balls && !tarot; // 소품이 있는 화면에선 오행 빛글자 숨김
+      // 타로: 평소엔 카드가 살짝 숨쉬듯, 섞는 동안엔 카드가 떠올라 빙글 돌며 자리를 바꿈
+      if (tarot) {
+        tarot.userData.cards.children.forEach((c) => {
+          const { base, a, i } = c.userData;
+          if (drawing) {
+            const ph = t * 4 + i * 0.9;
+            c.position.set(Math.sin(a + Math.sin(ph) * 0.6) * 0.95, 0.25 + Math.abs(Math.sin(ph)) * 0.35 * s, base.z);
+            c.rotation.y = -a + t * 6 * s;
+          } else {
+            c.position.lerp(base, 0.12);
+            c.position.y = base.y + Math.sin(t * 1.6 + i) * 0.01 * s;
+            c.rotation.y += (-a - c.rotation.y) * 0.12;
+          }
+        });
+      }
       const n = m.spirits.children.length;
       m.spirits.children.forEach((sp, k) => {
         const { angle, height, phase } = sp.userData;
