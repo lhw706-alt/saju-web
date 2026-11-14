@@ -110,16 +110,17 @@ export default function Talisman() {
               <Art key={id} id={id} className={`fan f${i}`} />
             ))}
           </div>
-          <button type="button" className="tal-today card" onClick={() => choose(today.id, 'today')}>
-            <GlassIcon kind="luck" />
+          {/* 오늘의 행운 부적 (2026-11-14 사용자 지시: 반짝 아이콘·금테·알약 버튼 없이 담백하게 — 실제 부적 종이 + 글 + 밑줄 글자 링크) */}
+          <button type="button" className="tal-today" onClick={() => choose(today.id, 'today')}>
+            <Art id={today.id} className="tal-today-paper" />
             <span className="tal-today-text">
-              <small>오늘의 행운 부적</small>
+              <small>
+                {new Date().getMonth() + 1}월 {new Date().getDate()}일 · 오늘의 행운 부적
+              </small>
               <b>{today.name}</b>
               <span>{today.short}</span>
             </span>
-            <span className="tal-today-go" aria-hidden="true">
-              펼치기
-            </span>
+            <span className="tal-today-go">펼쳐 보기</span>
           </button>
         </section>
       )}

@@ -1607,3 +1607,12 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wish-cheer svg, .wish-cheer b { color: var(--primary); }
 .wish-cheer.on { background: rgba(226, 194, 122, 0.1); border-color: rgba(226, 194, 122, 0.35); }
 .wish-tabs { border-bottom-color: rgba(255, 255, 255, 0.1); }
+
+/* 오늘의 행운 부적 줄 (2026-11-14 사용자 지시: 덜 꾸민 모양) — 상자·금테·빛나는 아이콘 없이 위아래 얇은 줄, 실제 부적 종이 작게 */
+.tal-today { display: flex; align-items: center; gap: 16px; width: min(100%, 460px); margin-top: 8px; padding: 16px 4px; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0; background: none; box-shadow: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tal-art.tal-today-paper { flex: none; width: 40px; height: 60px; transform: rotate(-6deg); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)); }
+.tal-today-text small { color: var(--text-2); font-size: 13px; }
+.tal-today-text b { font-family: var(--title); font-size: 18px; font-weight: 400; }
+.tal-today-text span { color: var(--text-2); }
+.tal-today-go { flex: none; padding: 0; border-radius: 0; background: none; color: var(--text); font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.35); }
+.tal-today:hover .tal-today-go { text-decoration-color: var(--primary); color: var(--primary); }
