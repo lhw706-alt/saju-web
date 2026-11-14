@@ -472,6 +472,7 @@ export default function Byeolmaru() {
     if (await askConfirm({ title: '별마루에서 나갈까요?', message: `${label}을 보려면 별마루 밖 화면으로 이동해요.`, note: '다시 들어오면 마당 처음 자리에서 시작해요. 오늘 헤아린 별은 그대로 남아요.', ok: '이동하기', cancel: '머물기' })) go();
   };
   // 등불에 소원 담기 (2026-11-15 사용자 지시: 소원빌기 화면으로 나가지 않고 별마루 안에서 — 쓰고 띄우면 내 자리에서 등불이 오르고 소원 목록에도 올라감)
+  const [rising, setRising] = useState(null); // 등불이 오르는 동안 위쪽 문구 { nick, text, big }
   const [compose, setCompose] = useState({ text: '', big: false, pub: true, busy: false, balance: null });
   const openCompose = (big = false) => {
     setCompose((c) => ({ ...c, big, busy: false }));
@@ -512,6 +513,8 @@ export default function Byeolmaru() {
     setCard(null);
     setCompose((c) => ({ ...c, text: '', busy: false, balance: c.balance != null ? c.balance - offer : c.balance }));
     if (offer && compose.balance != null) announceBalance(compose.balance - offer);
+    setRising({ nick: auth.user.nick, text: d.wish?.text || text, big: offer >= 10 });
+    setTimeout(() => setRising(null), 3700);
     apiRef.current?.lantern({ wish: d.wish, big: offer >= 10 });
     // 등불이 하늘에 닿을 즈음 알림 카드
     setTimeout(() => setCard({ kind: 'sent', wish: d.wish, big: offer >= 10 }), 3800);
@@ -850,6 +853,14 @@ export default function Byeolmaru() {
       {qi === 'walk' && <p className="bm-help">방석으로 가는 중이에요… 걸으면 멈춰요</p>}
       {qi === 'on' && <Breath seconds={prefs.qi} onDone={qiDone} onStop={qiStop} />}
 
+      {rising && (
+        <div className="bm-rise" role="status">
+          <p>
+            {rising.nick}님의 {rising.big ? '큰 등불이' : '소원이'} 하늘로 올라가요
+          </p>
+          <strong>{rising.text}</strong>
+        </div>
+      )}
       {card && (
         <div className="bm-card" role="dialog" aria-labelledby="bm-card-title">
           {card.kind === 'word' && (

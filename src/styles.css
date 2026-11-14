@@ -2558,44 +2558,28 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 @media (max-width: 559px) { .content-grid li.has-bubble .card-bubble { bottom: 71px; right: 8px; padding: 3px 7px; font-size: 11px; } }
 @media (prefers-reduced-motion: reduce) { .content-grid li.has-bubble .card-bubble { animation: none; } }
 
-/* 별마루 메인 배너 (2026-11-15 사용자 지시: 카드 묶음과 따로 가운데, 다른 UI 로 특별하게) — 밤하늘 창: 실제 달 모양, 반짝이는 별, 천천히 오르는 등불, 땅 위 천동이 */
+/* 별마루 메인 배너 2차 (2026-11-15 사용자 지시: 'AI 티' 빼고 트렌디하게) — 납작한 면, 큰 글자, 선 그림, 빛·반짝임·그라데이션 없음 */
 .home-bm-wrap { margin: 0; }
-.home-bm { position: relative; display: flex; align-items: stretch; width: 100%; min-height: 200px; padding: 0; border: 1px solid rgba(226, 194, 122, 0.22); border-radius: 24px; overflow: hidden; background: linear-gradient(180deg, #0b1027 0%, #141a3a 58%, #22223f 100%); color: #F2EEE4; font: inherit; text-align: left; cursor: pointer; isolation: isolate; transition: border-color 0.2s ease, transform 0.2s ease; }
-.home-bm:hover { border-color: rgba(226, 194, 122, 0.5); }
-.home-bm:active { transform: scale(0.99); }
+.home-bm { position: relative; display: grid; grid-template-columns: 1fr minmax(0, 260px); align-items: end; gap: 12px; width: 100%; padding: 30px 32px 28px; border: 1px solid rgba(243, 228, 191, 0.14); border-radius: 24px; background: #13152A; color: #F2EEE4; font: inherit; text-align: left; cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; }
+.home-bm:hover { border-color: rgba(243, 228, 191, 0.32); }
+.home-bm:hover .home-bm-go { background: #F3E4BF; color: #13152A; }
 .home-bm:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
-.home-bm-sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.home-bm-sky i { position: absolute; border-radius: 50%; background: #fff; opacity: 0.35; animation: bm-tw 3.6s ease-in-out infinite; }
-@keyframes bm-tw { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.95; } }
-.home-bm-lantern { position: absolute; bottom: -24px; width: 9px; height: 12px; border-radius: 3px 3px 4px 4px; background: linear-gradient(180deg, #F8D9A0, #E39A4C); box-shadow: 0 0 10px rgba(240, 170, 90, 0.55); opacity: 0; animation: bm-lan 11s linear infinite; }
-.home-bm-lantern.l1 { left: 58%; }
-.home-bm-lantern.l2 { left: 72%; width: 7px; height: 10px; animation-delay: 3.8s; animation-duration: 13s; }
-.home-bm-lantern.l3 { left: 46%; width: 6px; height: 8px; animation-delay: 7.2s; animation-duration: 12s; }
-@keyframes bm-lan { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 0.9; } 80% { opacity: 0.7; } 100% { transform: translate(14px, -240px); opacity: 0; } }
-.home-bm-moon { position: absolute; top: 18px; right: 26px; width: 56px; height: 56px; z-index: -1; }
-.home-bm-text { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 26px 0 24px 28px; }
-.home-bm-text small { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: #EBCB86; }
-.home-bm-text strong { font-family: 'ChosunSm', serif; font-size: 34px; font-weight: 600; letter-spacing: 0.04em; color: #F7F1E3; line-height: 1.2; }
-.home-bm-desc { max-width: 30em; font-size: 15px; line-height: 1.55; color: rgba(236, 232, 222, 0.82); }
-.home-bm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; }
-.home-bm-go { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border-radius: 12px; background: #ECE6D8; color: #1B1C1E; font-size: 15px; font-weight: 600; }
-.home-bm-go::after { content: '\2192'; }
-.home-bm-people { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(236, 232, 222, 0.8); }
-.home-bm-people::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #E2C27A; animation: bm-tw 2s ease-in-out infinite; }
-.home-bm-art { flex: none; align-self: flex-end; width: 170px; margin: 0 18px -6px 0; }
-.home-bm-art svg { display: block; width: 100%; height: auto; }
-.home-bm-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; z-index: -1; background: radial-gradient(120% 100% at 75% 100%, rgba(226, 194, 122, 0.14), transparent 70%); }
+.home-bm-text { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.home-bm-eyebrow { font-size: 13px; font-weight: 500; letter-spacing: 0.12em; color: #E2C27A; }
+.home-bm-text strong { font-family: var(--title); font-size: 34px; font-weight: 400; line-height: 1.22; letter-spacing: -0.01em; color: #F7F1E3; }
+.home-bm-desc { font-size: 15px; line-height: 1.55; color: rgba(236, 232, 222, 0.75); word-break: keep-all; }
+.home-bm-meta { display: flex; flex-wrap: wrap; gap: 0; margin-top: 8px; font-size: 13px; color: rgba(236, 232, 222, 0.72); font-variant-numeric: tabular-nums; }
+.home-bm-meta span + span::before { content: ''; display: inline-block; width: 1px; height: 10px; margin: 0 10px; background: rgba(236, 232, 222, 0.3); vertical-align: -1px; }
+.home-bm-pic { align-self: stretch; display: flex; align-items: flex-end; margin: -30px -32px -28px 0; }
+.home-bm-pic svg { display: block; width: 100%; height: 100%; max-height: 210px; }
+.home-bm-go { position: absolute; right: 22px; bottom: 22px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(243, 228, 191, 0.45); color: #F3E4BF; background: #13152A; transition: background 0.2s ease, color 0.2s ease; }
 @media (max-width: 559px) {
-  .home-bm { min-height: 188px; border-radius: 20px; }
-  .home-bm-text { padding: 20px 0 18px 18px; gap: 5px; }
-  .home-bm-text strong { font-size: 28px; }
+  .home-bm { grid-template-columns: 1fr 120px; padding: 22px 18px 20px; border-radius: 20px; gap: 6px; }
+  .home-bm-text strong { font-size: 26px; }
   .home-bm-desc { font-size: 14px; }
-  .home-bm-art { width: 112px; margin-right: 6px; }
-  .home-bm-moon { top: 14px; right: 16px; width: 42px; height: 42px; }
-  .home-bm-go { height: 36px; padding: 0 13px; font-size: 14px; }
+  .home-bm-pic { margin: -22px -18px -20px 0; }
+  .home-bm-go { right: 14px; bottom: 14px; width: 40px; height: 40px; }
 }
-@media (prefers-reduced-motion: reduce) { .home-bm-sky i, .home-bm-people::before { animation: none; } .home-bm-lantern { display: none; } }
-
 /* 별마루 안 소원 등불 쓰기 (2026-11-15) */
 .bm-wish-input { display: block; width: 100%; margin-top: 10px; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; background: rgba(0, 0, 0, 0.28); color: #F3E4BF; font: inherit; font-size: 16px; line-height: 1.5; resize: none; }
 .bm-wish-input:focus { outline: none; border-color: rgba(226, 194, 122, 0.6); }
@@ -2608,3 +2592,9 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .bm-wish-pub { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; color: rgba(236, 238, 244, 0.8); cursor: pointer; }
 .bm-wish-pub input { accent-color: #E2C27A; }
 .bm-card-main:disabled { opacity: 0.5; cursor: default; }
+
+/* 별마루 내 소원 등불 오를 때 문구 (2026-11-15 사용자 지시: 닉네임과 함께) */
+.bm-rise { position: absolute; z-index: 6; top: 96px; left: 0; right: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 40px); text-align: center; pointer-events: none; animation: bm-rise-in 3.6s ease-out both; }
+.bm-rise p { margin: 0; font-size: 14px; color: #E2C27A; letter-spacing: 0.02em; }
+.bm-rise strong { display: block; margin-top: 6px; font-family: var(--title); font-size: 20px; font-weight: 400; line-height: 1.5; color: #F7F1E3; word-break: keep-all; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+@keyframes bm-rise-in { 0% { opacity: 0; } 15% { opacity: 1; } 82% { opacity: 1; } 100% { opacity: 0; } }

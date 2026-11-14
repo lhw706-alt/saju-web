@@ -1,10 +1,8 @@
-// 메인 가운데 별마루 입장 배너 (2026-11-15 사용자 지시: 카드 묶음과 따로, 조금 강조해서 중간에, 다른 UI 로 특별하게)
-// 실제 오늘 밤 달 모양(음력)·특별한 날 문구·지금 걷는 사람 수(/api/plaza, CDN 10초 캐시 — 실패하면 안 보임)를 보여 줌.
+// 메인 가운데 별마루 입장 배너 (2026-11-15 사용자 지시: 카드 묶음과 따로 가운데, 'AI 티' 없이 트렌디하게)
+// 납작한 밤색 면 + 큰 글자 + 선으로 그린 천문문·지평선 + 오늘 실제 달 모양. 빛 번짐·반짝임·그라데이션 없음.
+// 아래 한 줄 정보: 음력 날짜·달 이름 | 지금 거니는 인원(/api/plaza, 실패하면 안 보임)
 import { useEffect, useMemo, useState } from 'react';
 import { skyState } from '../lib/byeolmaruSky.js';
-import { dosaArtSvg } from '../brand/dosaArt.js';
-
-const ART = dosaArtSvg('byeolmaru');
 
 // 음력 위상(0 새달 ~ 0.5 보름 ~ 1)으로 빛나는 부분 경로
 function moonPath(r, p) {
@@ -12,13 +10,16 @@ function moonPath(r, p) {
   if (p < 0.5) return `M0,${-r} A${r},${r} 0 0 1 0,${r} A${k},${r} 0 0 ${p > 0.25 ? 1 : 0} 0,${-r}Z`;
   return `M0,${-r} A${r},${r} 0 0 0 0,${r} A${k},${r} 0 0 ${p > 0.75 ? 1 : 0} 0,${-r}Z`;
 }
-
-// 반짝이는 별 자리 (고정 — 늘 같은 하늘)
-const STARS = Array.from({ length: 34 }, (_, i) => {
-  const a = Math.sin(i * 91.7 + 1) * 10000;
-  const b = Math.sin(i * 47.3 + 2) * 10000;
-  return { x: (a - Math.floor(a)) * 100, y: (b - Math.floor(b)) * 78, s: i % 7 === 0 ? 2.4 : i % 3 === 0 ? 1.7 : 1.1, d: (i % 9) * 0.45 };
-});
+function moonName(day) {
+  if (day <= 2 || day >= 29) return '그믐·새달';
+  if (day <= 6) return '초승달';
+  if (day <= 9) return '상현달';
+  if (day <= 13) return '차오르는 달';
+  if (day <= 17) return '보름달';
+  if (day <= 21) return '기우는 달';
+  if (day <= 24) return '하현달';
+  return '그믐달';
+}
 
 export default function ByeolmaruBanner({ onOpen }) {
   const sky = useMemo(() => {
@@ -40,40 +41,60 @@ export default function ByeolmaruBanner({ onOpen }) {
     };
   }, []);
 
-  const line = sky?.special
-    ? `오늘은 ${sky.special.title}. ${sky.special.line}`
-    : sky
-      ? `오늘 밤은 음력 ${sky.lunarDay}일, 하늘에 이런 달이 떠 있어요. 별을 헤아리며 쉬어 가요.`
-      : '밤하늘 마당을 거닐며 별을 헤아리고 쉬어 가요.';
-
   return (
     <section className="home-bm-wrap" aria-label="별마루">
       <button type="button" className="home-bm" onClick={onOpen}>
-        <span className="home-bm-sky" aria-hidden="true">
-          {STARS.map((s, i) => (
-            <i key={i} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.s, height: s.s, animationDelay: `${s.d}s` }} />
-          ))}
-          <b className="home-bm-lantern l1" />
-          <b className="home-bm-lantern l2" />
-          <b className="home-bm-lantern l3" />
-        </span>
-        {sky && (
-          <svg className="home-bm-moon" viewBox="-30 -30 60 60" aria-hidden="true">
-            <circle r="22" fill="rgba(255,255,255,0.07)" />
-            <path d={moonPath(22, sky.phase)} fill="#F3E4BF" />
-          </svg>
-        )}
         <span className="home-bm-text">
-          <small>밤하늘 마당</small>
-          <strong>별마루</strong>
-          <span className="home-bm-desc">{line}</span>
-          <span className="home-bm-foot">
-            <span className="home-bm-go">마당에 들어가기</span>
-            {people != null && <span className="home-bm-people">지금 {people}명이 거닐고 있어요</span>}
+          <span className="home-bm-eyebrow">밤하늘 마당</span>
+          <strong>
+            오늘 밤,
+            <br />
+            별마루로
+          </strong>
+          <span className="home-bm-desc">천동이와 걷고, 별을 헤아리고, 등불에 소원을 띄워요.</span>
+          <span className="home-bm-meta">
+            {sky && (
+              <span>
+                음력 {sky.lunarDay}일 · {moonName(sky.lunarDay)}
+              </span>
+            )}
+            {sky?.special && <span>{sky.special.title}</span>}
+            {people != null && <span>지금 {people}명</span>}
           </span>
         </span>
-        <span className="home-bm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ART }} />
-        <span className="home-bm-ground" aria-hidden="true" />
+        <span className="home-bm-pic" aria-hidden="true">
+          <svg viewBox="0 0 240 180" preserveAspectRatio="xMidYMax meet">
+            {/* 달 (오늘 실제 모양) */}
+            <g transform="translate(176 52)">
+              <circle r="26" fill="none" stroke="rgba(243,228,191,0.28)" strokeWidth="1" />
+              {sky && <path d={moonPath(26, sky.phase)} fill="#F3E4BF" />}
+            </g>
+            {/* 별 몇 개 — 점만 */}
+            <g fill="rgba(243,228,191,0.7)">
+              <circle cx="40" cy="30" r="1.3" />
+              <circle cx="92" cy="18" r="1" />
+              <circle cx="122" cy="62" r="1.2" />
+              <circle cx="222" cy="104" r="1" />
+              <circle cx="62" cy="78" r="0.9" />
+            </g>
+            {/* 천문문: 선으로 */}
+            <g fill="none" stroke="#E2C27A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M44 104 Q96 92 148 104" />
+              <path d="M52 112 H140" />
+              <path d="M62 112 V160 M130 112 V160" />
+              <path d="M58 124 H134" />
+              <rect x="84" y="114" width="24" height="8" />
+            </g>
+            {/* 지평선 + 돌길 */}
+            <path d="M0 160 H240" stroke="rgba(243,228,191,0.35)" strokeWidth="1" />
+            <path d="M88 160 L74 180 M104 160 L118 180" stroke="rgba(243,228,191,0.22)" strokeWidth="1" />
+          </svg>
+        </span>
+        <span className="home-bm-go" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
       </button>
     </section>
   );
