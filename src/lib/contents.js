@@ -32,8 +32,8 @@ export const CONTENTS = [
   { id: 'number', group: 'luck', title: '행운의 번호', desc: '천둥도사가 하루 한 번 뽑아 주는 6개의 숫자', glyph: '數', el: 'water', status: 'live', path: '/lucky' },
   { id: 'blessing', group: 'luck', title: '천생복덕운', desc: '타고난 복을 활용하는 방법', glyph: '福', el: 'earth', status: 'soon' },
   { id: 'moving', group: 'luck', title: '이사택일', desc: '한눈에 보는 이사하기 좋은 날', glyph: '移', el: 'wood', status: 'soon' },
-  { id: 'wish', group: 'luck', title: '소원 빌기', desc: '밤하늘에 소원을 띄워 두기', glyph: '願', el: 'water', status: 'login' },
-  { id: 'charm', group: 'luck', title: '행운의 부적', desc: '나를 도와주는 기운', glyph: '符', el: 'fire', status: 'hold' },
+  { id: 'wish', group: 'luck', title: '소원 빌기', desc: '소원을 하늘에 띄우고 서로 응원하기', glyph: '願', el: 'water', status: 'live', path: '/wish' },
+  { id: 'charm', group: 'luck', title: '행운의 부적', desc: '지금 나에게 필요한 행운을 펼치기', glyph: '符', el: 'fire', status: 'live', path: '/talisman' },
   { id: 'sal', group: 'luck', title: '살풀이', desc: '원국의 살(煞), 겁내지 않고 이해하기', glyph: '解', el: 'metal', status: 'hold' },
 
   { id: 'ask', group: 'ask', title: '천둥도사에게 묻기', desc: '내 사주로 궁금한 걸 물어봐요', glyph: '問', el: 'water', status: 'soon' },

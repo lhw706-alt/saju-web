@@ -28,12 +28,14 @@ import { createRateLimiter } from '../lib/guard.mjs';
 import { computeSaju, normalizeInput, SajuInputError } from '../../src/lib/saju.js';
 import { TOPICS, REPORT_PARTS, DAY_TOPICS } from '../../src/lib/topics.js';
 import { passwordOk } from '../../src/lib/password.js';
+import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/lib/wish.js';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
 const SESSION_DAYS = 30;
 // 행운의 번호 /api/lucky 호출 제한
 const luckyLimited = createRateLimiter(30, 10 * 60_000);
+const wishLimited = createRateLimiter(60, 10 * 60_000); // 소원빌기 쓰기 요청 (회원·IP 당)
 const users = () => getStore('users');
 // 관리자 비밀번호 대입 막기: 같은 IP 는 10분에 5번까지만 시도
 const adminLimited = createRateLimiter(5, 10 * 60_000);
@@ -676,6 +678,102 @@ export default async (req, context) => {
     return json({ date, numbers: rec.numbers, already: false });
   }
 
+  // ── 소원빌기 (2026-11-14) ──
+  // Netlify Blobs 'wishes': 'w/<id>' = { id, uid, text, cat, pub, createdAt, cheers, reports, hidden, done, doneAt }
+  //   id = (9999999999999 - 시각) 36진수 + 무작위 → 키 순서 = 최신순. 'u/<회원번호>/<id>' = 내 소원 색인, 'c/<id>/<회원번호>' = 응원, 'r/<id>/<회원번호>' = 신고.
+  // 목록: GET /api/wish?sort=new|hot&cat= (공개·숨김 아닌 것, 최대 120개) · 내 소원: GET /api/wish?mine=1
+  // 쓰기: POST /api/wish {text, cat, pub} (회원, 하루 3개) · POST /api/wish/cheer {id} (회원, 소원마다 1번, 내 소원 X)
+  //       POST /api/wish/done {id, done} · POST /api/wish/report {id} · DELETE /api/wish?id= (본인)
+  if (path === '/api/wish' || path.startsWith('/api/wish/')) {
+    const ws = getStore({ name: 'wishes', consistency: 'strong' });
+    const s = secret ? verify(cookies(req)[SESSION], secret) : null;
+    const kstDay = (t = Date.now()) => new Date(t + 9 * 3600e3).toISOString().slice(0, 10);
+    const pub = (w) => ({ id: w.id, text: w.text, cat: w.cat, createdAt: w.createdAt, cheers: w.cheers || 0, done: !!w.done, mine: !!s && w.uid === s.sub });
+    const loadAll = async () => {
+      const { blobs } = await ws.list({ prefix: 'w/' });
+      const keys = blobs.map((b) => b.key).sort().slice(0, 400); // id 가 시간 역순이라 키 순 = 최신순
+      return (await Promise.all(keys.map((k) => ws.get(k, { type: 'json' }))))
+        .filter(Boolean)
+        .sort((x, y) => y.createdAt.localeCompare(x.createdAt));
+    };
+    if (req.method === 'GET' && path === '/api/wish') {
+      const all = await loadAll();
+      const today = kstDay();
+      const stats = { total: all.length, today: all.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length };
+      if (url.searchParams.get('mine')) {
+        if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+        const mine = all.filter((w) => w.uid === s.sub).map((w) => ({ ...pub(w), pub: w.pub, doneAt: w.doneAt || null, hidden: !!w.hidden }));
+        const left = Math.max(0, WISH_DAILY - mine.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length);
+        return json({ stats, wishes: mine, left });
+      }
+      const cat = url.searchParams.get('cat');
+      let list = all.filter((w) => w.pub && !w.hidden && (!cat || w.cat === cat));
+      if (url.searchParams.get('sort') === 'hot') list = list.sort((a, b) => (b.cheers || 0) - (a.cheers || 0) || b.createdAt.localeCompare(a.createdAt));
+      // 내가 응원한 소원 표시
+      const ids = list.slice(0, 120).map((w) => w.id);
+      const cheered = s ? new Set((await Promise.all(ids.map(async (id) => ((await ws.get(`c/${id}/${s.sub}`)) ? id : null)))).filter(Boolean)) : new Set();
+      return json({ stats, wishes: list.slice(0, 120).map((w) => ({ ...pub(w), cheered: cheered.has(w.id) })) });
+    }
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    if (wishLimited(s.sub) || wishLimited(ip)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
+    const body = req.method === 'DELETE' ? null : await readJson();
+    const getWish = async (id) => (/^[a-z0-9]{6,20}$/.test(String(id || '')) ? ws.get(`w/${id}`, { type: 'json' }) : null);
+
+    if (req.method === 'POST' && path === '/api/wish') {
+      const text = String(body?.text || '').trim().replace(/\s+/g, ' ');
+      const bad = wishProblem(text);
+      if (bad) return json({ error: bad }, 400);
+      if (!wishCat(body?.cat)) return json({ error: '소원의 종류를 골라 주세요.' }, 400);
+      const { blobs: mineKeys } = await ws.list({ prefix: `u/${s.sub}/` });
+      const today = kstDay();
+      const mine = (await Promise.all(mineKeys.map((b) => ws.get(`w/${b.key.split('/')[2]}`, { type: 'json' })))).filter(Boolean);
+      if (mine.filter((w) => kstDay(Date.parse(w.createdAt)) === today).length >= WISH_DAILY) return json({ error: `소원은 하루에 ${WISH_DAILY}개까지 빌 수 있어요. 내일 다시 띄워 주세요.` }, 429);
+      const id = (9999999999999 - Date.now()).toString(36) + randomBytes(3).toString('hex');
+      const w = { id, uid: s.sub, text, cat: body.cat, pub: body?.pub !== false, createdAt: new Date().toISOString(), cheers: 0, reports: 0, hidden: false, done: false };
+      await ws.setJSON(`w/${id}`, w);
+      await ws.set(`u/${s.sub}/${id}`, '1');
+      return json({ ok: true, wish: { ...pub(w), pub: w.pub } });
+    }
+    if (req.method === 'POST' && path === '/api/wish/cheer') {
+      const w = await getWish(body?.id);
+      if (!w || !w.pub || w.hidden) return json({ error: '소원을 찾지 못했어요.' }, 404);
+      if (w.uid === s.sub) return json({ error: '내 소원은 응원할 수 없어요.' }, 400);
+      if (await ws.get(`c/${w.id}/${s.sub}`)) return json({ ok: true, cheers: w.cheers || 0, already: true });
+      await ws.set(`c/${w.id}/${s.sub}`, '1');
+      w.cheers = (w.cheers || 0) + 1;
+      await ws.setJSON(`w/${w.id}`, w);
+      return json({ ok: true, cheers: w.cheers });
+    }
+    if (req.method === 'POST' && path === '/api/wish/report') {
+      const w = await getWish(body?.id);
+      if (!w) return json({ error: '소원을 찾지 못했어요.' }, 404);
+      if (w.uid === s.sub) return json({ error: '내 소원은 신고할 수 없어요.' }, 400);
+      if (!(await ws.get(`r/${w.id}/${s.sub}`))) {
+        await ws.set(`r/${w.id}/${s.sub}`, '1');
+        w.reports = (w.reports || 0) + 1;
+        if (w.reports >= WISH_HIDE_REPORTS) w.hidden = true;
+        await ws.setJSON(`w/${w.id}`, w);
+      }
+      return json({ ok: true });
+    }
+    if (req.method === 'POST' && path === '/api/wish/done') {
+      const w = await getWish(body?.id);
+      if (!w || w.uid !== s.sub) return json({ error: '내 소원만 바꿀 수 있어요.' }, 403);
+      w.done = body?.done !== false;
+      w.doneAt = w.done ? new Date().toISOString() : null;
+      await ws.setJSON(`w/${w.id}`, w);
+      return json({ ok: true, done: w.done, doneAt: w.doneAt });
+    }
+    if (req.method === 'DELETE' && path === '/api/wish') {
+      const w = await getWish(url.searchParams.get('id'));
+      if (!w || w.uid !== s.sub) return json({ error: '내 소원만 지울 수 있어요.' }, 403);
+      await ws.delete(`w/${w.id}`);
+      await ws.delete(`u/${s.sub}/${w.id}`);
+      return json({ ok: true });
+    }
+    return json({ error: '잘못된 요청이에요.' }, 405);
+  }
+
   if (path === '/api/auth/logout') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     return json({ ok: true }, 200, [setCookie(SESSION, '', 0)]);
@@ -768,6 +866,10 @@ export default async (req, context) => {
       const inv = getStore({ name: 'invites', consistency: 'strong' });
       const { blobs: mine } = await inv.list({ prefix: `u/${s.sub}/` });
       await Promise.all(mine.flatMap((b) => [inv.delete(b.key), inv.delete(`t/${b.key.split('/').pop()}`)]));
+      // 소원빌기: 내 소원 지움
+      const wishes = getStore({ name: 'wishes', consistency: 'strong' });
+      const { blobs: wk } = await wishes.list({ prefix: `u/${s.sub}/` });
+      await Promise.all(wk.flatMap((b) => [wishes.delete(b.key), wishes.delete(`w/${b.key.split('/')[2]}`)]));
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });
@@ -893,4 +995,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report'] };

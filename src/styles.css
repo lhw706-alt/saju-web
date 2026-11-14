@@ -1407,3 +1407,158 @@ body:has(.contact-overlay), body:has(.fortune-overlay), body:has(.charm-get) { o
 .nm-head .nm-r-title { margin-top: 12px; font-size: clamp(22px, 5.6vw, 26px); color: var(--primary); }
 .nm-head .nm-r-sub { font-size: 16px; color: var(--text-2); }
 @media (max-width: 400px) { .nm-tag { min-width: 0; padding: 8px 12px; } .nm-ring { width: 148px; height: 148px; } .nm-ring-num b { font-size: 48px; } }
+
+/* ── 소원빌기 /wish (2026-11-14) ── 밤하늘 + 떠다니는 소원, 유리 카드, 리퀴드 메탈 버튼 */
+.wish { padding: 16px 0 8px; }
+.wish-hero { position: relative; display: grid; justify-items: center; overflow: hidden; border-radius: 28px; padding: 210px 20px 28px; background: radial-gradient(120% 80% at 50% 0%, #2a2f55 0%, #1c1e2c 45%, #1b1c1e 100%); border: 1px solid rgba(255, 255, 255, 0.06); text-align: center; }
+.wish-sky { position: absolute; inset: 0 0 auto 0; height: 230px; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 244, 214, 0.9), transparent), radial-gradient(1px 1px at 28% 60%, rgba(255, 244, 214, 0.7), transparent), radial-gradient(1.5px 1.5px at 46% 14%, rgba(255, 244, 214, 0.8), transparent), radial-gradient(1px 1px at 63% 48%, rgba(255, 244, 214, 0.6), transparent), radial-gradient(1.5px 1.5px at 81% 26%, rgba(255, 244, 214, 0.9), transparent), radial-gradient(1px 1px at 92% 66%, rgba(255, 244, 214, 0.6), transparent), radial-gradient(1px 1px at 7% 78%, rgba(255, 244, 214, 0.6), transparent); }
+.wish-moon { position: absolute; right: 10%; top: 26px; width: 46px; height: 46px; border-radius: 50%; box-shadow: inset -12px 8px 0 0 #f0d595; filter: drop-shadow(0 0 14px rgba(240, 213, 149, 0.55)); }
+.wish-float { position: absolute; display: inline-flex; align-items: center; gap: 6px; max-width: 46%; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.22); background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: rgba(255, 248, 230, 0.92); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 22px rgba(226, 194, 122, 0.18); animation: wish-drift 7s ease-in-out infinite; }
+.wish-float svg { flex: none; color: #f0d595; }
+.wish-float.f0 { left: 6%; top: 40px; }
+.wish-float.f1 { left: 42%; top: 18px; animation-delay: -2s; }
+.wish-float.f2 { left: 14%; top: 108px; animation-delay: -4s; }
+.wish-float.f3 { right: 6%; top: 96px; animation-delay: -1s; }
+.wish-float.f4 { left: 30%; top: 166px; animation-delay: -3s; }
+.wish-float.f5 { right: 12%; top: 168px; animation-delay: -5s; }
+.wish-lantern { position: absolute; width: 22px; height: 28px; border-radius: 8px 8px 10px 10px; background: radial-gradient(circle at 50% 40%, #ffd98a, #e2a24a 70%); box-shadow: 0 0 22px rgba(255, 200, 110, 0.7); animation: wish-drift 6s ease-in-out infinite; }
+.wish-lantern.l0 { left: 16%; top: 70px; }
+.wish-lantern.l1 { left: 38%; top: 30px; animation-delay: -2s; transform: scale(0.8); }
+.wish-lantern.l2 { left: 60%; top: 120px; animation-delay: -4s; }
+.wish-lantern.l3 { left: 78%; top: 60px; animation-delay: -1s; transform: scale(0.7); }
+@keyframes wish-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.wish-hero-text { position: relative; display: grid; justify-items: center; gap: 10px; }
+.wish-title { margin: 0; font-family: var(--title); font-size: clamp(24px, 6vw, 32px); font-weight: 400; letter-spacing: -0.02em; word-break: keep-all; }
+.wish-lead { max-width: 460px; margin: 0; font-size: 15px; line-height: 1.7; color: rgba(220, 222, 228, 0.86); word-break: keep-all; }
+.wish-stats { display: flex; gap: 10px; margin: 6px 0 8px; padding: 0; list-style: none; }
+.wish-stats li { display: grid; justify-items: center; min-width: 120px; padding: 10px 16px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); }
+.wish-stats b { font-size: 22px; font-weight: 600; color: var(--primary); font-variant-numeric: tabular-nums; }
+.wish-stats span { font-size: 13px; color: rgba(220, 222, 228, 0.8); }
+.wish-left { margin: 4px 0 0; font-size: 14px; color: var(--text-2); text-align: center; }
+.wish-tabs { margin-top: 24px; }
+.wish-filters { display: grid; gap: 10px; margin-top: 16px; }
+.wish-sort, .wish-cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.wish-sort button, .wish-cats button { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.03); color: var(--text-2); font: inherit; font-size: 14px; cursor: pointer; }
+.wish-sort button.on, .wish-cats button.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.12); color: var(--primary); font-weight: 600; }
+.wish-cats svg { color: rgba(226, 194, 122, 0.8); }
+.wish-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.wish-card { display: grid; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); }
+.wish-card.is-done { border-color: rgba(127, 224, 160, 0.35); }
+.wish-card-top { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.wish-cat { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 999px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-size: 13px; }
+.wish-time { margin-left: auto; font-size: 13px; color: var(--text-2); }
+.wish-done-tag, .wish-state.is-done { padding: 2px 8px; border-radius: 999px; background: rgba(127, 224, 160, 0.14); color: #8fe3ad; font-size: 13px; }
+.wish-state { padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--text-2); font-size: 13px; }
+.wish-private { padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); color: var(--text-2); font-size: 13px; }
+.wish-text { margin: 0; font-size: 16px; line-height: 1.7; color: var(--text); word-break: keep-all; overflow-wrap: anywhere; }
+.wish-card-foot { display: flex; align-items: center; gap: 8px; }
+.wish-anon { font-size: 13px; color: var(--text-2); }
+.wish-cheer { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(226, 194, 122, 0.35); background: transparent; color: var(--primary); font: inherit; font-size: 13px; cursor: pointer; }
+.wish-cheer b { font-weight: 600; }
+.wish-cheer.on { background: rgba(226, 194, 122, 0.14); }
+.wish-cheer.is-static { cursor: default; border-color: transparent; }
+.wish-report { height: 34px; padding: 0 8px; border: 0; background: none; color: rgba(194, 196, 200, 0.7); font: inherit; font-size: 13px; cursor: pointer; }
+.wish-empty { display: grid; justify-items: center; gap: 10px; margin: 28px 0; text-align: center; color: var(--text-2); }
+.wish-mine-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 12px; padding: 0; list-style: none; }
+.wish-mine-stats li { display: grid; justify-items: center; gap: 4px; padding: 14px 8px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.03); }
+.wish-mine-stats b { font-size: 22px; font-weight: 600; color: var(--text); }
+.wish-mine-stats span { font-size: 13px; color: var(--text-2); }
+.wish-mine-list { display: grid; gap: 12px; margin: 14px 0 0; padding: 0; list-style: none; }
+.wish-mine-item { display: grid; gap: 8px; padding: 18px; }
+.wish-mine-item.is-done { border-color: rgba(127, 224, 160, 0.35); }
+.wish-meta { margin: 0; font-size: 13px; color: var(--text-2); }
+.wish-remind { margin: 0; padding: 8px 12px; border-radius: 12px; background: rgba(226, 194, 122, 0.1); color: var(--primary); font-size: 14px; }
+.wish-mine-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.wish-mine-actions .btn-primary.inline, .wish-mine-actions .btn-ghost { margin: 0; height: 40px; }
+.wish-del { margin-left: auto; height: 40px; padding: 0 8px; border: 0; background: none; color: rgba(194, 196, 200, 0.7); font: inherit; font-size: 14px; cursor: pointer; }
+.wish-compose { display: grid; gap: 8px; }
+.wish-textarea { min-height: 96px; }
+.wish-count { display: flex; justify-content: space-between; gap: 10px; margin: 0; font-size: 13px; color: var(--text-2); }
+.wish-count span { flex: none; font-variant-numeric: tabular-nums; }
+.wish-cat-pick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wish-vis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wish-vis button { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.03); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.wish-vis b { font-size: 15px; font-weight: 600; }
+.wish-vis span { font-size: 13px; line-height: 1.45; color: var(--text-2); }
+.wish-vis button.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.1); }
+.wish-vis button.on b { color: var(--primary); }
+.wish-launch { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 30%, rgba(42, 47, 85, 0.96), rgba(15, 15, 16, 0.97)); overflow: hidden; animation: fortune-fade 0.25s ease-out; }
+.wish-launch-stars i { position: absolute; left: var(--x); bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: #ffe7a8; box-shadow: 0 0 10px #ffd98a; animation: wish-star 2.2s ease-out var(--d) both; }
+@keyframes wish-star { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-110vh); opacity: 0; } }
+.wish-launch-card { position: absolute; left: 50%; bottom: 10%; display: grid; gap: 8px; width: min(84vw, 320px); padding: 16px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.3); background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 0 40px rgba(226, 194, 122, 0.35); text-align: left; animation: wish-rise 2.4s cubic-bezier(0.3, 0.6, 0.3, 1) forwards; }
+.wish-launch-card p { margin: 0; font-size: 15px; line-height: 1.6; color: #fff; word-break: keep-all; }
+@keyframes wish-rise { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(-50%, -78vh) scale(0.35); opacity: 0; } }
+.wish-launch-msg { display: grid; justify-items: center; gap: 10px; text-align: center; opacity: 0; animation: fortune-fade 0.5s ease-out 1.9s forwards; }
+.wish-launch-msg h2 { margin: 0; font-family: var(--title); font-size: clamp(22px, 6vw, 28px); font-weight: 400; color: #fff; word-break: keep-all; }
+.wish-launch-msg p { margin: 0; font-size: 15px; color: rgba(220, 222, 228, 0.86); }
+.wish-launch-btns { display: grid; gap: 8px; width: min(100%, 320px); margin-top: 8px; }
+.wish-launch-btns .btn-primary, .wish-launch-btns .btn-ghost { width: 100%; margin: 0; }
+@media (max-width: 559px) {
+  .wish-list { grid-template-columns: 1fr; }
+  .wish-hero { padding-top: 200px; border-radius: 22px; }
+  .wish-float { max-width: 58%; font-size: 12px; }
+  .wish-float.f4, .wish-float.f5 { display: none; }
+  .wish-stats li { min-width: 0; flex: 1; }
+  .wish-vis { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .wish-float, .wish-lantern, .wish-launch-stars i { animation: none; } .wish-launch-card { animation-duration: 0.01s; } .wish-launch-msg { animation-delay: 0s; } }
+
+/* ── 행운의 부적 /talisman (2026-11-14) ── */
+.tal { padding: 20px 0 8px; }
+.tal-hero { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.tal-art { display: block; }
+.tal-art svg { display: block; width: 100%; height: 100%; }
+.tal-fan { position: relative; width: 300px; height: 230px; margin: 8px 0 4px; }
+.tal-art.fan { position: absolute; top: 10px; left: 50%; width: 130px; height: 195px; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.45)); }
+.tal-art.fan.f0 { transform: translateX(-120%) rotate(-12deg); }
+.tal-art.fan.f1 { transform: translateX(-50%) translateY(-10px); z-index: 1; }
+.tal-art.fan.f2 { transform: translateX(20%) rotate(12deg); }
+.tal-today { display: flex; align-items: center; gap: 14px; width: min(100%, 440px); padding: 16px; border: 1px solid var(--primary-line); background: linear-gradient(180deg, rgba(226, 194, 122, 0.1), rgba(226, 194, 122, 0.03)); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tal-today-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.tal-today-text small { font-size: 13px; color: var(--primary); }
+.tal-today-text b { font-size: 17px; font-weight: 600; }
+.tal-today-text span { font-size: 14px; color: rgba(206, 208, 212, 0.86); }
+.tal-today-go { flex: none; padding: 6px 12px; border-radius: 999px; background: var(--primary); color: #1b1c1e; font-size: 14px; font-weight: 600; }
+.tal-result { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.tal-stage { position: relative; display: grid; place-items: center; width: 240px; height: 340px; margin: 8px 0; perspective: 900px; }
+.tal-rays { position: absolute; inset: -60px; background: repeating-conic-gradient(from 0deg, rgba(255, 216, 130, 0.22) 0deg 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(circle, #000 20%, transparent 62%); mask: radial-gradient(circle, #000 20%, transparent 62%); animation: tal-spin 14s linear infinite; }
+@keyframes tal-spin { to { transform: rotate(360deg); } }
+.tal-flip { position: relative; width: 200px; height: 300px; transform-style: preserve-3d; }
+.tal-result.is-revealing .tal-flip { animation: tal-flip 1.5s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+@keyframes tal-flip { 0% { transform: rotateY(180deg) translateY(30px) scale(0.7); } 60% { transform: rotateY(-12deg) scale(1.05); } 100% { transform: rotateY(0) scale(1); } }
+.tal-back, .tal-art.tal-front { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 12px; }
+.tal-art.tal-front { filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 30px rgba(226, 194, 122, 0.25)); }
+.tal-back { display: grid; place-items: center; transform: rotateY(180deg); background: linear-gradient(135deg, #3a2a12, #6b4a1c 50%, #3a2a12); border: 2px solid #e2c27a; }
+.tal-back b { font-family: ChosunSm, serif; font-size: 40px; font-weight: 400; color: #e2c27a; letter-spacing: 6px; }
+.tal-name { margin: 0; font-family: var(--title); font-size: clamp(26px, 6.4vw, 32px); font-weight: 400; }
+.tal-cheer { margin: 0; font-size: 16px; color: var(--primary); }
+.tal-info { display: grid; gap: 14px; width: min(100%, 560px); margin: 10px 0 0; padding: 20px; text-align: left; }
+.tal-info dt { font-size: 14px; font-weight: 600; color: var(--primary); }
+.tal-info dd { margin: 4px 0 0; font-size: 15px; line-height: 1.7; color: var(--text); word-break: keep-all; }
+.tal-note { max-width: 560px; margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--text-2); word-break: keep-all; }
+.tal-actions { display: grid; justify-items: center; gap: 10px; margin-top: 8px; }
+.tal-actions-row { display: flex; gap: 8px; }
+.tal-actions-row .btn-ghost { margin: 0; }
+.tal-msg { margin: 0; font-size: 14px; color: var(--primary); }
+.tal-wish { display: flex; align-items: center; gap: 12px; width: min(100%, 440px); margin-top: 14px; padding: 14px 16px; color: var(--text); text-decoration: none; text-align: left; }
+.tal-wish b { display: block; font-size: 15px; font-weight: 600; }
+.tal-wish small { font-size: 13px; color: var(--text-2); }
+.tal-pick, .tal-box { margin-top: 36px; }
+.tal-h2 { margin: 0; font-family: var(--title); font-size: 22px; font-weight: 400; text-align: center; }
+.tal-sub { margin: 6px 0 0; font-size: 14px; color: var(--text-2); text-align: center; }
+.tal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.tal-card { display: grid; justify-items: center; gap: 10px; width: 100%; padding: 16px 10px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); color: var(--text); font: inherit; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+.tal-card:hover { transform: translateY(-3px); border-color: rgba(226, 194, 122, 0.45); }
+.tal-card.on { border-color: var(--primary); }
+.tal-art.mini { width: 72px; height: 108px; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.4)); }
+.tal-card-text { display: grid; gap: 2px; }
+.tal-card-text b { font-size: 15px; font-weight: 600; }
+.tal-card-text span { font-size: 13px; color: rgba(206, 208, 212, 0.86); word-break: keep-all; }
+.tal-box-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.tal-box-list li { display: grid; justify-items: center; gap: 4px; }
+.tal-box-item { display: grid; justify-items: center; gap: 4px; padding: 10px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.03); color: var(--text); font: inherit; cursor: pointer; }
+.tal-box-item b { font-size: 14px; font-weight: 600; }
+.tal-box-item small { font-size: 13px; color: var(--text-2); }
+.tal-box-del { border: 0; background: none; color: rgba(194, 196, 200, 0.7); font: inherit; font-size: 13px; cursor: pointer; }
+@media (max-width: 559px) { .tal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tal-fan { transform: scale(0.85); } }
+@media (prefers-reduced-motion: reduce) { .tal-rays, .tal-result.is-revealing .tal-flip { animation: none; } }

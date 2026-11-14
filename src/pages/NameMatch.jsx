@@ -13,6 +13,7 @@ import { dosaArtSvg } from '../brand/dosaArt.js';
 import Markdown from '../components/Markdown.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
+import GlassIcon, { LineIcon } from '../components/GlassIcon.jsx';
 
 // 3D 천동이 + 둘레를 도는 이름 패(名)·하트 (행운의 번호와 같은 품질, 2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -72,42 +73,8 @@ const AREAS = [
   ['감정', '감정 궁합'],
   ['지속력', '관계 지속력'],
 ];
-// 관계 아이콘: 이모지 대신 사이트 톤의 얇은 선 아이콘 (2026-11-14 사용자 지시)
-const REL_PATHS = {
-  lover: 'M9 19s-6-3.6-6-8.2A3.3 3.3 0 0 1 9 9a3.3 3.3 0 0 1 6 1.8M15 21s-5-3-5-6.8A2.7 2.7 0 0 1 15 12.6a2.7 2.7 0 0 1 5 1.6C20 18 15 21 15 21z',
-  some: 'M12 20s-7-4.2-7-9.4A3.8 3.8 0 0 1 12 8.5a3.8 3.8 0 0 1 7 2.1C19 15.8 12 20 12 20zM19 3v3M17.5 4.5h3',
-  friend: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 20c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M12.5 16.2c.9-.8 2.1-1.2 3.5-1.2 2.7 0 4.9 2 5.5 5',
-  spouse: 'M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM9.5 9.6 8 6l2-3h4l2 3-1.5 3.6M8 6h8',
-  coworker: 'M4 8h16v11H4zM9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 13h16',
-  etc: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z',
-};
-// 글래스모피즘 아이콘 (2026-11-14 사용자 요청): 색 번짐(--g1·--g2) 위에 반투명 유리판, 흰 선 아이콘
-const GLASS = {
-  lover: ['#ff7a9a', '#ffb36b'],
-  some: ['#ff8fb8', '#c9a0ff'],
-  friend: ['#ffc861', '#ff9a6b'],
-  spouse: ['#b9a6ff', '#7fc8ff'],
-  coworker: ['#6fc6ff', '#7fe0c0'],
-  etc: ['#ffd98a', '#e2c27a'],
-  pen: ['#ffd98a', '#ff9a6b'],
-  chart: ['#7fc8ff', '#b9a6ff'],
-  heart: ['#ff7a9a', '#ffb36b'],
-};
-const GlassIcon = ({ kind, path, size = 'md' }) => {
-  const [g1, g2] = GLASS[kind] || GLASS.etc;
-  return (
-    <span className={`glass-ic is-${size}`} style={{ '--g1': g1, '--g2': g2 }} aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d={path || REL_PATHS[kind] || REL_PATHS.etc} />
-      </svg>
-    </span>
-  );
-};
-const RelIcon = ({ id, size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d={REL_PATHS[id] || REL_PATHS.etc} />
-  </svg>
-);
+// 글래스 아이콘·선 아이콘은 공용 컴포넌트 (src/components/GlassIcon.jsx)
+const RelIcon = ({ id, size = 20 }) => <LineIcon kind={id} size={size} />;
 
 // 소개 화면 특징 3가지 (✦ 목록 대신 아이콘 카드, 2026-11-14 사용자 지시)
 const FEATS = [
