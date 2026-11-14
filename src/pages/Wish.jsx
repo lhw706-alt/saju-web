@@ -146,6 +146,11 @@ export default function Wish() {
     if (asked.current || !params.get('write') || !auth?.ready || (auth.user && mine === null)) return; // 회원이면 오늘 남은 수를 받은 뒤
     asked.current = true;
     const c = wishCat(params.get('cat'))?.id || '';
+    const off = Number(params.get('offer') || 0); // 별마루 '큰 등불로 띄우기' → 10금전 미리 고름
+    if (off > 0 && off <= WISH_OFFER_MAX) {
+      setOffer(off);
+      if (!WISH_OFFERS.includes(off)) setCustomOffer(String(off));
+    }
     setParams({}, { replace: true });
     if (!auth.user) {
       openLogin('부적에 담은 마음을 소원으로 띄우려면 로그인해 주세요.');

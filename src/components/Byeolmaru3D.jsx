@@ -8,6 +8,7 @@ import { buildCheondong } from './Mascot3D.jsx';
 import { SKY_COLORS } from '../lib/byeolmaruSky.js';
 import { zodiacSvg } from '../brand/zodiacArt.js';
 import { MANSIONS, GROUPS as MANSION_GROUPS, mansionShape } from '../lib/byeolmaruCollect.js';
+import { cheondongBustSvg } from '../brand/cheondong.js';
 
 const WORLD_R = 24; // 걸을 수 있는 반지름
 const SPEED = 4.4;
@@ -715,6 +716,54 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     const lanterns = [];
     const lanternMat = new THREE.MeshStandardMaterial({ color: '#ffd59a', emissive: '#ff9f4a', emissiveIntensity: 1.8, roughness: 0.6 });
 
+    // ── 다녀간 사람 잔상: 반투명 천동이가 그 자리에 잠깐 나타났다 사라짐 ──
+    const ghostTex = new THREE.Texture();
+    ghostTex.colorSpace = THREE.SRGBColorSpace;
+    {
+      const im = new Image();
+      im.onload = () => {
+        ghostTex.image = im;
+        ghostTex.needsUpdate = true;
+      };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(cheondongBustSvg({ id: 'gh' }).replace('<svg ', '<svg width="256" height="256" '));
+    }
+    const ghosts = [];
+    const setGhosts = (list) => {
+      ghosts.forEach((g) => scene.remove(g));
+      ghosts.length = 0;
+      (list || []).slice(0, 30).forEach((p, i) => {
+        const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: ghostTex, transparent: true, depthWrite: false, opacity: 0 }));
+        g.scale.setScalar(1.15);
+        g.position.set(p.x, 0.62, p.z);
+        g.userData = { phase: (i * 2.7) % 24 };
+        scene.add(g);
+        ghosts.push(g);
+      });
+    };
+    // ── 실제 소원 등불: 공개 소원이 하늘에 떠 있음, 금전을 넣은 소원은 큰 등불 ──
+    const wishLanterns = [];
+    const wishTex = glow('rgba(255,210,140,1)', 'rgba(255,150,70,0)');
+    const setWishes = (list) => {
+      wishLanterns.forEach((l) => scene.remove(l));
+      wishLanterns.length = 0;
+      (list || []).slice(0, 40).forEach((w, i) => {
+        const big = (w.offer || 0) >= 10;
+        const l = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.24, 0.55, 10, 1, true), lanternMat);
+        const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: wishTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+        halo.scale.setScalar(2.4);
+        l.add(body, halo);
+        const a = (i / 40) * Math.PI * 2 + Math.random() * 0.3;
+        const r = 9 + Math.random() * 16;
+        l.position.set(Math.cos(a) * r, 3.5 + Math.random() * 6, Math.sin(a) * r); // 처음 보는 눈높이에서 보이게
+        l.scale.setScalar(big ? 1.9 : 1);
+        l.userData = { wish: w, base: l.position.y, ph: Math.random() * 6 };
+        scene.add(l);
+        wishLanterns.push(l);
+      });
+    };
+    let lastAct = 'walk';
+
     // 동작 상태
     let paused = false; // 자기 전 모드: 그리기를 멈춰 배터리 아낌
     let mode = 'walk'; // walk | auto(방석으로 걸어가는 중) | sit
@@ -743,7 +792,10 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
     let drag = null;
     const cv = renderer.domElement;
     cv.style.touchAction = 'none';
+    const ray = new THREE.Raycaster();
+    let tap = null;
     const onDown = (e) => {
+      tap = { x: e.clientX, y: e.clientY, t: performance.now() };
       drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
       cv.setPointerCapture?.(e.pointerId);
     };
@@ -755,6 +807,15 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       drag.y = e.clientY;
     };
     const onUp = (e) => {
+      if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8 && performance.now() - tap.t < 450 && wishLanterns.length) {
+        const r = cv.getBoundingClientRect();
+        ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+        const hit = ray.intersectObjects(wishLanterns, true)[0];
+        let o = hit?.object;
+        while (o && !o.userData?.wish) o = o.parent;
+        if (o) onEvent?.('wish', o.userData.wish);
+      }
+      tap = null;
       if (drag && drag.id === e.pointerId) drag = null;
     };
     const onWheel = (e) => {
@@ -812,6 +873,9 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
         },
         stopQi: () => stopSit(true),
         addMansion: (id) => drawMansion(id),
+        getPos: () => ({ x: player.position.x, z: player.position.z, a: mode === 'sit' ? 'sit' : lastAct }),
+        setGhosts,
+        setWishes,
         teleport: (x, z) => {
           player.position.set(x, 0, z);
         },
@@ -819,9 +883,11 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           paused = !!v;
         },
         bow: () => {
+          lastAct = 'bow';
           if (bowT < 0) bowT = 0;
         },
         star: () => {
+          lastAct = 'star';
           const fwd = new THREE.Vector3();
           camera.getWorldDirection(fwd);
           addCountStar(randomSkyDir(fwd.setY(Math.max(0.4, fwd.y + 0.5)).normalize()));
@@ -834,6 +900,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
           return renderer.domElement.toDataURL('image/jpeg', 0.92);
         },
         lantern: () => {
+          lastAct = 'lantern';
           const l = new THREE.Group();
           const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.42, 12, 1, true), lanternMat);
           const cap = new THREE.Mesh(new THREE.CircleGeometry(0.22, 12), lanternMat);
@@ -851,6 +918,7 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       };
 
     if (import.meta.env.DEV && apiRef) window.__bmApi = apiRef.current; // 로컬 미리보기 점검용 (빌드에는 안 들어감)
+    if (import.meta.env.DEV) window.__bmTapWish = () => wishLanterns[0] && onEvent?.('wish', wishLanterns[0].userData.wish);
     const clock = new THREE.Clock();
     let raf;
     let facing = Math.PI;
@@ -964,6 +1032,16 @@ export default function Byeolmaru3D({ nick = '별빛의 손님', joyRef, apiRef,
       // 기운 받기 중: 내 둘레로 빛이 피어오름
       if (qiOn && Math.random() < dt * 9) burst(player.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.2, (Math.random() - 0.5) * 0.8)), 1, 0.7);
 
+      // 잔상: 차례로 나타났다 사라짐 (24초 한 바퀴)
+      ghosts.forEach((g) => {
+        const p = ((t + g.userData.phase) % 24) / 24;
+        g.material.opacity = p < 0.25 ? Math.sin((p / 0.25) * Math.PI) * 0.4 : 0;
+        g.position.y = 0.62 + Math.sin(t * 1.5 + g.userData.phase) * 0.03;
+      });
+      // 소원 등불: 천천히 떠 있음
+      wishLanterns.forEach((l) => {
+        l.position.y = l.userData.base + Math.sin(t * 0.5 + l.userData.ph) * 0.4;
+      });
       // 암자 문 앞
       const nh = Math.hypot(player.position.x - hutDoor.x, player.position.z - hutDoor.z) < 2.6;
       if (nh !== nearHut) {

@@ -61,6 +61,20 @@ const saveStars = (n) => {
     /* 무시 */
   }
 };
+// 이 탭의 무작위 아이디 (지금 인원 셈용 — 회원 정보와 상관없음)
+const tabSid = () => {
+  try {
+    let v = sessionStorage.getItem('saju:bm-sid');
+    if (!v) {
+      v = Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6);
+      sessionStorage.setItem('saju:bm-sid', v);
+    }
+    return v;
+  } catch {
+    return Math.random().toString(36).slice(2, 14);
+  }
+};
+
 const QI_OPTIONS = [
   { s: 30, label: '30초' },
   { s: 180, label: '3분' },
@@ -269,6 +283,7 @@ export default function Byeolmaru() {
   const [book, setBook] = useState(false);
   const [nearHut, setNearHut] = useState(false);
   const [hut, setHut] = useState(null); // null | { oracle, shaking }
+  const [people, setPeople] = useState(null); // 지금 별마루에 있는 사람 수
   const setPref = (k, v) =>
     setPrefs((p) => {
       const n = { ...p, [k]: v };
@@ -315,6 +330,40 @@ export default function Byeolmaru() {
   const [failed, setFailed] = useState(false);
   const [help, setHelp] = useState(true);
   const nick = auth?.user?.nick || guestName();
+  // 20초마다 "아직 있어요" + 인원·잔상 받기 (실시간 서버 없이 가볍게)
+  useEffect(() => {
+    if (!ready) return undefined;
+    const sid = tabSid();
+    let stop = false;
+    const beat = async () => {
+      const pos = apiRef.current?.getPos?.();
+      if (pos) fetch('/api/plaza', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, ...pos }) }).catch(() => {});
+      const r = await fetch(`/api/plaza?me=${sid}`, { cache: 'no-store' }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+      if (stop || !r) return;
+      setPeople(r.count);
+      apiRef.current?.setGhosts?.(r.ghosts);
+    };
+    beat();
+    const iv = setInterval(beat, 20000);
+    // 하늘의 소원 등불: 공개 소원 최근 것
+    fetch('/api/wish?sort=new', { cache: 'no-store' })
+      .then((x) => (x.ok ? x.json() : null))
+      .then((d) => !stop && d && apiRef.current?.setWishes?.(d.wishes || []))
+      .catch(() => {});
+    return () => {
+      stop = true;
+      clearInterval(iv);
+    };
+  }, [ready]);
+  // 하늘 소원 등불 응원
+  const cheerWish = async (w) => {
+    if (!auth?.user) return notify?.('소원을 응원하려면 로그인해 주세요.');
+    const r = await fetch('/api/wish/cheer', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    if (!r?.ok) return notify?.(d?.error || '응원하지 못했어요.');
+    trackEvent('plaza_wish_cheer');
+    setCard({ kind: 'wish', wish: { ...w, cheered: true, cheers: d.cheers ?? w.cheers + 1 } });
+  };
 
   useEffect(() => {
     trackEvent('plaza_enter', { member: auth?.user ? 'yes' : 'no' });
@@ -329,6 +378,10 @@ export default function Byeolmaru() {
     else if (type === 'qi-cancel') setQi(null);
     else if (type === 'lantern-up') setCard({ kind: 'lantern' });
     else if (type === 'hermitage') setNearHut(!!arguments[1]);
+    else if (type === 'wish') {
+      setCard({ kind: 'wish', wish: arguments[1] });
+      trackEvent('plaza_wish_open');
+    }
   };
   const act = (a) => {
     trackEvent('plaza_action', { type: a.id });
@@ -431,6 +484,7 @@ export default function Byeolmaru() {
         </button>
         <span className="bm-place">
           별마루 <small>天文</small>
+          {people != null && <em className="bm-people">{people}명</em>}
         </span>
         {stars > 0 && (
           <span className="bm-stars" aria-label={`오늘 헤아린 별 ${stars}개`}>
@@ -680,6 +734,27 @@ export default function Byeolmaru() {
                 </button>
                 <button type="button" className="bm-card-main" onClick={() => navigate('/wish?write=1')}>
                   소원 쓰기
+                </button>
+              </div>
+              <button type="button" className="bm-card-big" onClick={() => navigate('/wish?write=1&offer=10')}>
+                큰 등불로 띄우기 <span>10금전 · 하늘에 더 크고 밝게 떠요</span>
+              </button>
+            </>
+          )}
+          {card.kind === 'wish' && (
+            <>
+              <p className="bm-card-kicker">
+                하늘에 떠 있는 소원{card.wish.offer > 0 ? ` · ${card.wish.offer}금전의 정성` : ''}
+              </p>
+              <p id="bm-card-title" className="bm-card-text">
+                {card.wish.text}
+              </p>
+              <div className="bm-card-actions">
+                <button type="button" className="bm-card-ghost" onClick={() => setCard(null)}>
+                  닫기
+                </button>
+                <button type="button" className="bm-card-main" onClick={() => cheerWish(card.wish)} disabled={card.wish.cheered}>
+                  {card.wish.cheered ? '응원했어요' : '응원하기'} {card.wish.cheers}
                 </button>
               </div>
             </>
