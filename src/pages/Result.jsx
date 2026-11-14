@@ -14,6 +14,8 @@ import DayReport from '../components/DayReport.jsx';
 import PollCard from '../components/PollCard.jsx';
 import ResultShare from '../components/ShareRow.jsx';
 import MemberCta from '../components/MemberCta.jsx';
+import NewYearMonthly from '../components/NewYearMonthly.jsx';
+import { NEXT_YEAR } from '../lib/topics.js';
 
 const DAY_MASTER_IMAGE = {
   甲: '곧게 자라는 큰 나무', 乙: '덩굴과 풀꽃', 丙: '하늘의 태양', 丁: '밤을 밝히는 등불', 戊: '넓은 산과 대지',
@@ -87,6 +89,27 @@ export default function Result() {
             다른 사람 운세 보기
           </Link>
         </div>
+      </GlossaryProvider>
+    );
+  }
+
+  // 신년운세만 보는 화면 (2026-11-15 사용자 지시: 올해 운세·연애 같은 다른 주제 없이 신년운세만)
+  if (params.get('v') === 'newyear') {
+    const dm = chart.dayMaster;
+    return (
+      <GlossaryProvider>
+        <FreshLoader />
+        <section className="ny-result">
+          <p className="eyebrow">{NEXT_YEAR} 신년운세</p>
+          <h1 className="ny-result-title">
+            {dm.ko}{ELEMENT_KO[dm.element]} 일간의 {NEXT_YEAR}년
+          </h1>
+          <p className="ny-result-sub">
+            {chart.nextSeun.year}년은 <b>{chart.nextSeun.ganzhi}({chart.nextSeun.ko})년</b>이에요. 내 사주와 그해의 기운이 어떻게 만나는지 천둥도사가 풀어 드려요.
+          </p>
+          <NewYearMonthly input={input} member={member} openLogin={openLogin} />
+        </section>
+        <ResultShare kakao={{ title: `천둥도사가 본 나의 ${NEXT_YEAR} 신년운세`, description: '내 사주로 본 한 해의 흐름과 달마다의 운이에요. 나도 볼까요?', button: '신년운세 보기' }} />
       </GlossaryProvider>
     );
   }

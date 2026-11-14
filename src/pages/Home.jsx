@@ -5,6 +5,7 @@ import ContentCards from '../components/ContentCards.jsx';
 import { saveTopic } from '../lib/storage.js';
 import { TOPICS, NEXT_YEAR } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
+import NewYearFab from '../components/NewYearFab.jsx';
 
 // 3D 천동이는 따로 불러옴 (three.js 가 커서 첫 화면을 막지 않게). 불러오는 동안·3D 불가 시 2D 그림.
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -94,6 +95,7 @@ export default function Home() {
 
       {/* 오늘의 질문(투표)은 2026-11-15 사용자 지시로 메인에서 잠시 숨김 — 나중에 다시 넣음 */}
       <ContentCards onOpen={openContent} />
+      <NewYearFab />
 
     </>
   );

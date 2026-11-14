@@ -91,7 +91,7 @@ export default function Start() {
     markFresh(); // 결과 화면에서 천둥도사 로딩을 한 번 보여 줌
     const t = peekTopic();
     // 평생 사주는 리포트 화면, 오늘·내일·지정일 운세는 하루 운세 화면
-    navigate(t === 'overall' ? '/result?v=life' : isDayTopic(t) ? `/result?v=day&t=${t}${isPick ? `&d=${day}` : ''}` : '/result');
+    navigate(t === 'overall' ? '/result?v=life' : t === 'newyear' ? '/result?v=newyear' : isDayTopic(t) ? `/result?v=day&t=${t}${isPick ? `&d=${day}` : ''}` : '/result');
   };
 
   return (

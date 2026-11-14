@@ -2254,3 +2254,43 @@ button.wish-float { font: inherit; font-size: 13px; text-align: left; cursor: po
 .rec-group:hover { background: #26272b; }
 .rec-group.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.08); }
 .rec-group.on b { color: var(--primary); }
+
+/* 신년운세 소개: 3D 천동이 + 리퀴드 메탈 버튼 (2026-11-15) */
+.ny-stage { width: min(100%, 340px); height: 300px; margin: 4px auto 0; }
+.ny-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+.ny-stage .ny-art { display: block; margin: 0 auto; }
+.ny-go { display: grid; justify-items: center; gap: 10px; margin-top: 6px; }
+.ny-go .ny-price { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 14px; color: rgba(220, 222, 228, 0.8); }
+.ny-cta { display: grid; justify-items: center; gap: 10px; }
+/* 신년운세만 보는 결과 화면 */
+.ny-result { padding: 24px 0 8px; }
+.ny-result .eyebrow { margin: 0; color: var(--primary); font-size: 14px; }
+.ny-result-title { margin: 6px 0 0; font-family: var(--title); font-size: 28px; font-weight: 400; }
+.ny-result-sub { margin: 8px 0 0; font-size: 15px; line-height: 1.7; color: rgba(220, 222, 228, 0.85); word-break: keep-all; }
+.ny-result .nym { margin-top: 20px; }
+/* 메인 '신년운세 인기' 떠 있는 버튼 (2026-11-15) — 왼쪽 아래, 부적 버튼과 반대편 */
+.ny-fab { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 40; display: flex; align-items: flex-start; animation: ny-fab-in 0.4s ease-out 0.8s both; }
+@keyframes ny-fab-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.ny-fab-main { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 16px; border: 1px solid rgba(226, 194, 122, 0.45); background: rgba(33, 34, 37, 0.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); font: inherit; text-align: left; cursor: pointer; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); transition: border-color 0.15s ease, transform 0.15s ease; }
+.ny-fab-main:hover { border-color: var(--primary); transform: translateY(-2px); }
+.ny-fab-seal { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; background: #C8352B; color: #FCE9C8; font-family: 'ChosunSm', serif; font-size: 20px; box-shadow: inset 0 0 0 2px rgba(252, 233, 200, 0.35); }
+.ny-fab-text { display: grid; gap: 1px; }
+.ny-fab-text em { font-style: normal; font-size: 12px; font-weight: 600; color: #FF8A7A; }
+.ny-fab-text b { font-size: 14px; font-weight: 600; color: #F3E4BF; }
+.ny-fab-arrow { color: var(--primary); }
+.ny-fab-close { display: grid; place-items: center; width: 22px; height: 22px; margin: -6px 0 0 -10px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 50%; background: #2a2b2f; color: rgba(220, 222, 228, 0.8); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .ny-fab { animation: none; } }
+/* 불러오기 수정 칸 보정 (2026-11-15) */
+.saved-edit .saved-num { display: inline-flex; align-items: center; gap: 4px; flex: none; width: 96px; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.14); background: #1B1C1E; }
+.saved-edit .saved-num.sm { width: 70px; }
+.saved-edit .saved-num:focus-within { border-color: var(--primary); }
+.saved-edit .saved-num input { flex: 1; width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px; outline: none; }
+.saved-card-main { padding-right: 14px; padding-bottom: 34px; }
+.saved-card-edit { top: auto; bottom: 6px; right: 6px; }
+@media (max-width: 559px) {
+  .saved-card-main { padding: 10px 10px 30px; }
+  .saved-card-edit { bottom: 4px; right: 4px; }
+  .ny-fab-main { padding: 6px 12px 6px 6px; gap: 8px; }
+  .ny-fab-seal { width: 30px; height: 30px; font-size: 17px; }
+  .ny-fab-text b { font-size: 13px; }
+}

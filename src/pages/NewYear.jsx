@@ -1,13 +1,17 @@
 // 신년운세 소개 페이지 (/newyear, 2026-11-14) — 메인 '신년운세' 카드를 누르면 여기부터.
 // 검색으로 들어온 사람이 읽을 글(그해 간지 소개·무엇을 알려 주는지·자주 묻는 질문)을 두고, 버튼으로 생년월일 입력(/start)에 이어 줌.
 // 고정 글이라 풀이 비용 없음. 해가 바뀌면 YEAR_INFO 에 그해 설명을 더한다.
+import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LiquidMetalButton from '../components/LiquidMetalButton.jsx';
 import { NEXT_YEAR } from '../lib/topics.js';
 import { saveTopic } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { dosaArtSvg } from '../brand/dosaArt.js';
 import { PRICE_TAGS, PRICE_COIN } from '../lib/wallet.js';
 import { PriceTag } from '../components/BokchaLink.jsx';
+
+const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 
 const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
 const STEMS_H = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
@@ -66,11 +70,18 @@ export default function NewYear() {
         </p>
         <h1 className="ny-title">{y} 신년운세</h1>
         <p className="ny-lead">천둥도사가 내 사주와 {y}년의 기운을 맞춰 보고, 한 해의 흐름과 계절마다 운, 1월부터 12월까지 달마다의 흐름을 풀어 드려요.</p>
-        <p className="ny-price"><PriceTag {...PRICE_COIN.newyear} size={20} /></p>
-        <span className="ny-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('newyear') }} />
-        <button type="button" className="btn-primary" onClick={() => start('top')}>
-          내 {y} 신년운세 보기
-        </button>
+        {/* 3D 천동이 (2026-11-15 사용자 지시) — 불러오는 동안·WebGL 없으면 2D 그림 */}
+        <div className="ny-stage">
+          <Suspense fallback={<span className="ny-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('newyear') }} />}>
+            <Mascot3D prop="stars" />
+          </Suspense>
+        </div>
+        <div className="ny-go">
+          <LiquidMetalButton label={`내 ${y} 신년운세 보러 가기`} width={260} onClick={() => start('top')} />
+          <p className="ny-price">
+            <PriceTag {...PRICE_COIN.newyear} size={18} /> 로 한 해 흐름과 월별 상세를 모두 봐요
+          </p>
+        </div>
       </section>
 
       <section className="ny-sec">
@@ -126,9 +137,7 @@ export default function NewYear() {
       </section>
 
       <div className="ny-cta">
-        <button type="button" className="btn-primary" onClick={() => start('bottom')}>
-          내 {y} 신년운세 보기
-        </button>
+        <LiquidMetalButton label={`내 ${y} 신년운세 보러 가기`} width={260} onClick={() => start('bottom')} />
         <p className="ny-note">재미와 참고를 위한 풀이예요. 중요한 결정은 스스로 판단해 주세요.</p>
       </div>
     </article>

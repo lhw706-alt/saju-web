@@ -2,6 +2,7 @@
 // 비밀번호는 저장하지 않고 이 화면에 있는 동안만 메모리에 둠. 검색 노출 막음(Layout noindex, robots.txt).
 import { useState } from 'react';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmt = (iso) => {
@@ -107,10 +108,7 @@ export default function Admin() {
       <h1 className="start-title">관리자</h1>
       {!data ? (
         <form className="admin-login card" onSubmit={load}>
-          <label className="contact-label" htmlFor="admin-pw">
-            관리자 비밀번호
-          </label>
-          <input id="admin-pw" className="contact-input" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <PasswordInput id="admin-pw" label="관리자 비밀번호" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} />
           {error && <p className="field-msg">{error}</p>}
           <button type="submit" className="btn-primary" disabled={!pw || loading}>
             {loading ? '불러오는 중…' : '보기'}
