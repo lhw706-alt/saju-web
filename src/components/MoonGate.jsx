@@ -47,16 +47,34 @@ export default function MoonGate({ onEnter }) {
       <span className="moon-gate-orb">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <defs>
+            {/* 3차(2026-11-15 사용자 지시): 은은한 그라데이션 — 빛 받는 가장자리가 가장 밝고 경계선 쪽으로 따뜻하게 어두워짐, 경계는 살짝 흐리게 */}
+            <radialGradient id="mg-face" cx={phase < 0.5 ? '72%' : '28%'} cy="38%" r="78%">
+              <stop offset="0" stopColor="#FBF3DE" />
+              <stop offset="0.55" stopColor="#EADBB6" />
+              <stop offset="1" stopColor="#C8B183" />
+            </radialGradient>
+            <radialGradient id="mg-dark" cx="50%" cy="45%" r="60%">
+              <stop offset="0" stopColor="rgba(241,228,195,0.10)" />
+              <stop offset="1" stopColor="rgba(241,228,195,0.03)" />
+            </radialGradient>
+            <filter id="mg-soft" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2.2" />
+            </filter>
+            <clipPath id="mg-disc">
+              <circle cx="100" cy="92" r={R} />
+            </clipPath>
             <clipPath id="mg-lit">
-              <path d={litPath(R, phase)} transform="translate(100 92)" />
+              <path d={litPath(R + 4, phase)} transform="translate(100 92)" />
             </clipPath>
           </defs>
           {/* 어두운 쪽: 달 테두리만 옅게 */}
-          <circle cx="100" cy="92" r={R} fill="rgba(241,228,195,0.07)" stroke="rgba(241,228,195,0.22)" strokeWidth="1" />
+          <circle cx="100" cy="92" r={R} fill="url(#mg-dark)" stroke="rgba(241,228,195,0.22)" strokeWidth="1" />
           {/* 밝은 쪽: 한지빛 면 + 먹물 얼룩 */}
+          <g clipPath="url(#mg-disc)">
+          <g filter="url(#mg-soft)">
           <g clipPath="url(#mg-lit)">
-            <circle cx="100" cy="92" r={R} fill="#EFE2C2" />
-            <g fill="#C9B48A" opacity="0.35">
+            <circle cx="100" cy="92" r={R + 2} fill="url(#mg-face)" />
+            <g fill="#B89F70" opacity="0.28">
               <ellipse cx="122" cy="70" rx="16" ry="11" />
               <ellipse cx="138" cy="104" rx="9" ry="12" />
               <ellipse cx="108" cy="118" rx="12" ry="7" />
@@ -64,6 +82,8 @@ export default function MoonGate({ onEnter }) {
               <circle cx="150" cy="80" r="4" />
               <circle cx="96" cy="58" r="3.5" />
             </g>
+          </g>
+          </g>
           </g>
           {/* 금빛 선 구름(운문) — 달 아래를 지나감 */}
           <g className="moon-gate-cloud" fill="#1B1C1E" stroke="#E2C27A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
