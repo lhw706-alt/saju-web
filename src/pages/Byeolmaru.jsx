@@ -916,7 +916,7 @@ export default function Byeolmaru() {
                     </button>
                   </div>
                   <p className="bm-wish-note">
-                    {compose.big ? '하늘에 더 크고 밝게 떠요' : '하늘에 등불로 떠요'}
+                    {compose.big ? '하늘에 더 크고 밝게 떠요. 넣은 금전은 돌려받을 수 없어요' : '하늘에 등불로 떠요'}
                     {compose.balance != null && ` · 지금 ${fmtCredits(compose.balance)}`}
                   </p>
                   <label className="bm-wish-pub">

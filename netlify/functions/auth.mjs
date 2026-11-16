@@ -303,18 +303,20 @@ export default async (req, context) => {
       console.error('visit save failed:', e?.name);
     }
     // 마이페이지용: ?full=1 이면 저장된 회원 정보(가입일·마지막 로그인·횟수)도 함께
+    // 회원 기록: 마이페이지(?full=1)용 정보 + 만 14세 이상 확인 여부(age14At — 2026-11-16, 없으면 화면이 한 번 물어봄)
     let profile = null;
-    if (url.searchParams.get('full') === '1') {
-      try {
-        profile = await users().get(s.sub, { type: 'json' });
-      } catch (e) {
-        console.error('profile read failed:', e?.name);
-      }
+    let ageOk = true;
+    try {
+      const rec = await users().get(s.sub, { type: 'json' });
+      if (rec) ageOk = !!rec.age14At;
+      if (url.searchParams.get('full') === '1') profile = rec;
+    } catch (e) {
+      console.error('profile read failed:', e?.name);
     }
     return json({
       enabled,
       emailEnabled: mailOn,
-      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null, ...(profile.email ? { email: profile.email } : {}) } : {}) },
+      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ageOk, ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null, ...(profile.email ? { email: profile.email } : {}) } : {}) },
     });
   }
 
@@ -338,13 +340,14 @@ export default async (req, context) => {
     if (!EMAIL_RE.test(email) || email.length > 100) return json({ error: '이메일 주소를 확인해 주세요.', field: 'email' }, 400);
     const pwErr = passwordError(body?.password);
     if (pwErr) return json({ error: pwErr, field: 'password' }, 400);
+    if (body?.age14 !== true) return json({ error: '만 14세 이상만 가입할 수 있어요.', field: 'age' }, 400); // 개인정보보호법 제22조의2 (2026-11-16)
     let nick = body?.nick ? cleanNick(body.nick) : { nick: await freeRandomNick() };
     if (nick.error) return json({ error: nick.error, field: 'nick' }, 400);
     nick = nick.nick;
     if (await emails().get(emailKey(email))) return json({ error: '이미 가입한 이메일이에요. 로그인해 주세요.', field: 'email' }, 409);
     if (await nicknames().get(nickKey(nick))) return json({ error: '이미 쓰고 있는 닉네임이에요. 다른 닉네임을 정해 주세요.', field: 'nick' }, 409);
     const token = randomBytes(32).toString('hex');
-    await pending().setJSON(token, { email, passHash: hashPassword(body.password), nick, exp: Date.now() + 24 * 3600_000 });
+    await pending().setJSON(token, { email, passHash: hashPassword(body.password), nick, age14: true, exp: Date.now() + 24 * 3600_000 });
     try {
       await sendVerifyMail(email, `${url.origin}/api/auth/email/verify?token=${token}`);
     } catch (e) {
@@ -372,7 +375,7 @@ export default async (req, context) => {
       await claimNick(id, nick);
     }
     const now = new Date().toISOString();
-    await users().setJSON(id, { id, provider: 'email', email: p.email, passHash: p.passHash, displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 1 });
+    await users().setJSON(id, { id, provider: 'email', email: p.email, passHash: p.passHash, displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 1, ...(p.age14 ? { age14At: now } : {}) });
     await emails().set(emailKey(p.email), id);
     return redirect('/?login=new&via=email', [sessionCookie(id, nick)]);
   }
@@ -1018,6 +1021,17 @@ export default async (req, context) => {
     return json({ nick: await freeRandomNick() });
   }
 
+  // 만 14세 이상 확인 (2026-11-16): 카카오로 처음 가입했거나 예전 회원은 화면에서 한 번 확인 → 회원 기록에 시각만 남김
+  if (path === '/api/auth/age') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const s = verify(cookies(req)[SESSION], secret);
+    if (!s) return json({ error: '로그인이 필요해요.', login: true }, 401);
+    const store = users();
+    const rec = (await store.get(s.sub, { type: 'json' })) || { id: s.sub, nick: s.nick || '', joinedAt: new Date().toISOString(), loginCount: 1 };
+    if (!rec.age14At) await store.setJSON(s.sub, { ...rec, age14At: new Date().toISOString() });
+    return json({ ok: true });
+  }
+
   if (path === '/api/auth/nickname') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     const s = verify(cookies(req)[SESSION], secret);
@@ -1258,4 +1272,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

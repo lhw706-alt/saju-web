@@ -148,6 +148,31 @@ export default function Layout() {
     setAuth((a) => ({ ...a, user: null }));
     showNotice('로그아웃했어요.', 'positive');
   };
+  // 만 14세 이상 확인 (2026-11-16, 개인정보보호법 제22조의2): 카카오로 처음 가입했거나 예전 회원(ageOk false)에게 한 번 묻기.
+  // 아니라고 하면 가입을 취소(탈퇴)함. 창 바깥을 눌러 닫으면 다시 물어봄(실수로 탈퇴되지 않게).
+  const askedAge = useRef(false);
+  useEffect(() => {
+    if (!auth.user || auth.user.ageOk !== false || askedAge.current) return;
+    askedAge.current = true;
+    (async () => {
+      for (;;) {
+        const yes = await askConfirm({ title: '만 14세 이상인가요?', message: '사주천문은 만 14세 이상만 회원으로 가입할 수 있어요.', note: '처음 한 번만 확인해요.', ok: '네, 만 14세 이상이에요', cancel: '아니요' });
+        if (yes) {
+          await fetch('/api/auth/age', { method: 'POST' }).catch(() => {});
+          setAuth((a) => ({ ...a, user: a.user ? { ...a.user, ageOk: true } : a.user }));
+          return;
+        }
+        const quit = await askConfirm({ title: '가입을 취소할까요?', message: '만 14세 미만은 회원으로 가입할 수 없어요. 가입을 취소하면 계정 정보가 지워져요. 회원이 아니어도 무료 사주와 운세는 볼 수 있어요.', ok: '가입 취소', cancel: '다시 확인할게요' });
+        if (quit) {
+          await fetch('/api/auth/delete', { method: 'POST' }).catch(() => {});
+          setAuth((a) => ({ ...a, user: null }));
+          showNotice('가입을 취소했어요.');
+          return;
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user?.ageOk]);
   // 회원 탈퇴: 저장된 회원 정보(회원번호·닉네임·가입일 등)를 지우고 로그아웃 → 성공하면 true
   const withdraw = async () => {
     if (!await askConfirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return false;

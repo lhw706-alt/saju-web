@@ -13,6 +13,7 @@ import { DosaLoader } from './LifeReport.jsx';
 import { clearFresh } from '../lib/storage.js';
 import { trackEvent } from '../lib/analytics.js';
 import { askConfirm, showAlert } from './ConfirmHost.jsx';
+import RefundNote from './RefundNote.jsx';
 
 const KEY = 'newyearMonth';
 const PARTS = ['newyear', 'nym1', 'nym2'];
@@ -124,6 +125,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
               </span>
             )}
           </button>
+          {!state.owned && <RefundNote what="신년운세" />}
         </div>
       </section>
     );

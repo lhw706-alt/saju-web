@@ -6,6 +6,7 @@ import { PRICES, fmtCredits } from '../lib/wallet.js';
 import { PriceTag, announceBalance } from './BokchaLink.jsx';
 import { trackEvent } from '../lib/analytics.js';
 import { askConfirm, showAlert } from './ConfirmHost.jsx';
+import RefundNote from './RefundNote.jsx';
 
 const post = (url, body) =>
   fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
@@ -61,6 +62,7 @@ export default function PaidGate({ item, input, member, openLogin, title, desc, 
         </span>
       </button>
       <p className="paygate-note">한 번 열면 같은 사람의 {title}는 다시 볼 때 금전이 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.</p>
+      <RefundNote />
     </section>
   );
 }

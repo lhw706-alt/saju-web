@@ -2622,3 +2622,8 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 
 /* 충전 화면 환불 정책 제목 (2026-11-16 토스 심사 대비) */
 .wallet-notice-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+
+/* 청약철회 제한 안내 · 가입 만 14세 확인 (2026-11-16) */
+.refund-note { margin: 10px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.8); word-break: keep-all; }
+.refund-note a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.login-age { margin: 4px 0 2px; }

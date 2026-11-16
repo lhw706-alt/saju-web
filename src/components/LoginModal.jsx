@@ -29,6 +29,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
   const { pathname, search } = useLocation();
   const panel = useRef(null);
   const [view, setView] = useState('login'); // login | signup | sent | find | findSent
+  const [age14, setAge14] = useState(false); // 만 14세 이상 확인 (가입할 때 필수, 2026-11-16)
   const [keep, setKeep] = useState(true); // 자동 로그인 (끄면 브라우저를 닫을 때 로그아웃)
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
@@ -121,7 +122,8 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
     if (!passwordOk(pw)) return setErr({ field: 'password', text: '비밀번호 조건을 모두 맞춰 주세요.' });
     if (pw !== pw2) return setErr({ field: 'password2', text: '비밀번호가 서로 달라요.' });
     if (nick.trim() && nickError(nick)) return setErr({ field: 'nick', text: nickError(nick) });
-    const d = await post('/api/auth/email/signup', { email, password: pw, nick: nick.trim() || suggest });
+    if (!age14) return setErr({ field: 'age', text: '만 14세 이상만 가입할 수 있어요.' });
+    const d = await post('/api/auth/email/signup', { email, password: pw, nick: nick.trim() || suggest, age14 });
     if (d) setView('sent');
   };
 
@@ -222,6 +224,12 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
             />
             {field('su-nick', '닉네임', { value: nick, maxLength: 12, onChange: (e) => setNick(e.target.value), placeholder: suggest }, 'nick')}
             <p className="login-hint">비워 두면 회색 닉네임으로 가입돼요. 닉네임은 다른 회원과 겹칠 수 없어요.</p>
+            <label className="login-keep login-age">
+              <input type="checkbox" checked={age14} onChange={(e) => setAge14(e.target.checked)} />
+              <span className="login-keep-box" aria-hidden="true" />
+              <span>(필수) 만 14세 이상이에요</span>
+            </label>
+            {fieldErr('age') && <p className="field-msg">{fieldErr('age')}</p>}
             {err.text && !err.field && <p className="field-msg">{err.text}</p>}
             <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
               {busy ? '보내는 중…' : '인증 메일 받기'}

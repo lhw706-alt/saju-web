@@ -13,6 +13,7 @@ import ResultShare from '../components/ShareRow.jsx';
 import { trackEvent } from '../lib/analytics.js';
 import { announceBalance, PriceTag } from '../components/BokchaLink.jsx';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
+import RefundNote from '../components/RefundNote.jsx';
 
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 const shuffle = (arr) => {
@@ -198,6 +199,7 @@ export default function Tarot() {
           <button type="button" className="btn-primary tarot-go" onClick={begin}>
             {cost ? `${fmtCredits(cost)}으로 카드 섞기` : '카드 섞기'}
           </button>
+          {cost ? <RefundNote what="타로 풀이" /> : null}
           <p className="tarot-left">
             {auth?.user ? '다 본 풀이는 마이페이지 ‘풀이 기록’에 남아요.' : '타로는 회원만 복채로 볼 수 있어요.'}
           </p>
