@@ -113,7 +113,7 @@ function checkPassword(pw, stored) {
 function passwordError(pw) {
   return passwordOk(pw) ? '' : '비밀번호 조건을 모두 맞춰 주세요.';
 }
-// 메일 보내기 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@xn--z92bt3ho9hczd.com>)
+// 메일 보내기 (Resend). 환경 변수: RESEND_API_KEY, MAIL_FROM (예: 사주천문 <noreply@sajucheonmun.com>)
 // 메일은 라이트 모드(흰 배경). 받은편지함이 다크로 바꾸지 않게 color-scheme 을 light 로 고정
 async function sendMail(to, { subject, title, lines, button, link, ignore }) {
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head><body style="margin:0;background:#ffffff;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">

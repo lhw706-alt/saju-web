@@ -139,7 +139,7 @@ async function composePhoto(shot, { nick, stars, ymd, special }) {
   if (stars > 0) g.fillText(`★ ${stars}`, W - 40 * u, H + 98 * u);
   g.fillStyle = 'rgba(236,238,244,0.6)';
   g.font = `500 ${28 * u}px "Pretendard Variable", Pretendard, sans-serif`;
-  g.fillText('사주천문.com/byeolmaru', W - 40 * u, H + 148 * u);
+  g.fillText('sajucheonmun.com/byeolmaru', W - 40 * u, H + 148 * u);
   return new Promise((res) => c.toBlob((b) => res(b), 'image/jpeg', 0.92));
 }
 
@@ -542,7 +542,7 @@ export default function Byeolmaru() {
     } catch {
       return;
     }
-    await copyText('https://사주천문.com/byeolmaru');
+    await copyText('https://sajucheonmun.com/byeolmaru');
     notify?.('별마루 주소를 복사했어요. 사진은 저장해서 올려 주세요.');
     trackEvent('plaza_share', { method: 'link' });
   };

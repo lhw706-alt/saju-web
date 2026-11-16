@@ -60,5 +60,5 @@ export async function sendKakao({ title, description, path = '/', button = '사�
   });
 }
 
-// 링크 복사용 읽기 쉬운 주소 (사주천문.com/…)
+// 링크 복사용 읽기 쉬운 주소 (sajucheonmun.com/…)
 export const displayLink = (path = '/') => `${SITE.displayUrl}${path === '/' ? '' : path}`;
