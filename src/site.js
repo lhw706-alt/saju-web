@@ -6,6 +6,6 @@ export const SITE = {
   url: 'https://sajucheonmun.com', // 2026-11-16 가비아에서 사주천문.com → sajucheonmun.com 으로 도메인 이름 변경
   displayUrl: 'https://sajucheonmun.com', // 사람에게 보여 주는 주소 (링크 복사 등)
   // 사업자 정보 (2026-11-14 사업자등록) — 푸터·이용약관·처리방침에 표시. 대표자·주소·전화·통신판매업 신고번호는 받으면 여기 채우기
-  business: { name: '이노제로', ceo: '이한울', regNo: '689-44-01349', email: 'damoapick@gmail.com', phone: '070-7954-3670', hosting: 'Netlify, Inc.' }, // 전화 2026-11-15
+  business: { name: '이노제로', ceo: '이한울', regNo: '689-44-01349', email: 'damoapick@gmail.com', phone: '070-7954-3670', address: '인천광역시 남동구 청능대로 559 (논현동) 4층 4226호', hosting: 'Netlify, Inc.' }, // 전화 2026-11-15, 주소 2026-11-16(나이스페이 구매안전서비스 이용확인증 소재지)
 };
 
