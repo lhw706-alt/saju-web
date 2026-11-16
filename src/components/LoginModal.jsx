@@ -7,6 +7,8 @@ import { LogoSymbol } from './Logo.jsx';
 import PasswordInput from './PasswordInput.jsx';
 import { passwordOk } from '../lib/password.js';
 
+// 화면에 자리가 있는 칸의 오류만 칸 아래에, 나머지(서버가 새로 보낸 칸 등)는 버튼 위에 꼭 보이게 (2026-11-16: 예전 화면이 'age' 오류를 못 띄워 버튼이 조용히 돌아간 일)
+const SHOWN_FIELDS = { login: ['email', 'password'], signup: ['email', 'password', 'password2', 'nick', 'age'], find: ['email'] };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 // 닉네임 규칙 (서버 cleanNick 과 같음)
 const nickError = (v) => {
@@ -181,7 +183,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
                   아이디 및 비밀번호 찾기
                 </button>
               </div>
-              {err.text && !err.field && <p className="field-msg">{err.text}</p>}
+              {err.text && !(SHOWN_FIELDS[view] || []).includes(err.field) && <p className="field-msg">{err.text}</p>}
               <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
                 {busy ? '확인 중…' : '로그인'}
               </button>
@@ -230,7 +232,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
               <span>(필수) 만 14세 이상이에요</span>
             </label>
             {fieldErr('age') && <p className="field-msg">{fieldErr('age')}</p>}
-            {err.text && !err.field && <p className="field-msg">{err.text}</p>}
+            {err.text && !(SHOWN_FIELDS[view] || []).includes(err.field) && <p className="field-msg">{err.text}</p>}
             <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
               {busy ? '보내는 중…' : '인증 메일 받기'}
             </button>
@@ -263,7 +265,7 @@ export default function LoginModal({ open, enabled, emailEnabled, onClose, onLog
               아이디는 가입할 때 쓴 <b>이메일 주소</b>예요. 가입한 이메일을 넣으면 비밀번호를 새로 정할 수 있는 링크를 보내 드려요.
             </p>
             {field('find-email', '가입한 이메일', { type: 'email', inputMode: 'email', autoComplete: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'you@example.com' }, 'email')}
-            {err.text && !err.field && <p className="field-msg">{err.text}</p>}
+            {err.text && !(SHOWN_FIELDS[view] || []).includes(err.field) && <p className="field-msg">{err.text}</p>}
             <button type="submit" className="btn-primary" disabled={busy || !emailEnabled}>
               {busy ? '보내는 중…' : '비밀번호 재설정 메일 받기'}
             </button>
