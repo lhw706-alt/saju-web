@@ -2619,3 +2619,6 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .moon-gate:hover .moon-gate-cloud { transform: translateX(-14px); animation-play-state: paused; }
 @keyframes moon-cloud { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
 @media (prefers-reduced-motion: reduce) { .moon-gate-cloud { animation: none; } }
+
+/* 충전 화면 환불 정책 제목 (2026-11-16 토스 심사 대비) */
+.wallet-notice-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }

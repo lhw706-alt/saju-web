@@ -6,6 +6,7 @@ import { PACKAGES, fmtCredits, discountOf, listWon } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
+import { SITE } from '../site.js';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -60,18 +61,8 @@ export default function Wallet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.ready, auth?.user]);
 
-  if (auth?.ready && !auth.user) {
-    return (
-      <section className="wallet">
-        <span className="wallet-pouch"><PouchIcon size={88} /></span>
-      <h1 className="start-title">복채 충전</h1>
-        <p className="start-lead">복채는 로그인한 회원만 충전하고 쓸 수 있어요.</p>
-        <button type="button" className="btn-primary wallet-login" onClick={() => openLogin('복채를 충전하려면 로그인해 주세요.')}>
-          로그인
-        </button>
-      </section>
-    );
-  }
+  // 비회원도 충전 금액·환불 정책을 볼 수 있게 (2026-11-16 토스페이먼츠 심사 대비) — 결제 버튼만 로그인으로
+  const guest = auth?.ready && !auth.user;
 
   const charge = async () => {
     setBusy(true);
@@ -90,12 +81,14 @@ export default function Wallet() {
     <section className="wallet">
       <span className="wallet-pouch"><PouchIcon size={88} /></span>
       <h1 className="start-title">복채 충전</h1>
-      <p className="start-lead">복채로 타로와 신년운세를 볼 수 있어요. 본 풀이는 마이페이지 '풀이 기록'에 남아요.</p>
+      <p className="start-lead">{guest ? '복채(금전)로 평생 사주·신년운세·타로 같은 유료 풀이를 볼 수 있어요. 충전은 로그인한 회원만 할 수 있어요.' : "복채로 타로와 신년운세를 볼 수 있어요. 본 풀이는 마이페이지 '풀이 기록'에 남아요."}</p>
 
+      {!guest && (
       <div className="wallet-balance">
         <span>내 복채</span>
         {w && !w.error ? <Coins n={w.balance} size={30} className="wallet-bal" /> : <b>…</b>}
       </div>
+      )}
 
       {msg && (
         <p className={`wallet-msg${msg.ok ? ' is-ok' : ''}`} role="status">
@@ -123,9 +116,15 @@ export default function Wallet() {
           </li>
         ))}
       </ul>
-      <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready}>
-        {busy ? '처리 중…' : ready ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
-      </button>
+      {guest ? (
+        <button type="button" className="btn-primary wallet-pay" onClick={() => openLogin('복채를 충전하려면 로그인해 주세요.')}>
+          로그인하고 충전하기
+        </button>
+      ) : (
+        <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready}>
+          {busy ? '처리 중…' : ready ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
+        </button>
+      )}
 
 
       {w?.ledger?.length > 0 && (
@@ -146,11 +145,13 @@ export default function Wallet() {
       )}
 
       <div className="wallet-notice">
+        <h2 className="wallet-notice-title">환불 정책</h2>
         <p>1금전은 100원이에요. 충전한 복채는 사주천문에서만 쓸 수 있고, 유효기간은 충전일로부터 5년이에요.</p>
         <p>
           충전 후 7일 안에 쓰지 않은 복채는 전액 환불받을 수 있고, 일부를 쓴 뒤에도 남은 복채는 환불을 요청할 수 있어요. 환불은{' '}
-          <Link to="/my/support">고객센터</Link>로 요청해 주세요. 자세한 내용은 <Link to="/terms">이용약관</Link>을 확인해 주세요.
+          <Link to="/my/support">고객센터</Link>나 전화({SITE.business.phone})로 요청해 주세요. 결제한 수단으로 돌려드려요.
         </p>
+        <p>이미 열어 본 풀이는 디지털 콘텐츠라 청약철회가 제한돼요(전자상거래법 제17조 제2항). 이벤트·운영자 지급으로 무료로 받은 금전은 환불 금액에 들어가지 않아요. 자세한 내용은 <Link to="/terms#refund">이용약관 제7조의3</Link>을 확인해 주세요.</p>
         <p>풀이를 만들지 못하면 쓴 복채는 자동으로 돌려드려요. 회원 탈퇴하면 남은 복채가 사라지니, 탈퇴 전에 환불을 먼저 요청해 주세요.</p>
       </div>
     </section>

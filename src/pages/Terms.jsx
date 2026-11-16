@@ -1,8 +1,16 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { SITE } from '../site.js';
 
 // 이용약관 (시행 2026-11-14). 유료 결제를 추가할 때는 결제·환불·청약철회 조항과 미성년자 결제 조항을 더한다. 해요체.
 export default function Terms() {
+  const { hash } = useLocation();
+  // 푸터 '환불 정책'(/terms#refund)으로 오면 환불 조항으로 (Layout 이 맨 위로 올린 뒤에)
+  useEffect(() => {
+    if (!hash) return;
+    const t = setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' }), 120);
+    return () => clearTimeout(t);
+  }, [hash]);
   return (
     <article className="doc">
       <h1>이용약관</h1>
@@ -77,12 +85,12 @@ export default function Terms() {
         <li>회원은 자신이 쓴 소원을 언제든 지울 수 있고, 회원 탈퇴하면 소원도 모두 지워져요.</li>
       </ul>
 
-      <h2>제7조의3 (복채 — 유료 서비스)</h2>
+      <h2 id="refund">제7조의3 (복채 — 유료 서비스와 환불)</h2>
       <ul>
         <li>'복채'는 서비스 안에서 유료 풀이를 열 때 쓰는 충전식 값이고, 단위는 '금전'이에요. 1금전은 100원이고, 회원만 충전하고 쓸 수 있어요. 충전한 복채는 다른 사람에게 넘기거나 현금으로 바꿀 수 없어요.</li>
         <li>복채를 쓰는 곳과 필요한 양은 충전 화면(/wallet)과 각 풀이 화면에 미리 알려요. 결제는 토스페이먼츠를 통해 이뤄져요.</li>
         <li>복채의 유효기간은 충전일로부터 5년이에요.</li>
-        <li>청약철회: 충전한 날부터 7일 안에 전혀 쓰지 않은 복채는 전액 환불받을 수 있어요. 일부를 쓴 뒤에도 남은 복채는 환불을 요청할 수 있고, 덤으로 받은 복채는 환불 금액에 들어가지 않아요. 환불은 '문의하기'로 요청하면 결제한 수단으로 돌려드려요.</li>
+        <li>청약철회: 충전한 날부터 7일 안에 전혀 쓰지 않은 복채는 전액 환불받을 수 있어요. 일부를 쓴 뒤에도 남은 복채는 환불을 요청할 수 있어요(쓴 금전을 뺀 금액, 할인 충전은 실제로 낸 금액을 기준으로 계산해요). 환불은 '문의하기'나 고객센터 전화({SITE.business.phone})로 요청하면 결제한 수단으로 돌려드려요.</li>
         <li>복채를 써서 이미 열어 본 풀이는 디지털 콘텐츠의 성격상 청약철회가 제한돼요(전자상거래법 제17조 제2항). 다만 서비스 잘못으로 풀이를 받지 못했다면 쓴 복채를 돌려드려요.</li>
         <li>'별마루'에서 금전으로 산 천동이 꾸미기 아이템은 산 즉시 쓸 수 있는 디지털 콘텐츠라 청약철회가 제한되고, 그 계정에서 계속 쓸 수 있어요(회원 탈퇴하면 사라져요).</li>
         <li>운영자가 이벤트·보상 등으로 무료로 넣어 드린 금전은 환불 금액에 들어가지 않아요.</li>
