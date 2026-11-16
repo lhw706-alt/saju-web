@@ -129,7 +129,8 @@ async function sendMail(to, { subject, title, lines, button, link, ignore }) {
     headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'content-type': 'application/json' },
     body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, html }),
   });
-  if (!r.ok) throw new Error(`resend ${r.status}`);
+  // 실패하면 Resend 가 준 이유(예: 도메인 미인증·키 권한)를 함수 로그에 남김 — 받는 사람 주소는 남기지 않음
+  if (!r.ok) throw new Error(`resend ${r.status} ${(await r.text().catch(() => '')).slice(0, 200)}`);
 }
 const sendVerifyMail = (to, link) =>
   sendMail(to, {
