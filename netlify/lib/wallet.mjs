@@ -30,6 +30,42 @@ export const grant = (uid, amount, item) => apply(uid, Math.abs(amount), 'grant'
 export const spend = (uid, amount, item, ref) => apply(uid, -Math.abs(amount), 'spend', item, ref);
 // 사용 취소 (풀이를 못 만들었을 때 돌려줌)
 export const refundSpend = (uid, amount, item, ref) => apply(uid, Math.abs(amount), 'return', item, ref);
+// 운영자가 빼기 (2026-11-17 — 환불 처리·도용 회수 등). 잔액보다 많으면 잔액만큼만. type: 'refund' | 'debit'
+export async function deduct(uid, amount, type, item, ref) {
+  const w = await walletOf(uid);
+  const n = Math.min(Math.abs(amount), w.balance || 0);
+  if (n <= 0) return { ok: true, balance: w.balance || 0, taken: 0 };
+  const r = await apply(uid, -n, type, item, ref);
+  return { ...r, taken: n };
+}
+
+// ── 환불 계산 (2026-11-17 사용자 결정, 이용약관 제7조의3) ──
+// 환불 금액 = 그 충전에 낸 금액 − 그 충전에서 쓴 금전 × 100원(정가). 7일 안은 그대로, 7일이 지나면 10% 공제(1원 미만 버림).
+// 무상 금전(운영자 지급)을 먼저 쓴 것으로 보고, 유상 금전은 먼저 충전한 것부터 쓴 것으로 봄. 더 드린 금전(+N)도 그 충전의 금전.
+// 이미 환불한 충전은 orders 기록의 refundUsed(환불 때 그 충전에서 쓴 금전)만큼만 쓴 것으로 고정.
+export const WON_PER = 100;
+export const DAY7 = 7 * 24 * 3600e3;
+export function refundPlan(w, orderOf = {}, now = Date.now()) {
+  const ledger = [...(w.ledger || [])].reverse(); // 오래된 것부터
+  const used = Math.max(0, ledger.reduce((t, e) => t + (e.type === 'spend' ? -e.amount : e.type === 'return' ? -e.amount : 0), 0));
+  const free = ledger.reduce((t, e) => t + (e.type === 'grant' ? e.amount : 0), 0);
+  let paidUsed = Math.max(0, used - free);
+  const charges = ledger.filter((e) => e.type === 'charge').map((e) => {
+    const o = orderOf[e.ref] || {};
+    const won = Number(o.won) || Number(String(e.item || '').replace(/[^0-9]/g, '')) || e.amount * WON_PER;
+    return { orderId: e.ref, at: e.at, won, credits: e.amount, method: o.method || null, refunded: Boolean(o.refundedAt), refundedAt: o.refundedAt || null, refundWon: o.refundWon ?? null, refundUsed: o.refundUsed ?? null };
+  });
+  for (const c of charges) {
+    const cap = c.refunded ? Math.min(c.credits, c.refundUsed ?? c.credits) : c.credits;
+    c.used = Math.min(cap, paidUsed);
+    paidUsed -= c.used;
+    c.left = c.refunded ? 0 : c.credits - c.used;
+    c.within7 = now - Date.parse(c.at) <= DAY7;
+    const base = Math.max(0, c.won - c.used * WON_PER);
+    c.refundable = c.refunded ? 0 : c.within7 ? base : Math.floor(base * 0.9);
+  }
+  return { balance: w.balance || 0, used, free, charges };
+}
 
 // 산 상품 기록 (2026-11-14): Blobs 'purchases', 키 = u/회원번호/상품/사람·연도 해시 → 같은 사람·같은 해 상품은 한 번만 결제
 import { createHash } from 'node:crypto';

@@ -10,7 +10,7 @@ const when = (iso) => {
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
-const KIND = { charge: '충전', spend: '사용', return: '돌려받음', grant: '지급' };
+const KIND = { charge: '충전', spend: '사용', return: '돌려받음', grant: '지급', refund: '환불', debit: '회수' };
 const FILTERS = [
   { id: 'all', label: '전체' },
   { id: 'charge', label: '충전' },
@@ -32,7 +32,7 @@ export default function WalletHistory() {
       .catch((e) => setW({ error: e.message || '복채 정보를 불러오지 못했어요.' }));
   }, []);
 
-  const ledger = (w?.ledger || []).filter((e) => filter === 'all' || (filter === 'spend' ? e.type === 'spend' || e.type === 'return' : e.type === 'charge' || e.type === 'grant'));
+  const ledger = (w?.ledger || []).filter((e) => filter === 'all' || (filter === 'spend' ? ['spend', 'return', 'refund', 'debit'].includes(e.type) : e.type === 'charge' || e.type === 'grant'));
 
   return (
     <section className="mw" aria-labelledby="mw-title">
@@ -67,7 +67,7 @@ export default function WalletHistory() {
         </ul>
       )}
       <p className="mw-note">
-        충전한 날부터 7일 안에 쓰지 않은 복채는 전액 환불받을 수 있어요. 환불은 <Link to="/my/support">고객센터</Link>로 요청해 주세요.
+        남은 복채는 환불받을 수 있어요(낸 금액 − 쓴 금전 × 100원, 7일이 지나면 10% 공제). 환불은 <Link to="/my/support">고객센터</Link>로 요청해 주세요. <Link to="/terms#refund">환불 정책</Link>
       </p>
     </section>
   );

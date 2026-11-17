@@ -1,11 +1,17 @@
 // 복채(충전식 유료) — 2026-11-14 사용자 결정. 단위는 '금전'(2026-11-15 사용자 지시), 1금전 = 100원. 화면·서버가 같이 씀.
 // 가격·패키지를 바꾸면 여기만 고치면 됨 (서버가 금액을 이 표로 다시 확인).
 export const UNIT = '금전';
-// 2026-11-17 사용자 지시: 50 · 80 · 150 · 300금전 4단계, 300 충전 때 30금전 더(10%) — 80·150 은 같은 흐름으로 +4(5%)·+12(8%).
+// 2026-11-17 사용자 지시: 50 · 80 · 150 · 300금전 4단계, 더 드리는 금전은 메리트 있게(2차 지시) +0 · +8(10%) · +20(13%) · +50(17%).
+// can = 그 금액으로 볼 수 있는 것(가격 PRICES 를 바꾸면 같이 고칠 것): 50 신년운세, 88 평생 사주, 170 평생+신년+궁합(160), 350 두 사람 평생+신년(260)+궁합 3번(90)
 // base = 낸 금액 ÷ 100원, extra = 더 드리는 금전(무상 금전 아님 — 같은 충전에 묶여 환불 계산은 쓴 금전 × 100원), credits = 실제로 들어가는 금전
 // 1회 최대 30,000원(이용약관 제7조의3)
-const pkg = (id, base, extra) => ({ id, won: base * 100, base, extra, credits: base + extra, label: `${(base * 100).toLocaleString('ko-KR')}원`, bonus: extra ? `+${extra}금전` : '' });
-export const PACKAGES = [pkg('p5', 50, 0), pkg('p8', 80, 4), pkg('p15', 150, 12), pkg('p30', 300, 30)];
+const pkg = (id, base, extra, can) => ({ id, won: base * 100, base, extra, can, credits: base + extra, label: `${(base * 100).toLocaleString('ko-KR')}원`, bonus: extra ? `+${extra}금전` : '' });
+export const PACKAGES = [
+  pkg('p5', 50, 0, '신년운세 또는 궁합 + 타로 한 장'),
+  pkg('p8', 80, 8, '평생 사주 리포트'),
+  pkg('p15', 150, 20, '평생 사주 + 신년운세 + 궁합'),
+  pkg('p30', 300, 50, '두 사람 평생 사주·신년운세 + 궁합 3번'),
+];
 // 1금전 = 100원 기준으로 몇 % 싸게 사는지 (2026-11-15 사용자 지시: 덤 대신 할인율로 표기)
 export const WON_PER_CREDIT = 100;
 export const listWon = (p) => p.credits * WON_PER_CREDIT;

@@ -32,7 +32,7 @@ import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/l
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
 import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk, cosmeticById } from '../../src/lib/wallet.js';
-import { walletOf, credit, grant, spend, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
+import { walletOf, credit, grant, spend, deduct, refundPlan, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
 const STATE = 'sc_oauth';
@@ -1193,6 +1193,45 @@ export default async (req, context) => {
     return json({ ok: true, balance: r.balance });
   }
 
+  // 관리자: 회원 복채 내역·환불 계산 / 환불 처리 / 금전 빼기 (2026-11-17 사용자 지시)
+  //   POST /api/admin/wallet {userId} → { balance, used, free, charges[{orderId, at, won, credits, used, left, within7, refundable, refunded…}], ledger }
+  //   POST /api/admin/wallet/refund {userId, orderId} → 그 충전의 남은 금전을 빼고 주문 기록에 환불 표시 (결제 취소는 스마트로 관리자에서 — 취소 API 연동 전)
+  //   POST /api/admin/wallet/debit {userId, amount, memo} → 금전 빼기 (도용 회수 등)
+  if (path === '/api/admin/wallet' || path === '/api/admin/wallet/refund' || path === '/api/admin/wallet/debit') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const bad = adminAuth(req, ip);
+    if (bad) return json({ error: bad.error }, bad.status);
+    const body = await readJson();
+    const userId = String(body?.userId || '');
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(userId) || !(await users().get(userId))) return json({ error: '회원을 찾지 못했어요.' }, 404);
+    const orders = getStore({ name: 'orders', consistency: 'strong' });
+    const planOf = async () => {
+      const w = await walletOf(userId);
+      const refs = [...new Set((w.ledger || []).filter((e) => e.type === 'charge' && e.ref).map((e) => e.ref))];
+      const orderOf = Object.fromEntries(await Promise.all(refs.map(async (r) => [r, (await orders.get(r, { type: 'json' }).catch(() => null)) || {}])));
+      return { ...refundPlan(w, orderOf), ledger: (w.ledger || []).slice(0, 200) };
+    };
+    if (path === '/api/admin/wallet/refund') {
+      const orderId = String(body?.orderId || '');
+      const plan = await planOf();
+      const c = plan.charges.find((x) => x.orderId === orderId);
+      if (!c) return json({ error: '그 충전 기록을 찾지 못했어요.' }, 404);
+      if (c.refunded) return json({ error: '이미 환불 처리한 충전이에요.' }, 409);
+      const r = await deduct(userId, c.left, 'refund', `환불 · ${c.won.toLocaleString('ko-KR')}원 충전`, orderId);
+      const o = (await orders.get(orderId, { type: 'json' }).catch(() => null)) || { uid: userId, won: c.won, credits: c.credits };
+      await orders.setJSON(orderId, { ...o, refundedAt: new Date().toISOString(), refundWon: c.refundable, refundUsed: c.used, refundCredits: r.taken });
+      return json({ ok: true, refundWon: c.refundable, taken: r.taken, ...(await planOf()) });
+    }
+    if (path === '/api/admin/wallet/debit') {
+      const amount = Number(body?.amount);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 100000) return json({ error: '1~100,000 사이 숫자로 적어 주세요.' }, 400);
+      const memo = String(body?.memo || '').trim().slice(0, 30);
+      const r = await deduct(userId, amount, 'debit', memo ? `운영자 회수 · ${memo}` : '운영자 회수', `debit-${Date.now().toString(36)}`);
+      return json({ ok: true, taken: r.taken, ...(await planOf()) });
+    }
+    return json(await planOf());
+  }
+
   // 관리자: 테스트 계정 만들기 (2026-11-17 사용자 지시 — PG·앱 심사 담당자용 시험 계정)
   // POST {email, password, nick?, coins?} → 메일 인증 없이 이메일 회원을 바로 만듦. 회원 기록에 test: true.
   // 지울 때는 그 계정으로 로그인해 마이페이지 > 회원 탈퇴 (일반 회원과 같은 정리).
@@ -1301,4 +1340,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

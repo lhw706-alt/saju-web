@@ -102,9 +102,12 @@ export default function Wallet() {
           <li key={p.id}>
             <button type="button" role="radio" aria-checked={pick === p.id} className={pick === p.id ? 'on' : ''} onClick={() => setPick(p.id)}>
               <span className="wallet-radio" aria-hidden="true" />
-              <span className="wallet-pkg-amt">
-                <Coins n={p.base} size={26} className="wallet-pkg-coins" />
-                {p.extra > 0 && <em className="wallet-pkg-extra">+{p.extra} 더</em>}
+              <span className="wallet-pkg-main">
+                <span className="wallet-pkg-amt">
+                  <Coins n={p.base} size={26} className="wallet-pkg-coins" />
+                  {p.extra > 0 && <em className="wallet-pkg-extra">+{p.extra} 더</em>}
+                </span>
+                {p.can && <small className="wallet-pkg-can">{p.can}</small>}
               </span>
               <span className="wallet-pkg-price">
                 <b>{p.label}</b>

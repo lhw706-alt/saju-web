@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
+import AdminWallet from '../components/AdminWallet.jsx';
 
 const INQ_TYPES = { site: '이용 문의', error: '풀이·계산 오류 신고', ad: '제휴·광고 제안', etc: '기타' };
 const fmt = (iso) => {
@@ -102,6 +103,7 @@ export default function Admin() {
   const [giveMemo, setGiveMemo] = useState({});
   const [giveMsg, setGiveMsg] = useState('');
   const [giving, setGiving] = useState(null);
+  const [openW, setOpenW] = useState(null); // 내역·환불을 펼친 회원
   const give = async (u) => {
     const amount = Number(giveAmt[u.id] || 0);
     if (!Number.isInteger(amount) || amount < 1) return setGiveMsg('넣을 금전을 1 이상 숫자로 적어 주세요.');
@@ -240,7 +242,7 @@ export default function Admin() {
             </div>
           ) : tab === 'credit' ? (
             <div className="admin-credit">
-              <p className="hint">회원에게 금전을 넣어 줄 수 있어요. 넣은 금전은 회원의 복채 내역에 '운영자 지급'으로 남고, 결제가 아니라 환불 대상이 아니에요.</p>
+              <p className="hint">회원에게 금전을 넣어 줄 수 있어요. 넣은 금전은 회원의 복채 내역에 '운영자 지급'으로 남고, 결제가 아니라 환불 대상이 아니에요. '내역·환불'을 누르면 충전별 환불 금액 계산·환불 처리·금전 빼기를 할 수 있어요.</p>
               <input className="contact-input admin-credit-search" placeholder="닉네임·이메일·회원번호로 찾기" value={giveQ} onChange={(e) => setGiveQ(e.target.value)} aria-label="회원 찾기" />
               {giveMsg && <p className="inq-meta" role="status">{giveMsg}</p>}
               <ul className="admin-credit-list">
@@ -259,6 +261,14 @@ export default function Admin() {
                       <button type="button" className="btn-primary inline" disabled={giving === u.id} onClick={() => give(u)}>
                         {giving === u.id ? '넣는 중…' : '넣기'}
                       </button>
+                      <button type="button" className="btn-ghost inline admin-w-toggle" aria-expanded={openW === u.id} onClick={() => setOpenW((v) => (v === u.id ? null : u.id))}>
+                        {openW === u.id ? '닫기' : '내역·환불'}
+                      </button>
+                      {openW === u.id && (
+                        <div className="admin-w-panel">
+                          <AdminWallet userId={u.id} name={u.displayNick || u.id} pw={pw} onBalance={(b) => setData((old) => ({ ...old, users: old.users.map((x) => (x.id === u.id ? { ...x, balance: b } : x)) }))} />
+                        </div>
+                      )}
                     </li>
                   ))}
               </ul>

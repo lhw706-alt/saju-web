@@ -2001,6 +2001,8 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-pkg-coins b { font-size: 20px; }
 .wallet-pkg-price { margin-left: auto; display: grid; justify-items: end; gap: 2px; }
 .wallet-pkg-price > b { font-size: 16px; font-weight: 600; }
+.wallet-pkg-main { display: grid; gap: 3px; min-width: 0; }
+.wallet-pkg-can { font-size: 13px; color: rgba(194, 196, 200, 0.8); word-break: keep-all; }
 .wallet-pkg-amt { display: inline-flex; align-items: center; gap: 8px; }
 .wallet-pkg-extra { font-style: normal; font-size: 13px; font-weight: 600; color: var(--primary); background: rgba(226, 194, 122, 0.14); border-radius: 999px; padding: 2px 8px; }
 .wallet-pkg-was { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
@@ -2141,13 +2143,41 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 /* 관리자 금전 탭 (2026-11-15) */
 .admin-credit-search { width: 100%; margin: 10px 0; }
 .admin-credit-list { margin: 8px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.admin-credit-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px 140px auto; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.admin-credit-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px 140px auto auto; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
 .admin-credit-who { display: grid; min-width: 0; }
 .admin-credit-who small { font-size: 13px; color: rgba(194, 196, 200, 0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-credit-bal { font-size: 14px; color: var(--primary); white-space: nowrap; }
 .admin-credit-list .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
 .admin-credit-list .btn-primary.inline { margin: 0; height: 38px; }
 @media (max-width: 640px) { .admin-credit-list li { grid-template-columns: 1fr auto; } .admin-credit-list .contact-input { grid-column: span 1; } }
+/* 관리자 회원 복채 내역·환불 (2026-11-17, AdminWallet.jsx) */
+.admin-credit-list .btn-ghost.inline { margin: 0; height: 38px; padding: 0 12px; }
+.admin-w-panel { grid-column: 1 / -1; padding: 6px 0 4px; }
+.aw { padding: 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+.aw-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 8px; padding: 0; list-style: none; }
+.aw-sum li { display: grid; gap: 2px; }
+.aw-sum span { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.aw-sum b { font-size: 18px; font-weight: 600; }
+.aw-sum .aw-won { color: var(--primary); }
+.aw-h { margin: 16px 0 6px; font-size: 14px; font-weight: 600; }
+.aw-charges, .aw-ledger { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.aw-charges li { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.aw-charges li.is-done { opacity: 0.6; }
+.aw-c-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.aw-c-head span { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.aw-c-head em { font-style: normal; font-size: 13px; padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+.aw-c-head em.is-in { background: rgba(0, 191, 64, 0.16); color: #4fd17a; }
+.aw-calc { margin: 0; font-size: 14px; }
+.aw-btn { justify-self: start; height: 34px; min-height: 34px; margin: 2px 0 0; padding: 0 12px; }
+.aw-debit { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 8px; }
+.aw-debit .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
+.aw-ledger li { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px 56px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 14px; }
+.aw-ledger small { display: block; font-size: 13px; color: rgba(194, 196, 200, 0.7); }
+.aw-kind { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.aw-amt, .aw-bal { text-align: right; }
+.aw-amt.is-plus { color: var(--primary); }
+.aw-bal { color: rgba(194, 196, 200, 0.7); }
+@media (max-width: 640px) { .aw-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } .aw-debit { grid-template-columns: 1fr; } }
 /* 관리자 테스트 계정 탭 (2026-11-17) */
 .admin-test-form { display: grid; gap: 8px; max-width: 420px; margin: 4px 0 20px; }
 .admin-test-form .btn-primary { margin-top: 6px; }
