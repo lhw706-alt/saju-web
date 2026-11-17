@@ -286,7 +286,6 @@ export default function Layout() {
             </button>
             <Link to="/dict">사주 용어 사전</Link>
             <Link to="/terms">이용약관</Link>
-            <Link to="/terms#refund">환불 정책</Link>
             <Link to="/privacy">개인정보 처리방침</Link>
           </span>
           <span>© {new Date().getFullYear()} {SITE.name}</span>

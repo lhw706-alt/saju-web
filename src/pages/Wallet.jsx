@@ -126,8 +126,7 @@ export default function Wallet() {
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
           <span className="login-keep-box" aria-hidden="true" />
           <span>
-            (필수) 위 주문 내용을 확인했고, <Link to="/terms#refund" target="_blank" rel="noopener">이용약관(환불 정책 포함)</Link>과{' '}
-            <Link to="/privacy" target="_blank" rel="noopener">개인정보 처리방침</Link>에 동의해요.
+            (필수) 위 주문 내용을 확인했고, <Link to="/terms">이용약관</Link>과 <Link to="/privacy">개인정보 처리방침</Link>에 동의해요.
           </span>
         </label>
         <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready || !agree}>
