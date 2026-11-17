@@ -22,6 +22,7 @@ const JSON_BLOCK = /```json[\s\S]*?```/g;
 function sectionsOf(r) {
   const p = r.parts || {};
   if (r.kind === 'life') return ['life1', 'life2', 'life3', 'life4'].flatMap((id) => splitSections((p[id] || '').replace(JSON_BLOCK, '')));
+  if (r.kind === 'match') return ['match1', 'match2'].flatMap((id) => splitSections((p[id] || '').replace(JSON_BLOCK, '')));
   return [...(p.newyear ? [{ title: '한 해의 흐름', text: p.newyear.replace(JSON_BLOCK, '') }] : []), ...splitSections(p.nym1), ...splitSections(p.nym2)].map((m) => ({ ...m, title: m.title.replace(/^\d{4}년\s*/, '') }));
 }
 
@@ -93,6 +94,7 @@ export default function PaidRecords() {
     { value: 'all', label: '전체' },
     { value: 'newyear', label: '신년운세' },
     { value: 'life', label: '평생 사주' },
+    { value: 'match', label: '궁합' },
     { value: 'tarot', label: '타로' },
   ];
   const shown = (list || []).filter((r) => (who === 'all' || labelOf(r) === who) && (kind === 'all' || r.kind === kind));
@@ -141,12 +143,12 @@ export default function PaidRecords() {
           <ul className="rec-list">
             {shown.map((r) => {
               const on = open === r.id;
-              const title = r.kind === 'tarot' ? `${r.topic}${r.question ? ` — ${r.question}` : ''}` : r.kind === 'life' ? '평생 사주 리포트' : `${r.year}년 신년운세`;
+              const title = r.kind === 'tarot' ? `${r.topic}${r.question ? ` — ${r.question}` : ''}` : r.kind === 'life' ? '평생 사주 리포트' : r.kind === 'match' ? '사주 궁합' : `${r.year}년 신년운세`;
               const sub = r.kind === 'tarot' ? `${dateOf(r.at)} · ${r.spread === 3 ? '세 장' : '한 장'} · ${cardsText(r.cards)}` : `${dateOf(r.at)}${r.who ? ` · ${r.who}` : ''}`;
               return (
                 <li key={r.id} className={`rec-item${on ? ' on' : ''}`}>
                   <button type="button" className="rec-row" aria-expanded={on} onClick={() => setOpen(on ? null : r.id)}>
-                    <span className="rec-kind">{r.kind === 'tarot' ? '타로' : r.kind === 'life' ? '평생 사주' : '신년운세'}</span>
+                    <span className="rec-kind">{r.kind === 'tarot' ? '타로' : r.kind === 'life' ? '평생 사주' : r.kind === 'match' ? '궁합' : '신년운세'}</span>
                     <span className="rec-main">
                       <span className="rec-title">{title}</span>
                       <span className="rec-sub">

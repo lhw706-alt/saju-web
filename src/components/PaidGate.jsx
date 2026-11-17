@@ -11,7 +11,7 @@ import RefundNote from './RefundNote.jsx';
 const post = (url, body) =>
   fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
 
-export default function PaidGate({ item, input, member, openLogin, title, desc, points = [], onBought, children }) {
+export default function PaidGate({ item, input, member, openLogin, title, desc, points = [], onBought, same = '같은 사람의', children }) {
   const navigate = useNavigate();
   const price = PRICES[item].credits;
   const [state, setState] = useState({ owned: member ? null : false, balance: 0 });
@@ -32,7 +32,7 @@ export default function PaidGate({ item, input, member, openLogin, title, desc, 
       if (await askConfirm({ title: '복채가 조금 모자라요', message: `${title}에는 ${fmtCredits(price)}이 필요해요. 지금 ${fmtCredits(state.balance)} 있어요.`, ok: '충전하러 가기', cancel: '다음에' })) navigate('/wallet');
       return;
     }
-    if (!(await askConfirm({ title: `${title}를 열까요?`, message: `${fmtCredits(price)}을 쓰면 바로 풀이가 시작돼요. 지금 ${fmtCredits(state.balance)} 있어요.`, note: `같은 사람의 ${title}는 다시 볼 때 금전이 들지 않아요.`, ok: `${fmtCredits(price)}으로 열기`, cancel: '취소' }))) return;
+    if (!(await askConfirm({ title: `${title}를 열까요?`, message: `${fmtCredits(price)}을 쓰면 바로 풀이가 시작돼요. 지금 ${fmtCredits(state.balance)} 있어요.`, note: `${same} ${title}는 다시 볼 때 금전이 들지 않아요.`, ok: `${fmtCredits(price)}으로 열기`, cancel: '취소' }))) return;
     setBusy(true);
     const r = await post('/api/wallet/buy', { item, input });
     setBusy(false);
@@ -61,7 +61,7 @@ export default function PaidGate({ item, input, member, openLogin, title, desc, 
           <PriceTag n={price} size={18} />
         </span>
       </button>
-      <p className="paygate-note">한 번 열면 같은 사람의 {title}는 다시 볼 때 금전이 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.</p>
+      <p className="paygate-note">한 번 열면 {same} {title}는 다시 볼 때 금전이 들지 않고, 마이페이지 ‘풀이 기록’에 남아요.</p>
       <RefundNote />
     </section>
   );

@@ -150,6 +150,7 @@ export const MATCH_PARTS = [
   {
     id: 'match1',
     label: '궁합',
+    paid: 'match',
     focus: MATCH_TOPIC.focus,
     pair: true,
     format: `맨 처음에 json 코드블록(세 개의 백틱 + json) 하나를 설명 없이 쓴다: {"score":두 사람의 조화 점수 40~95 정수,"keywords":["네 글자 이내 키워드","…","…"]}
@@ -165,6 +166,7 @@ ${MATCH_COMMON}
   {
     id: 'match2',
     label: '궁합',
+    paid: 'match',
     focus: MATCH_TOPIC.focus,
     pair: true,
     format: `아래 제목을 그대로, 이 순서대로 쓴다. 앞부분(요약·기질·오행·일간과 지지)은 다른 글에서 다루므로 여기서는 쓰지 않는다.

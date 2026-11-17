@@ -84,7 +84,7 @@ export default async (req, context) => {
   if (topic.paid) {
     const s = sessionOf(req);
     if (!s) return json({ error: '이 풀이는 복채로 볼 수 있어요. 로그인해 주세요.', login: true }, 401);
-    const pkey = itemKey(s.sub, topic.paid, body?.input);
+    const pkey = itemKey(s.sub, topic.paid, topic.pair ? { ...body?.input, partner: body?.partner } : body?.input);
     if (!(await owned(pkey))) return json({ error: '먼저 복채로 열어 주세요.', reason: 'not_owned' }, 402);
     // 풀이 기록에서 사람별로 거를 수 있게 (2026-11-15 사용자 지시) — 생년월일 대신 '나' 또는 '1990년생 · 여성'만
     const n = normalizeInput(body?.input);
@@ -96,7 +96,13 @@ export default async (req, context) => {
     } catch {
       me = false;
     }
-    const who = me ? '나' : `${n.year}년생 · ${n.gender === 'female' ? '여성' : '남성'}`;
+    let who = me ? '나' : `${n.year}년생 · ${n.gender === 'female' ? '여성' : '남성'}`;
+    if (topic.pair) {
+      try {
+        const pn = normalizeInput(body?.partner);
+        who += ` × ${pn.year}년생 · ${pn.gender === 'female' ? '여성' : '남성'}`;
+      } catch {}
+    }
     paidRec = { uid: s.sub, id: itemRecordId(topic.paid, pkey), kind: PAID_ITEMS[topic.paid].kind, who };
   }
 

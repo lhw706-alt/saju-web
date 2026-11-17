@@ -10,6 +10,7 @@ import { GlossaryProvider, Help, TermButton } from '../components/Glossary.jsx';
 import { GOD_SHORT } from '../lib/glossary.js';
 import LifeReport, { FreshLoader } from '../components/LifeReport.jsx';
 import MatchReport from '../components/MatchReport.jsx';
+import PaidGate from '../components/PaidGate.jsx';
 import DayReport from '../components/DayReport.jsx';
 import PollCard from '../components/PollCard.jsx';
 import ResultShare from '../components/ShareRow.jsx';
@@ -57,7 +58,18 @@ export default function Result() {
   if (match) {
     return (
       <GlossaryProvider>
-        <MatchReport key={JSON.stringify([input, partner])} me={input} partner={partner} meChart={chart} partnerChart={partnerChart} member={member} onResult={setScore} />
+        <PaidGate
+          item="match"
+          input={{ ...input, partner }}
+          member={member}
+          openLogin={openLogin}
+          title="궁합 리포트"
+          same="같은 두 사람의"
+          desc="두 사람의 사주를 나란히 놓고, 천둥도사가 타고난 기질과 오행의 조화, 잘 맞는 점과 조심할 점을 풀어 드려요."
+          points={['한눈에 보는 궁합 점수와 키워드', '두 사람의 타고난 기질', '오행으로 본 조화와 일간·지지의 관계', '잘 맞는 점·조심할 점·함께하면 좋은 시기']}
+        >
+          <MatchReport key={JSON.stringify([input, partner])} me={input} partner={partner} meChart={chart} partnerChart={partnerChart} member={member} onResult={setScore} />
+        </PaidGate>
         <MemberCta place="match" title="천둥도사의 풀이를 간직해 두세요" text="로그인하면 이 풀이를 계정에 간직해, 다른 기기에서 같은 정보로 볼 때도 그대로 보여 드려요." reason="로그인하면 천둥도사가 펼친 풀이를 계정에 고이 간직해 드려요." />
         <ResultShare
           title="궁합 결과를 나눠 보세요"
