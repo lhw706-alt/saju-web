@@ -66,9 +66,6 @@ export default function WalletHistory() {
           ))}
         </ul>
       )}
-      <p className="mw-note">
-        남은 복채는 환불받을 수 있어요(낸 금액 − 쓴 금전 × 100원, 7일이 지나면 10% 공제). 환불은 <Link to="/my/support">고객센터</Link>로 요청해 주세요. <Link to="/terms#refund">환불 정책</Link>
-      </p>
     </section>
   );
 }
