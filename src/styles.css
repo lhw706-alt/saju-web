@@ -742,7 +742,7 @@ legend.contact-label { margin-bottom: 12px; }
 .admin-stats li { display: grid; gap: 4px; padding: 14px 16px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line-soft); }
 .admin-stats span { font-size: 14px; color: var(--muted); }
 .admin-stats b { font-size: 22px; font-weight: 600; }
-.admin-actions { margin: 14px 0 10px; }
+.admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 10px; }
 .admin-table-wrap { overflow-x: auto; border-radius: var(--r-md); border: 1px solid var(--line-soft); }
 .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; white-space: nowrap; }
 .admin-table th, .admin-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line-soft); }

@@ -5,6 +5,7 @@ Disallow: /result
 Disallow: /api/
 # 관리자 화면
 Disallow: /admin
+Disallow: /ds/
 Disallow: /my
 Disallow: /reset
 Disallow: /wallet

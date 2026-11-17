@@ -35,6 +35,29 @@ export default function Admin() {
     setLoading(false);
   };
 
+  // 디자인 시스템 문서 (2026-11-17): 비밀번호 확인 뒤 서버가 준 HTML 을 새 탭(blob 주소)으로 엶. 팝업 차단을 피하려고 탭은 누르자마자 먼저 엶
+  const [dsLoading, setDsLoading] = useState(false);
+  const openDesignSystem = async () => {
+    const win = window.open('', '_blank');
+    setDsLoading(true);
+    try {
+      const r = await fetch('/api/admin/ds', { method: 'POST', headers: { authorization: `Bearer ${pw}` }, cache: 'no-store' });
+      if (!r.ok) {
+        win?.close();
+        const d = await r.json().catch(() => ({}));
+        setError(d.error || '디자인 시스템을 열지 못했어요.');
+      } else {
+        const url = URL.createObjectURL(new Blob([await r.text()], { type: 'text/html' }));
+        if (win) win.location.href = url;
+        else window.location.href = url;
+      }
+    } catch {
+      win?.close();
+      setError('네트워크 연결을 확인해 주세요.');
+    }
+    setDsLoading(false);
+  };
+
   // 문의 탭: 답변 저장 (/api/admin/inquiry). 첫 답변이고 이메일을 적은 문의면 서버가 알림 메일도 보냄
   const [tab, setTab] = useState('users');
   const [drafts, setDrafts] = useState({});
@@ -139,6 +162,9 @@ export default function Admin() {
           <div className="admin-actions">
             <button type="button" className="btn-ghost" onClick={load} disabled={loading}>
               {loading ? '불러오는 중…' : '새로고침'}
+            </button>
+            <button type="button" className="btn-ghost" onClick={openDesignSystem} disabled={dsLoading}>
+              {dsLoading ? '여는 중…' : '디자인 시스템 ↗'}
             </button>
           </div>
           <div className="admin-tabs" role="tablist">
