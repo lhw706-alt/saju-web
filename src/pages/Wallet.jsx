@@ -18,6 +18,7 @@ export default function Wallet() {
   const [w, setW] = useState(null);
   const [pick, setPick] = useState('p8');
   const [busy, setBusy] = useState(false);
+  const [agree, setAgree] = useState(false); // 결제 전 동의 (2026-11-17 사용자 지시 — 환불 정책은 이용약관 제7조의3에 포함)
   const [msg, setMsg] = useState(null); // { ok, text }
   const handled = useRef(false);
 
@@ -120,9 +121,19 @@ export default function Wallet() {
           로그인하고 충전하기
         </button>
       ) : (
-        <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready}>
+        <>
+        <label className="login-keep wallet-agree">
+          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+          <span className="login-keep-box" aria-hidden="true" />
+          <span>
+            (필수) 위 주문 내용을 확인했고, <Link to="/terms#refund" target="_blank" rel="noopener">이용약관(환불 정책 포함)</Link>과{' '}
+            <Link to="/privacy" target="_blank" rel="noopener">개인정보 처리방침</Link>에 동의해요.
+          </span>
+        </label>
+        <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready || !agree}>
           {busy ? '처리 중…' : ready ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
         </button>
+        </>
       )}
 
 
@@ -143,15 +154,6 @@ export default function Wallet() {
         </>
       )}
 
-      {/* 결제 전 환불 조건 요약 (2026-11-17 사용자 지시로 짧게 — 전자상거래법 제13조·제17조 제6항: 결제 전에 청약철회 조건·제한을 보여 줘야 해서 다 빼지 않음. 전문은 약관) */}
-      <div className="wallet-notice">
-        <h2 className="wallet-notice-title">환불 정책</h2>
-        <p>
-          충전 후 7일 안에 쓰지 않은 복채는 전액 환불이 가능해요. 남은 복채도 낸 금액에서 쓴 금전(1금전 100원)을 뺀 만큼 환불이 가능하고, 7일이 지나면 10%를 빼요. 열어 본 풀이는 환불이 제한돼요. 환불은{' '}
-          <Link to="/my/support">마이페이지 고객센터</Link>로 신청해 주세요.{' '}
-          <Link to="/terms#refund">환불 정책 자세히 보기</Link>
-        </p>
-      </div>
     </section>
   );
 }
