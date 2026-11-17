@@ -2,7 +2,7 @@
 // 결제창에서 돌아오면(?pay=success&paymentKey&orderId&amount) 서버 승인 후 잔액을 다시 불러옴. 주소의 결제 정보는 바로 지움.
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
-import { PACKAGES, fmtCredits, discountOf, listWon } from '../lib/wallet.js';
+import { PACKAGES, fmtCredits } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
@@ -17,7 +17,7 @@ export default function Wallet() {
   const { auth, openLogin, notify } = useOutletContext();
   const [params, setParams] = useSearchParams();
   const [w, setW] = useState(null);
-  const [pick, setPick] = useState('p10');
+  const [pick, setPick] = useState('p8');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null); // { ok, text }
   const handled = useRef(false);
@@ -102,14 +102,11 @@ export default function Wallet() {
           <li key={p.id}>
             <button type="button" role="radio" aria-checked={pick === p.id} className={pick === p.id ? 'on' : ''} onClick={() => setPick(p.id)}>
               <span className="wallet-radio" aria-hidden="true" />
-              <Coins n={p.credits} size={26} className="wallet-pkg-coins" />
+              <span className="wallet-pkg-amt">
+                <Coins n={p.base} size={26} className="wallet-pkg-coins" />
+                {p.extra > 0 && <em className="wallet-pkg-extra">+{p.extra} 더</em>}
+              </span>
               <span className="wallet-pkg-price">
-                {discountOf(p) > 0 && (
-                  <span className="wallet-pkg-was">
-                    <s>{listWon(p).toLocaleString('ko-KR')}원</s>
-                    <em>{discountOf(p)}% 할인</em>
-                  </span>
-                )}
                 <b>{p.label}</b>
               </span>
             </button>
@@ -148,7 +145,7 @@ export default function Wallet() {
         <h2 className="wallet-notice-title">환불 정책</h2>
         <p>1금전은 100원이에요. 충전한 복채는 사주천문에서만 쓸 수 있고, 유효기간은 충전일로부터 5년이에요.</p>
         <p>
-          남은 복채는 환불받을 수 있어요. 환불 금액은 낸 금액에서 쓴 금전을 정가(1금전 100원)로 뺀 금액이에요(할인 충전도 같아요). 충전 후 7일 안이면 그대로, 7일이 지났다면 10%를 뺀 금액을 돌려드려요. 환불은{' '}
+          남은 복채는 환불받을 수 있어요. 환불 금액은 낸 금액에서 쓴 금전을 정가(1금전 100원)로 뺀 금액이에요(더 받은 금전이 있어도 같아요). 충전 후 7일 안이면 그대로, 7일이 지났다면 10%를 뺀 금액을 돌려드려요. 환불은{' '}
           <Link to="/my/support">고객센터</Link>나 전화({SITE.business.phone})로 요청해 주세요. 요청받은 날부터 3영업일 안에 결제한 수단으로 돌려드려요(가상계좌는 본인 계좌로 송금).
         </p>
         <p>이미 열어 본 풀이는 디지털 콘텐츠라 청약철회가 제한돼요(전자상거래법 제17조 제2항). 이벤트·운영자 지급으로 무료로 받은 금전은 환불 금액에 들어가지 않아요. 자세한 내용은 <Link to="/terms#refund">이용약관 제7조의3</Link>을 확인해 주세요.</p>

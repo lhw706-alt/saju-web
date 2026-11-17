@@ -1,13 +1,11 @@
 // 복채(충전식 유료) — 2026-11-14 사용자 결정. 단위는 '금전'(2026-11-15 사용자 지시), 1금전 = 100원. 화면·서버가 같이 씀.
 // 가격·패키지를 바꾸면 여기만 고치면 됨 (서버가 금액을 이 표로 다시 확인).
 export const UNIT = '금전';
-// 2026-11-17 사용자 지시: 4단계. 1회 최대 30,000원(이용약관 제7조의3)
-export const PACKAGES = [
-  { id: 'p3', won: 3000, credits: 30, label: '3,000원', bonus: '' },
-  { id: 'p10', won: 10000, credits: 105, label: '10,000원', bonus: '5% 할인' },
-  { id: 'p20', won: 20000, credits: 220, label: '20,000원', bonus: '9% 할인' },
-  { id: 'p30', won: 30000, credits: 345, label: '30,000원', bonus: '13% 할인' },
-];
+// 2026-11-17 사용자 지시: 50 · 80 · 150 · 300금전 4단계, 300 충전 때 30금전 더(10%) — 80·150 은 같은 흐름으로 +4(5%)·+12(8%).
+// base = 낸 금액 ÷ 100원, extra = 더 드리는 금전(무상 금전 아님 — 같은 충전에 묶여 환불 계산은 쓴 금전 × 100원), credits = 실제로 들어가는 금전
+// 1회 최대 30,000원(이용약관 제7조의3)
+const pkg = (id, base, extra) => ({ id, won: base * 100, base, extra, credits: base + extra, label: `${(base * 100).toLocaleString('ko-KR')}원`, bonus: extra ? `+${extra}금전` : '' });
+export const PACKAGES = [pkg('p5', 50, 0), pkg('p8', 80, 4), pkg('p15', 150, 12), pkg('p30', 300, 30)];
 // 1금전 = 100원 기준으로 몇 % 싸게 사는지 (2026-11-15 사용자 지시: 덤 대신 할인율로 표기)
 export const WON_PER_CREDIT = 100;
 export const listWon = (p) => p.credits * WON_PER_CREDIT;

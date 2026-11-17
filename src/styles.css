@@ -2001,6 +2001,8 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-pkg-coins b { font-size: 20px; }
 .wallet-pkg-price { margin-left: auto; display: grid; justify-items: end; gap: 2px; }
 .wallet-pkg-price > b { font-size: 16px; font-weight: 600; }
+.wallet-pkg-amt { display: inline-flex; align-items: center; gap: 8px; }
+.wallet-pkg-extra { font-style: normal; font-size: 13px; font-weight: 600; color: var(--primary); background: rgba(226, 194, 122, 0.14); border-radius: 999px; padding: 2px 8px; }
 .wallet-pkg-was { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
 .wallet-pkg-was s { color: rgba(194, 196, 200, 0.7); }
 .wallet-pkg-was em { font-style: normal; font-weight: 600; color: #FF6B5E; }
