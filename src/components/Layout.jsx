@@ -178,13 +178,16 @@ export default function Layout() {
     // 남은 금전이 있으면 먼저 알림 (2026-11-17 — 탈퇴 전 환불 요청 기회를 줌, 이용약관 제7조의3)
     const bal = await fetch('/api/wallet', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     const left = Number(bal?.balance) || 0;
-    if (left > 0 && !await askConfirm({
-      title: `남은 금전 ${left.toLocaleString('ko-KR')}금전이 있어요`,
-      message: '탈퇴하면 남은 금전이 사라져요. 직접 충전한 금전은 탈퇴하기 전에 고객센터로 환불을 요청할 수 있어요.',
-      ok: '그래도 탈퇴하기',
-      cancel: '돌아가기',
-    })) return false;
-    if (!await askConfirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?')) return false;
+    // 남은 금전이 있으면 이 창 하나로 묻고, 없으면 평소 탈퇴 확인 (2026-11-17 사용자 지시 문구)
+    const sure = left > 0
+      ? await askConfirm({
+          title: `남은 금전 ${left.toLocaleString('ko-KR')}금전이 있어요`,
+          message: '탈퇴하면 남은 금전이 사라져요. 정말로 탈퇴할까요?',
+          ok: '그래도 탈퇴하기',
+          cancel: '돌아가기',
+        })
+      : await askConfirm('탈퇴하면 저장된 회원 정보가 지워져요. 탈퇴할까요?');
+    if (!sure) return false;
     const r = await fetch('/api/auth/delete', { method: 'POST' }).catch(() => null);
     const ok = !!r?.ok;
     if (ok) {
