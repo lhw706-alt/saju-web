@@ -122,6 +122,28 @@ export default function Admin() {
     setGiveMsg(`${name} 님에게 ${amount.toLocaleString('ko-KR')}금전을 넣었어요. 지금 ${d.balance.toLocaleString('ko-KR')}금전.`);
   };
 
+  // 테스트 계정 탭 (2026-11-17 사용자 지시): 메일 인증 없이 시험용 이메일 회원 만들기 — /api/admin/test-account
+  const [ta, setTa] = useState({ email: '', password: '', nick: '', coins: '' });
+  const [taMsg, setTaMsg] = useState('');
+  const [taBusy, setTaBusy] = useState(false);
+  const makeTest = async (e) => {
+    e.preventDefault();
+    setTaBusy(true);
+    setTaMsg('');
+    const r = await fetch('/api/admin/test-account', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${pw}`, 'content-type': 'application/json' },
+      body: JSON.stringify(ta),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    setTaBusy(false);
+    if (!r?.ok) return setTaMsg(d?.error || '만들지 못했어요.');
+    setData((old) => ({ ...old, total: old.total + 1, users: [{ ...d.user, no: old.total + 1 }, ...old.users] }));
+    setTaMsg(`만들었어요. 아이디 ${d.user.email} · 닉네임 ${d.user.displayNick}${d.user.balance ? ` · ${d.user.balance.toLocaleString('ko-KR')}금전` : ''}`);
+    setTa({ email: '', password: '', nick: '', coins: '' });
+  };
+  const tests = data?.users.filter((u) => u.test) ?? [];
+
   const today = new Date().toDateString();
   const todayCount = data?.users.filter((u) => new Date(u.lastLoginAt).toDateString() === today).length ?? 0;
   const newToday = data?.users.filter((u) => new Date(u.joinedAt).toDateString() === today).length ?? 0;
@@ -181,8 +203,42 @@ export default function Admin() {
             <button type="button" role="tab" aria-selected={tab === 'credit'} className={tab === 'credit' ? 'on' : ''} onClick={() => setTab('credit')}>
               금전
             </button>
+            <button type="button" role="tab" aria-selected={tab === 'test'} className={tab === 'test' ? 'on' : ''} onClick={() => setTab('test')}>
+              테스트 계정 {tests.length}
+            </button>
           </div>
-          {tab === 'credit' ? (
+          {tab === 'test' ? (
+            <div className="admin-test">
+              <p className="hint">PG·앱 심사 담당자에게 줄 시험용 계정을 메일 인증 없이 만들어요. 로그인 창의 이메일 로그인으로 들어가요. 지울 때는 그 계정으로 로그인해 마이페이지에서 회원 탈퇴를 눌러 주세요.</p>
+              <form className="admin-test-form" onSubmit={makeTest}>
+                <label className="contact-label" htmlFor="ta-email">아이디 (이메일 모양)</label>
+                <input id="ta-email" className="contact-input" autoComplete="off" placeholder="review1@sajucheonmun.com" value={ta.email} onChange={(e) => setTa((t) => ({ ...t, email: e.target.value }))} />
+                <PasswordInput id="ta-pw" label="비밀번호" autoComplete="new-password" value={ta.password} onChange={(e) => setTa((t) => ({ ...t, password: e.target.value }))} />
+                <label className="contact-label" htmlFor="ta-nick">닉네임 (선택, 비우면 랜덤)</label>
+                <input id="ta-nick" className="contact-input" maxLength={12} value={ta.nick} onChange={(e) => setTa((t) => ({ ...t, nick: e.target.value }))} />
+                <label className="contact-label" htmlFor="ta-coins">처음 넣어 줄 금전 (선택)</label>
+                <input id="ta-coins" className="contact-input" inputMode="numeric" placeholder="0" value={ta.coins} onChange={(e) => setTa((t) => ({ ...t, coins: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) }))} />
+                {taMsg && <p className="inq-meta" role="status">{taMsg}</p>}
+                <button type="submit" className="btn-primary" disabled={taBusy || !ta.email || !ta.password}>
+                  {taBusy ? '만드는 중…' : '테스트 계정 만들기'}
+                </button>
+              </form>
+              {tests.length > 0 && (
+                <ul className="admin-credit-list">
+                  {tests.map((u) => (
+                    <li key={u.id}>
+                      <span className="admin-credit-who">
+                        <b>{u.displayNick || '-'}</b>
+                        <small>{u.email}</small>
+                      </span>
+                      <span className="admin-credit-bal">{(u.balance || 0).toLocaleString('ko-KR')}금전</span>
+                      <span className="inq-meta">{fmt(u.joinedAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : tab === 'credit' ? (
             <div className="admin-credit">
               <p className="hint">회원에게 금전을 넣어 줄 수 있어요. 넣은 금전은 회원의 복채 내역에 '운영자 지급'으로 남고, 결제가 아니라 환불 대상이 아니에요.</p>
               <input className="contact-input admin-credit-search" placeholder="닉네임·이메일·회원번호로 찾기" value={giveQ} onChange={(e) => setGiveQ(e.target.value)} aria-label="회원 찾기" />
@@ -290,7 +346,7 @@ export default function Admin() {
                     <tr key={u.id}>
                       <td className="num">{u.no}</td>
                       <td>{u.displayNick || '-'}</td>
-                      <td>{u.provider === 'email' ? '이메일' : '카카오'}</td>
+                      <td>{u.provider === 'email' ? '이메일' : '카카오'}{u.test ? ' · 테스트' : ''}</td>
                       <td>{(u.provider === 'email' ? u.email : u.nick) || '-'}</td>
                       <td className="mono">{u.id}</td>
                       <td>{fmt(u.joinedAt)}</td>

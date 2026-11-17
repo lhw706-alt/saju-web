@@ -1193,6 +1193,34 @@ export default async (req, context) => {
     return json({ ok: true, balance: r.balance });
   }
 
+  // 관리자: 테스트 계정 만들기 (2026-11-17 사용자 지시 — PG·앱 심사 담당자용 시험 계정)
+  // POST {email, password, nick?, coins?} → 메일 인증 없이 이메일 회원을 바로 만듦. 회원 기록에 test: true.
+  // 지울 때는 그 계정으로 로그인해 마이페이지 > 회원 탈퇴 (일반 회원과 같은 정리).
+  if (path === '/api/admin/test-account') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const bad = adminAuth(req, ip);
+    if (bad) return json({ error: bad.error }, bad.status);
+    const body = await readJson();
+    const email = String(body?.email || '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 100) return json({ error: '아이디는 이메일 모양으로 적어 주세요. 예: review1@sajucheonmun.com', field: 'email' }, 400);
+    const pwErr = passwordError(body?.password);
+    if (pwErr) return json({ error: pwErr, field: 'password' }, 400);
+    const coins = body?.coins === undefined || body?.coins === '' ? 0 : Number(body.coins);
+    if (!Number.isInteger(coins) || coins < 0 || coins > 100000) return json({ error: '금전은 0~100,000 사이 숫자로 적어 주세요.', field: 'coins' }, 400);
+    let nick = body?.nick ? cleanNick(body.nick) : { nick: await freeRandomNick() };
+    if (nick.error) return json({ error: nick.error, field: 'nick' }, 400);
+    nick = nick.nick;
+    if (await emails().get(emailKey(email))) return json({ error: '이미 가입한 아이디예요.', field: 'email' }, 409);
+    const id = `e_${randomBytes(9).toString('hex')}`;
+    if (!(await claimNick(id, nick))) return json({ error: '이미 쓰고 있는 닉네임이에요.', field: 'nick' }, 409);
+    const now = new Date().toISOString();
+    await users().setJSON(id, { id, provider: 'email', email, passHash: hashPassword(body.password), displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 0, age14At: now, test: true });
+    await emails().set(emailKey(email), id);
+    let balance = 0;
+    if (coins > 0) balance = (await grant(id, coins, '운영자 지급 · 테스트 계정')).balance;
+    return json({ ok: true, user: { id, email, displayNick: nick, provider: 'email', joinedAt: now, lastLoginAt: now, loginCount: 0, test: true, balance } });
+  }
+
   // 관리자: 회원의 오늘 행운의 번호 지우기 (다시 뽑을 수 있게) — POST {userId}
   if (path === '/api/admin/lucky') {
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
@@ -1273,4 +1301,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

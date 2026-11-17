@@ -2144,6 +2144,10 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .admin-credit-list .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
 .admin-credit-list .btn-primary.inline { margin: 0; height: 38px; }
 @media (max-width: 640px) { .admin-credit-list li { grid-template-columns: 1fr auto; } .admin-credit-list .contact-input { grid-column: span 1; } }
+/* 관리자 테스트 계정 탭 (2026-11-17) */
+.admin-test-form { display: grid; gap: 8px; max-width: 420px; margin: 4px 0 20px; }
+.admin-test-form .btn-primary { margin-top: 6px; }
+.admin-test .admin-credit-list li { grid-template-columns: minmax(0, 1fr) auto auto; }
 
 /* 소원 현황 한 줄 (2026-11-15 사용자 지시: 트렌디하게) */
 .wish-live { margin: 14px 0 18px; text-align: center; }
