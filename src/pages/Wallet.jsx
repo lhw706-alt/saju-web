@@ -6,7 +6,6 @@ import { PACKAGES, fmtCredits } from '../lib/wallet.js';
 import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
-import { SITE } from '../site.js';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -144,17 +143,14 @@ export default function Wallet() {
         </>
       )}
 
+      {/* 결제 전 환불 조건 요약 (2026-11-17 사용자 지시로 짧게 — 전자상거래법 제13조·제17조 제6항: 결제 전에 청약철회 조건·제한을 보여 줘야 해서 다 빼지 않음. 전문은 약관) */}
       <div className="wallet-notice">
         <h2 className="wallet-notice-title">환불 정책</h2>
-        <p>1금전은 100원이에요. 충전한 복채는 사주천문에서만 쓸 수 있고, 유효기간은 충전일로부터 5년이에요.</p>
         <p>
-          남은 복채는 환불받을 수 있어요. 환불 금액은 낸 금액에서 쓴 금전을 정가(1금전 100원)로 뺀 금액이에요(더 받은 금전이 있어도 같아요). 충전 후 7일 안이면 그대로, 7일이 지났다면 10%를 뺀 금액을 돌려드려요. 환불은{' '}
-          <Link to="/my/support">고객센터</Link>나 전화({SITE.business.phone})로 요청해 주세요. 요청받은 날부터 3영업일 안에 결제한 수단으로 돌려드려요(가상계좌는 본인 계좌로 송금).
+          충전 후 7일 안에 쓰지 않은 복채는 전액 환불이 가능해요. 남은 복채도 낸 금액에서 쓴 금전(1금전 100원)을 뺀 만큼 환불이 가능하고, 7일이 지나면 10%를 빼요. 열어 본 풀이는 환불이 제한돼요. 환불은{' '}
+          <Link to="/my/support">마이페이지 고객센터</Link>로 신청해 주세요.{' '}
+          <Link to="/terms#refund">환불 정책 자세히 보기</Link>
         </p>
-        <p>이미 열어 본 풀이는 디지털 콘텐츠라 청약철회가 제한돼요(전자상거래법 제17조 제2항). 이벤트·운영자 지급으로 무료로 받은 금전은 환불 금액에 들어가지 않아요. 자세한 내용은 <Link to="/terms#refund">이용약관 제7조의3</Link>을 확인해 주세요.</p>
-        <p>미성년자가 법정대리인(부모님 등)의 동의 없이 결제했다면 본인이나 법정대리인이 결제를 취소할 수 있어요.</p>
-        <p>풀이를 만들지 못하면 쓴 복채는 자동으로 돌려드려요. 회원 탈퇴하면 남은 복채가 사라지니, 탈퇴 전에 환불을 먼저 요청해 주세요.</p>
-        <p>결제는 ㈜스마트로가 대행해요(신용카드·간편결제·가상계좌). 환불 분쟁은 한국소비자원(1372)에 도움을 요청할 수 있어요.</p>
       </div>
     </section>
   );
