@@ -45,6 +45,9 @@ export async function deduct(uid, amount, type, item, ref) {
 // 이미 환불한 충전은 orders 기록의 refundUsed(환불 때 그 충전에서 쓴 금전)만큼만 쓴 것으로 고정.
 export const WON_PER = 100;
 export const DAY7 = 7 * 24 * 3600e3;
+// '충전한 날부터 7일' — 한국 날짜 기준, 충전한 날은 빼고 셈(민법 제157조). 11/17 충전이면 11/24 까지
+const kstDay = (t) => Math.floor((t + 9 * 3600e3) / 86400e3);
+export const within7 = (at, now = Date.now()) => kstDay(now) - kstDay(Date.parse(at)) <= 7;
 export function refundPlan(w, orderOf = {}, now = Date.now()) {
   const ledger = [...(w.ledger || [])].reverse(); // 오래된 것부터
   const used = Math.max(0, ledger.reduce((t, e) => t + (e.type === 'spend' ? -e.amount : e.type === 'return' ? -e.amount : 0), 0));
@@ -60,7 +63,7 @@ export function refundPlan(w, orderOf = {}, now = Date.now()) {
     c.used = Math.min(cap, paidUsed);
     paidUsed -= c.used;
     c.left = c.refunded ? 0 : c.credits - c.used;
-    c.within7 = now - Date.parse(c.at) <= DAY7;
+    c.within7 = within7(c.at, now);
     const base = Math.max(0, c.won - c.used * WON_PER);
     c.refundable = c.refunded ? 0 : c.within7 ? base : Math.floor(base * 0.9);
   }
