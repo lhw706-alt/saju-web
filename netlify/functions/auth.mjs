@@ -792,8 +792,9 @@ export default async (req, context) => {
         try {
           await sendSms(tel, `[사주천문] 인증번호 ${code} (3분 안에 입력해 주세요)`);
         } catch (e) {
-          console.error('sms send failed:', e?.message);
-          return json({ error: '문자를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, 502);
+          console.error('sms send failed:', e?.message, e?.detail);
+          // 원인 확인용으로 솔라피 오류 코드를 같이 보여 줌(키·번호 같은 비밀 값은 들어가지 않음)
+          return json({ error: `문자를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요. (오류: ${e?.code || 'unknown'}${e?.detail ? ` · ${e.detail}` : ''})` }, 502);
         }
         await otp.setJSON(s.sub, { tel, code: codeHash(code), exp: now + 180e3, tries: 0, sends: [...sends, now] });
         return json({ ok: true });

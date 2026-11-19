@@ -63,13 +63,13 @@ export default function PhoneVerifyModal({ open, onClose, onDone }) {
           </button>
         </div>
         <form className="contact-form" onSubmit={verify} noValidate>
-          <p className="contact-lead">처음 결제할 때 한 번만 휴대폰 인증이 필요해요. 인증한 번호는 결제대행사(스마트로)의 결제 확인에 쓰이고, 다음부터는 바로 결제할 수 있어요.</p>
+          <p className="contact-lead">처음 결제할 때 한 번만 휴대폰 인증이 필요해요.</p>
           <label className="contact-label" htmlFor="pv-tel">
             휴대폰 번호
           </label>
           <div className="pv-row">
             <input id="pv-tel" className="contact-input" type="tel" inputMode="numeric" autoComplete="tel" placeholder="01012345678" value={tel} autoFocus onChange={(e) => setTel(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))} />
-            <button type="button" className="btn-ghost pv-btn" onClick={send} disabled={!TEL_RE.test(tel) || busy}>
+            <button type="button" className="pv-btn" onClick={send} disabled={!TEL_RE.test(tel) || busy}>
               {sent ? '다시 받기' : '인증번호 받기'}
             </button>
           </div>

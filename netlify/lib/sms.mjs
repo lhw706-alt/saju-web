@@ -13,7 +13,7 @@ export function smsEnv() {
 export async function sendSms(to, text) {
   const env = smsEnv();
   if (!env.ready) throw new Error('sms-not-ready');
-  const date = new Date().toISOString();
+  const date = new Date().toISOString().replace(/.d{3}Z$/, 'Z'); // 문서 예시처럼 밀리초 없이
   const salt = randomBytes(16).toString('hex');
   const signature = createHmac('sha256', env.secret).update(date + salt).digest('hex');
   const r = await fetch('https://api.solapi.com/messages/v4/send', {
@@ -26,6 +26,11 @@ export async function sendSms(to, text) {
     signal: AbortSignal.timeout(10_000),
   }).catch(() => null);
   const d = await r?.json().catch(() => null);
-  if (!r?.ok) throw new Error(`sms-failed:${d?.errorCode || r?.status || 'network'}`);
+  if (!r?.ok) {
+    const e = new Error(`sms-failed:${d?.errorCode || r?.status || 'network'}`);
+    e.code = String(d?.errorCode || r?.status || 'network').slice(0, 40);
+    e.detail = String(d?.errorMessage || '').slice(0, 80);
+    throw e;
+  }
   return d;
 }

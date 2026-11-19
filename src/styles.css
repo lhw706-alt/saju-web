@@ -2005,7 +2005,10 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-tel { width: 100%; max-width: 320px; }
 .pv-row { display: flex; gap: 8px; }
 .pv-row .contact-input { flex: 1; min-width: 0; }
-.pv-btn { flex: none; margin: 0; padding: 0 14px; white-space: nowrap; }
+.pv-row { align-items: stretch; }
+.pv-btn { flex: none; height: 48px; margin: 0; padding: 0 18px; border: 1px solid rgba(226, 194, 122, 0.45); border-radius: var(--r-md); background: transparent; color: var(--primary); font: inherit; font-size: 15px; font-weight: 500; letter-spacing: var(--ls-label); white-space: nowrap; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+.pv-btn:hover:not(:disabled) { border-color: var(--primary); background: rgba(226, 194, 122, 0.08); }
+.pv-btn:disabled { border-color: var(--line); color: rgba(194, 196, 200, 0.5); cursor: default; }
 .pv-msg { margin: 8px 0 0; font-size: 14px; color: var(--danger); }
 .pv-msg.is-ok { color: rgba(194, 196, 200, 0.85); }
 .phone-verify .contact-form { display: grid; gap: 8px; }
