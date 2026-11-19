@@ -115,11 +115,12 @@ export default function DiaryBoard() {
           ))}
         </div>
         <p className="diary-q">하루가 어땠나요?</p>
-        <div className="diary-moods" role="radiogroup" aria-label="오늘 하루">
+        {/* 하루 기분은 다섯 칸 진행 막대 (2026-11-19 사용자 지시) — 고른 칸까지 그 기분 색으로 채움 */}
+        <div className={`diary-moods m${form.mood}`} role="radiogroup" aria-label="오늘 하루">
           {[1, 2, 3, 4, 5].map((v) => (
-            <button key={v} type="button" role="radio" aria-checked={form.mood === v} aria-label={MOODS[v]} className={`diary-opt m${v}${form.mood === v ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, mood: v }))}>
-              <span className="diary-dot" aria-hidden="true" />
-              {MOOD_SHORT[v]}
+            <button key={v} type="button" role="radio" aria-checked={form.mood === v} aria-label={MOODS[v]} className={`diary-seg${form.mood >= v ? ' is-fill' : ''}${form.mood === v ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, mood: v }))}>
+              <span className="diary-seg-bar" aria-hidden="true" />
+              <span className="diary-seg-label">{MOOD_SHORT[v]}</span>
             </button>
           ))}
         </div>
