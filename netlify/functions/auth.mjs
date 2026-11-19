@@ -32,6 +32,7 @@ import { WISH_DAILY, WISH_HIDE_REPORTS, wishCat, wishProblem } from '../../src/l
 import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
 import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk, cosmeticById } from '../../src/lib/wallet.js';
+import { smartroEnv, ediDate, encryptData } from '../lib/smartro.mjs';
 import { walletOf, credit, grant, spend, deduct, refundPlan, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
@@ -701,10 +702,10 @@ export default async (req, context) => {
     return json({ date, numbers: rec.numbers, already: false });
   }
 
-  // ── 복채 (충전식 유료, 2026-11-14) ── 토스페이먼츠 결제창. 화면 /wallet (src/pages/Wallet.jsx)
-  // GET  /api/wallet           → { enabled, balance, ledger, packages } (회원)
-  // POST /api/pay/order {pkg}  → 주문 만들기 { orderId, amount, orderName, customerKey } — Blobs 'orders'(키 = 주문번호, 5년 보관)
-  // POST /api/pay/confirm {paymentKey, orderId, amount} → 금액 확인 후 토스 승인 API → 복채 적립 (같은 주문은 한 번만)
+  // ── 복채 (충전식 유료, 2026-11-14) ── 2026-11-18 스마트로페이로 바꿈(예전 토스). 화면 /wallet (src/pages/Wallet.jsx)
+  // GET  /api/wallet           → { enabled, mode, balance, ledger, packages } (회원)
+  // POST /api/pay/order {pkg}  → 주문 만들기 { mode, orderId, fields(스마트로 결제창 tranMgr 값 + EncryptData) } — Blobs 'orders'(키 = 주문번호, 5년 보관)
+  // 승인·적립은 netlify/functions/pay-smartro.mjs (/api/pay/smartro/return — 같은 주문은 한 번만)
   // POST /api/wallet/owned {item, input} · /api/wallet/buy {item, input} → 신년운세 월별 상세처럼 사람·해마다 한 번 사는 상품
   // ── 유료 풀이 기록 (2026-11-15) ── GET /api/records → { records } · DELETE /api/records {id} (회원, 마이페이지 '풀이 기록')
   if (path === '/api/records') {
@@ -756,51 +757,51 @@ export default async (req, context) => {
 
   if (path === '/api/wallet' || path.startsWith('/api/pay/') || path.startsWith('/api/wallet/')) {
     const s = secret ? verify(cookies(req)[SESSION], secret) : null;
-    const payOn = Boolean(process.env.TOSS_SECRET_KEY);
+    const sm = smartroEnv(); // 2026-11-18 스마트로 (예전 토스 TOSS_SECRET_KEY)
+    const payOn = sm.ready;
     if (!s) return json({ error: '로그인이 필요해요.', login: true, enabled: payOn }, 401);
     if (historyLimited(s.sub)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
     const orders = getStore({ name: 'orders', consistency: 'strong' });
     if (req.method === 'GET' && path === '/api/wallet') {
       const w = await walletOf(s.sub);
-      return json({ enabled: payOn, balance: w.balance || 0, ledger: (w.ledger || []).slice(0, 50), packages: PACKAGES });
+      return json({ enabled: payOn, mode: sm.mode, balance: w.balance || 0, ledger: (w.ledger || []).slice(0, 50), packages: PACKAGES });
     }
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     const body = await readJson();
     if (path === '/api/pay/order') {
+      // 스마트로 결제창에 넣을 값 (netlify/lib/smartro.mjs). 주문번호(Moid)는 특수문자 없이
       if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);
       const pkg = packageById(body?.pkg);
       if (!pkg) return json({ error: '충전 금액을 다시 골라 주세요.' }, 400);
-      const orderId = `sc-${Date.now().toString(36)}-${randomBytes(6).toString('hex')}`;
-      await orders.setJSON(orderId, { uid: s.sub, pkg: pkg.id, won: pkg.won, credits: pkg.credits, status: 'ready', createdAt: new Date().toISOString() });
-      const customerKey = createHash('sha256').update(`cust:${s.sub}:${secret}`).digest('base64url').slice(0, 40);
-      return json({ orderId, amount: pkg.won, orderName: `사주천문 복채 ${pkg.credits}금전`, customerKey });
-    }
-    if (path === '/api/pay/confirm') {
-      if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);
-      const orderId = String(body?.orderId || '');
-      const paymentKey = String(body?.paymentKey || '');
-      const amount = Number(body?.amount);
-      const o = /^sc-[a-z0-9]+-[0-9a-f]{12}$/.test(orderId) ? await orders.get(orderId, { type: 'json' }) : null;
-      if (!o || o.uid !== s.sub) return json({ error: '주문을 찾지 못했어요.' }, 404);
-      if (o.status === 'done') {
-        const w = await walletOf(s.sub);
-        return json({ ok: true, balance: w.balance, credits: o.credits, already: true });
-      }
-      if (amount !== o.won || !paymentKey || paymentKey.length > 200) return json({ error: '결제 금액이 주문과 달라요. 결제가 취소돼요.' }, 400);
-      const res = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
-        method: 'POST',
-        headers: { authorization: `Basic ${Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString('base64')}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ paymentKey, orderId, amount }),
-      }).catch(() => null);
-      const pay = await res?.json().catch(() => null);
-      if (!res?.ok || pay?.status !== 'DONE') {
-        await orders.setJSON(orderId, { ...o, status: 'failed', failCode: pay?.code || 'network', failedAt: new Date().toISOString() });
-        console.error('pay confirm failed:', pay?.code || res?.status || 'network');
-        return json({ error: pay?.message || '결제를 승인하지 못했어요. 결제된 금액이 있다면 자동으로 취소돼요.' }, 400);
-      }
-      await orders.setJSON(orderId, { ...o, status: 'done', paymentKey, method: pay.method || null, approvedAt: pay.approvedAt || new Date().toISOString() });
-      const c = await credit(s.sub, o.credits, `충전 ${o.won.toLocaleString('ko-KR')}원`, orderId);
-      return json({ ok: true, balance: c.balance, credits: o.credits });
+      const orderId = `SC${Date.now().toString(36)}${randomBytes(6).toString('hex')}`;
+      await orders.setJSON(orderId, { uid: s.sub, pkg: pkg.id, won: pkg.won, credits: pkg.credits, status: 'ready', pg: 'smartro', createdAt: new Date().toISOString() });
+      const u = (await users().get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      const edi = ediDate();
+      const amt = String(pkg.won);
+      return json({
+        mode: sm.mode,
+        orderId,
+        fields: {
+          PayMethod: 'CARD',
+          GoodsCnt: '1',
+          GoodsName: `사주천문 복채 ${pkg.credits}금전`,
+          Amt: amt,
+          Moid: orderId,
+          Mid: sm.mid,
+          ReturnUrl: `${url.origin}/api/pay/smartro/return`,
+          StopUrl: `${url.origin}/api/pay/smartro/stop`,
+          BuyerName: String(u.displayNick || '사주천문 회원').slice(0, 20),
+          BuyerTel: '',
+          BuyerEmail: u.provider === 'email' && u.email ? u.email : '',
+          MallUserId: s.sub.replace(/[^A-Za-z0-9]/g, '').slice(0, 20),
+          ShowEasyPay: 'Y',
+          EdiDate: edi,
+          EncryptData: encryptData(edi, sm.mid, amt, sm.key),
+          TaxAmt: '',
+          TaxFreeAmt: '',
+          VatAmt: '',
+        },
+      });
     }
     if (path === '/api/wallet/owned' || path === '/api/wallet/buy') {
       const item = String(body?.item || '');
@@ -1340,4 +1341,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/confirm', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

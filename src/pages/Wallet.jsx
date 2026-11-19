@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { PACKAGES, fmtCredits } from '../lib/wallet.js';
-import { startCharge, confirmCharge, payClientKey } from '../lib/pay.js';
+import { startCharge } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
 
@@ -35,29 +35,22 @@ export default function Wallet() {
     if (auth?.ready && auth.user) load();
   }, [auth?.ready, auth?.user]);
 
-  // 결제창에서 돌아왔을 때
+  // 결제창에서 돌아왔을 때 (스마트로 → 서버가 승인·적립까지 마치고 /wallet?pay=success&c=금전 또는 ?pay=fail&message= 로 보냄)
   useEffect(() => {
     if (handled.current || !auth?.ready) return;
     const pay = params.get('pay');
     if (!pay) return;
     handled.current = true;
-    const data = { paymentKey: params.get('paymentKey'), orderId: params.get('orderId'), amount: params.get('amount') };
+    const credits = Number(params.get('c')) || 0;
     const failMsg = params.get('message');
     setParams({}, { replace: true });
     if (pay === 'fail') {
       setMsg({ ok: false, text: failMsg || '결제를 마치지 못했어요. 결제된 금액은 없어요.' });
       return;
     }
-    if (!auth.user) return;
-    setBusy(true);
-    confirmCharge(data)
-      .then((d) => {
-        trackEvent('charge_done', { credits: d.credits });
-        setMsg({ ok: true, text: `${fmtCredits(d.credits)}이 충전됐어요.` });
-        load();
-      })
-      .catch((e) => setMsg({ ok: false, text: e.message }))
-      .finally(() => setBusy(false));
+    trackEvent('charge_done', { credits });
+    setMsg({ ok: true, text: credits ? `${fmtCredits(credits)}이 충전됐어요.` : '충전됐어요.' });
+    if (auth.user) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.ready, auth?.user]);
 
@@ -75,7 +68,7 @@ export default function Wallet() {
     }
     setBusy(false);
   };
-  const ready = Boolean(payClientKey) && w?.enabled !== false;
+  const ready = w?.enabled === true;
 
   return (
     <section className="wallet">

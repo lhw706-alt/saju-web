@@ -298,6 +298,12 @@ export default function Layout() {
           <span>운영 {SITE.business.name}</span>
           <span>대표 {SITE.business.ceo}</span>
           <span>사업자등록번호 {SITE.business.regNo}</span>
+          <span>
+            통신판매업 신고 {SITE.business.mailOrderNo}{' '}
+            <a className="footer-bizcheck" href={`https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${SITE.business.regNo.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer">
+              사업자정보 확인
+            </a>
+          </span>
           <span>주소 {SITE.business.address}</span>
           <span>전화 {SITE.business.phone}</span>
           <span>이메일 {SITE.business.email}</span>

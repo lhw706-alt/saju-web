@@ -177,7 +177,7 @@ export default function Terms() {
 
       <h2>제13조 (서비스 제공자)</h2>
       <p>
-        {SITE.name}은(는) {SITE.business.name}(대표 {SITE.business.ceo})이(가) 운영해요. 사업자등록번호 {SITE.business.regNo} · 주소 {SITE.business.address} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email} · 호스팅 제공자 {SITE.business.hosting}
+        {SITE.name}은(는) {SITE.business.name}(대표 {SITE.business.ceo})이(가) 운영해요. 사업자등록번호 {SITE.business.regNo} · 통신판매업 신고 {SITE.business.mailOrderNo} · 주소 {SITE.business.address} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email} · 호스팅 제공자 {SITE.business.hosting}
       </p>
 
       <h2>부칙</h2>

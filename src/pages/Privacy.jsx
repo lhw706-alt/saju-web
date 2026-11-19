@@ -182,7 +182,7 @@ export default function Privacy() {
 
       <h2>10. 개인정보 보호 책임자</h2>
       <p>
-        운영자: {SITE.business.name}(대표 {SITE.business.ceo}, 사업자등록번호 {SITE.business.regNo}, 주소 {SITE.business.address}) · 개인정보 보호 책임자: {SITE.business.name} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email}
+        운영자: {SITE.business.name}(대표 {SITE.business.ceo}, 사업자등록번호 {SITE.business.regNo}, 통신판매업 신고 {SITE.business.mailOrderNo}, 주소 {SITE.business.address}) · 개인정보 보호 책임자: {SITE.business.name} · 전화 {SITE.business.phone} · 이메일 {SITE.business.email}
       </p>
       <p>개인정보 침해에 대한 신고나 상담은 개인정보침해신고센터(privacy.kisa.or.kr, 국번 없이 118), 개인정보분쟁조정위원회(www.kopico.go.kr, 1833-6972)에도 할 수 있어요.</p>
 
