@@ -125,7 +125,7 @@ export default function Admin() {
   };
 
   // 테스트 계정 탭 (2026-11-17 사용자 지시): 메일 인증 없이 시험용 이메일 회원 만들기 — /api/admin/test-account
-  const [ta, setTa] = useState({ email: '', password: '', nick: '', coins: '' });
+  const [ta, setTa] = useState({ email: '', password: '', nick: '', coins: '', tel: '' });
   const [taMsg, setTaMsg] = useState('');
   const [taBusy, setTaBusy] = useState(false);
   const makeTest = async (e) => {
@@ -141,8 +141,8 @@ export default function Admin() {
     setTaBusy(false);
     if (!r?.ok) return setTaMsg(d?.error || '만들지 못했어요.');
     setData((old) => ({ ...old, total: old.total + 1, users: [{ ...d.user, no: old.total + 1 }, ...old.users] }));
-    setTaMsg(`만들었어요. 아이디 ${d.user.email} · 닉네임 ${d.user.displayNick}${d.user.balance ? ` · ${d.user.balance.toLocaleString('ko-KR')}금전` : ''}`);
-    setTa({ email: '', password: '', nick: '', coins: '' });
+    setTaMsg(`만들었어요. 아이디 ${d.user.email} · 닉네임 ${d.user.displayNick}${d.user.balance ? ` · ${d.user.balance.toLocaleString('ko-KR')}금전` : ''}${d.user.phone ? ` · 결제 휴대폰 ${d.user.phone}` : ''}`);
+    setTa({ email: '', password: '', nick: '', coins: '', tel: '' });
   };
   const tests = data?.users.filter((u) => u.test) ?? [];
 
@@ -220,6 +220,8 @@ export default function Admin() {
                 <input id="ta-nick" className="contact-input" maxLength={12} value={ta.nick} onChange={(e) => setTa((t) => ({ ...t, nick: e.target.value }))} />
                 <label className="contact-label" htmlFor="ta-coins">처음 넣어 줄 금전 (선택)</label>
                 <input id="ta-coins" className="contact-input" inputMode="numeric" placeholder="0" value={ta.coins} onChange={(e) => setTa((t) => ({ ...t, coins: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) }))} />
+                <label className="contact-label" htmlFor="ta-tel">결제 휴대폰 (선택, 인증 없이 등록 — 테스트용)</label>
+                <input id="ta-tel" className="contact-input" type="tel" inputMode="numeric" placeholder="01012345678" value={ta.tel} onChange={(e) => setTa((t) => ({ ...t, tel: e.target.value.replace(/[^0-9]/g, '').slice(0, 11) }))} />
                 {taMsg && <p className="inq-meta" role="status">{taMsg}</p>}
                 <button type="submit" className="btn-primary" disabled={taBusy || !ta.email || !ta.password}>
                   {taBusy ? '만드는 중…' : '테스트 계정 만들기'}
@@ -234,7 +236,7 @@ export default function Admin() {
                         <small>{u.email}</small>
                       </span>
                       <span className="admin-credit-bal">{(u.balance || 0).toLocaleString('ko-KR')}금전</span>
-                      <span className="inq-meta">{fmt(u.joinedAt)}</span>
+                      <span className="inq-meta">{u.phone || '휴대폰 없음'} · {fmt(u.joinedAt)}</span>
                     </li>
                   ))}
                 </ul>
@@ -266,7 +268,7 @@ export default function Admin() {
                       </button>
                       {openW === u.id && (
                         <div className="admin-w-panel">
-                          <AdminWallet userId={u.id} name={u.displayNick || u.id} pw={pw} onBalance={(b) => setData((old) => ({ ...old, users: old.users.map((x) => (x.id === u.id ? { ...x, balance: b } : x)) }))} />
+                          <AdminWallet userId={u.id} name={u.displayNick || u.id} pw={pw} phone={u.phone} onPhone={(p) => setData((old) => ({ ...old, users: old.users.map((x) => (x.id === u.id ? { ...x, phone: p } : x)) }))} onBalance={(b) => setData((old) => ({ ...old, users: old.users.map((x) => (x.id === u.id ? { ...x, balance: b } : x)) }))} />
                         </div>
                       )}
                     </li>

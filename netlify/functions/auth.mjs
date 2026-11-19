@@ -1282,6 +1282,27 @@ export default async (req, context) => {
     return json(await planOf());
   }
 
+  // 관리자: 결제 휴대폰 직접 등록 (2026-11-19 사용자 지시 — 솔라피 070 발신번호 승인 기다리는 동안 테스트용, 문자 인증 없이)
+  // POST {userId, tel} → 회원 기록 phone 에 저장(인증한 것과 같게 결제에 쓰임) / tel 비우면 지움
+  if (path === '/api/admin/phone') {
+    if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
+    const bad = adminAuth(req, ip);
+    if (bad) return json({ error: bad.error }, bad.status);
+    const body = await readJson();
+    const userId = String(body?.userId || '');
+    const rec = /^[A-Za-z0-9_-]{1,80}$/.test(userId) ? await users().get(userId, { type: 'json' }) : null;
+    if (!rec) return json({ error: '회원을 찾지 못했어요.' }, 404);
+    const tel = String(body?.tel || '').replace(/[^0-9]/g, '');
+    if (!tel) {
+      const { phone, phoneAt, phoneBy, ...rest } = rec;
+      await users().setJSON(userId, rest);
+      return json({ ok: true, phone: null });
+    }
+    if (!/^01[016789][0-9]{7,8}$/.test(tel)) return json({ error: '휴대폰 번호를 확인해 주세요. 예: 01012345678' }, 400);
+    await users().setJSON(userId, { ...rec, phone: tel, phoneAt: new Date().toISOString(), phoneBy: 'admin' });
+    return json({ ok: true, phone: `${tel.slice(0, 3)}-****-${tel.slice(-4)}` });
+  }
+
   // 관리자: 테스트 계정 만들기 (2026-11-17 사용자 지시 — PG·앱 심사 담당자용 시험 계정)
   // POST {email, password, nick?, coins?} → 메일 인증 없이 이메일 회원을 바로 만듦. 회원 기록에 test: true.
   // 지울 때는 그 계정으로 로그인해 마이페이지 > 회원 탈퇴 (일반 회원과 같은 정리).
@@ -1299,15 +1320,17 @@ export default async (req, context) => {
     let nick = body?.nick ? cleanNick(body.nick) : { nick: await freeRandomNick() };
     if (nick.error) return json({ error: nick.error, field: 'nick' }, 400);
     nick = nick.nick;
+    const tTel = String(body?.tel || '').replace(/[^0-9]/g, '');
+    if (tTel && !/^01[016789][0-9]{7,8}$/.test(tTel)) return json({ error: '휴대폰 번호를 확인해 주세요. 예: 01012345678', field: 'tel' }, 400);
     if (await emails().get(emailKey(email))) return json({ error: '이미 가입한 아이디예요.', field: 'email' }, 409);
     const id = `e_${randomBytes(9).toString('hex')}`;
     if (!(await claimNick(id, nick))) return json({ error: '이미 쓰고 있는 닉네임이에요.', field: 'nick' }, 409);
     const now = new Date().toISOString();
-    await users().setJSON(id, { id, provider: 'email', email, passHash: hashPassword(body.password), displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 0, age14At: now, test: true });
+    await users().setJSON(id, { id, provider: 'email', email, passHash: hashPassword(body.password), displayNick: nick, joinedAt: now, lastLoginAt: now, loginCount: 0, age14At: now, test: true, ...(tTel ? { phone: tTel, phoneAt: now, phoneBy: 'admin' } : {}) });
     await emails().set(emailKey(email), id);
     let balance = 0;
     if (coins > 0) balance = (await grant(id, coins, '운영자 지급 · 테스트 계정')).balance;
-    return json({ ok: true, user: { id, email, displayNick: nick, provider: 'email', joinedAt: now, lastLoginAt: now, loginCount: 0, test: true, balance } });
+    return json({ ok: true, user: { id, email, displayNick: nick, provider: 'email', joinedAt: now, lastLoginAt: now, loginCount: 0, test: true, balance, phone: tTel ? `${tTel.slice(0, 3)}-****-${tTel.slice(-4)}` : undefined } });
   }
 
   // 관리자: 회원의 오늘 행운의 번호 지우기 (다시 뽑을 수 있게) — POST {userId}
@@ -1390,4 +1413,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/phone/send', '/api/pay/phone/verify', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/phone', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/phone/send', '/api/pay/phone/verify', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };

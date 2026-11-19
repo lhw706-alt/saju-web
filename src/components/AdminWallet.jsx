@@ -11,11 +11,12 @@ const day = (iso) => {
 };
 const KIND = { charge: '충전', spend: '사용', return: '돌려받음', grant: '지급', refund: '환불', debit: '회수' };
 
-export default function AdminWallet({ userId, name, pw, onBalance }) {
+export default function AdminWallet({ userId, name, pw, phone, onBalance, onPhone }) {
   const [plan, setPlan] = useState(null);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState('');
   const [debit, setDebit] = useState({ amount: '', memo: '' });
+  const [tel, setTel] = useState('');
 
   const call = async (path, body) => {
     const r = await fetch(path, { method: 'POST', headers: { authorization: `Bearer ${pw}`, 'content-type': 'application/json' }, body: JSON.stringify({ userId, ...body }) }).catch(() => null);
@@ -64,6 +65,19 @@ export default function AdminWallet({ userId, name, pw, onBalance }) {
     setBusy('');
   };
 
+  // 결제 휴대폰 직접 등록 (2026-11-19 — 문자 발신번호 승인 전 테스트용, 인증 없이)
+  const savePhone = async (clear) => {
+    if (clear && !(await askConfirm({ title: '결제 휴대폰을 지울까요?', message: '지우면 다음 결제 때 다시 휴대폰 인증을 해요.', ok: '지우기', cancel: '취소' }))) return;
+    setBusy('phone');
+    const r = await fetch('/api/admin/phone', { method: 'POST', headers: { authorization: `Bearer ${pw}`, 'content-type': 'application/json' }, body: JSON.stringify({ userId, tel: clear ? '' : tel }) }).catch(() => null);
+    const d = await r?.json().catch(() => ({}));
+    setBusy('');
+    if (!r?.ok) return setMsg(d?.error || '저장하지 못했어요.');
+    onPhone?.(d.phone || undefined);
+    setTel('');
+    setMsg(d.phone ? `결제 휴대폰 ${d.phone} 을 인증한 번호로 등록했어요.` : '결제 휴대폰을 지웠어요.');
+  };
+
   if (!plan) return <div className="aw">{msg ? <p className="field-msg">{msg}</p> : <p className="hint">불러오는 중…</p>}</div>;
   const total = plan.charges.reduce((t, c) => t + c.refundable, 0);
 
@@ -103,6 +117,20 @@ export default function AdminWallet({ userId, name, pw, onBalance }) {
           ))}
         </ul>
       )}
+
+      <h4 className="aw-h">결제 휴대폰 (인증 없이 등록 · 테스트용)</h4>
+      <p className="hint">지금: {phone || '없음'} — 등록하면 이 회원은 결제할 때 휴대폰 인증 창 없이 이 번호로 결제해요.</p>
+      <div className="aw-debit aw-phone">
+        <input className="contact-input" type="tel" inputMode="numeric" placeholder="01012345678" value={tel} onChange={(e) => setTel(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))} aria-label="결제 휴대폰 번호" />
+        <button type="button" className="btn-ghost aw-btn" disabled={busy === 'phone' || !/^01[016789][0-9]{7,8}$/.test(tel)} onClick={() => savePhone(false)}>
+          {busy === 'phone' ? '저장 중…' : '등록'}
+        </button>
+        {phone && (
+          <button type="button" className="btn-ghost aw-btn" disabled={busy === 'phone'} onClick={() => savePhone(true)}>
+            지우기
+          </button>
+        )}
+      </div>
 
       <h4 className="aw-h">금전 빼기 (도용 회수 등)</h4>
       <div className="aw-debit">

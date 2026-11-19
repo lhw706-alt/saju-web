@@ -2194,6 +2194,7 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .aw-btn { justify-self: start; height: 34px; min-height: 34px; margin: 2px 0 0; padding: 0 12px; }
 .aw-debit { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 8px; }
 .aw-debit .contact-input { height: 38px; min-height: 38px; padding: 0 10px; }
+.aw-phone { grid-template-columns: minmax(0, 1fr) auto auto; }
 .aw-ledger li { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px 56px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 14px; }
 .aw-ledger small { display: block; font-size: 13px; color: rgba(194, 196, 200, 0.7); }
 .aw-kind { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
