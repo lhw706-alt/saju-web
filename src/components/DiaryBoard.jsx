@@ -9,6 +9,9 @@ import { trackEvent } from '../lib/analytics.js';
 
 const MOODS = ['', '힘들었어요', '별로였어요', '보통이었어요', '좋았어요', '아주 좋았어요'];
 const HITS = ['안 봤어요', '안 맞았어요', '조금 맞았어요', '잘 맞았어요'];
+// 선택 버튼에 쓰는 짧은 말 (2026-11-19 사용자 지시: 한 줄 버튼으로)
+const MOOD_SHORT = ['', '힘듦', '별로', '보통', '좋음', '최고'];
+const HIT_SHORT = ['안 봤어요', '안 맞음', '조금', '잘 맞음'];
 const EL_ORDER = ['wood', 'fire', 'earth', 'metal', 'water'];
 const p2 = (n) => String(n).padStart(2, '0');
 const kst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -114,17 +117,17 @@ export default function DiaryBoard() {
         <p className="diary-q">하루가 어땠나요?</p>
         <div className="diary-moods" role="radiogroup" aria-label="오늘 하루">
           {[1, 2, 3, 4, 5].map((v) => (
-            <button key={v} type="button" role="radio" aria-checked={form.mood === v} className={`m${v}${form.mood === v ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, mood: v }))}>
+            <button key={v} type="button" role="radio" aria-checked={form.mood === v} aria-label={MOODS[v]} className={`diary-opt m${v}${form.mood === v ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, mood: v }))}>
               <span className="diary-dot" aria-hidden="true" />
-              {MOODS[v]}
+              {MOOD_SHORT[v]}
             </button>
           ))}
         </div>
         <p className="diary-q">운세는 맞았나요?</p>
         <div className="diary-hits" role="radiogroup" aria-label="운세가 맞았는지">
           {HITS.map((t, v) => (
-            <button key={t} type="button" role="radio" aria-checked={form.hit === v} className={form.hit === v ? 'on' : ''} onClick={() => setForm((f) => ({ ...f, hit: v }))}>
-              {t}
+            <button key={t} type="button" role="radio" aria-checked={form.hit === v} aria-label={t} className={`diary-opt${form.hit === v ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, hit: v }))}>
+              {HIT_SHORT[v]}
             </button>
           ))}
         </div>

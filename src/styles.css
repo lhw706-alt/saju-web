@@ -2775,58 +2775,58 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .ij-friend { margin-bottom: 8px; }
 @media (max-width: 380px) { .ij-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } .ij-hanja { font-size: 46px; } }
 
-/* ── 천동이 키우기 /my/grow (2026-11-19 리텐션 ②) ── */
-.grow-hero { position: relative; display: grid; place-items: center; height: 170px; margin: 4px 0 6px; }
-.grow-glow { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(243, 217, 142, 0.35), transparent 70%); transition: transform 0.6s ease; }
+/* ── 천동이 키우기 /my/grow (2026-11-19 리텐션 ②, 2차 'AI 티' 빼기: 천동이 한마디 · 단계 점 · 낙관 도장) ── */
+.grow-hero { position: relative; display: grid; place-items: center; height: 168px; margin: 0; }
+.grow-glow { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(243, 217, 142, 0.32), transparent 70%); transition: transform 0.6s ease; }
 .grow-hero.lv-2 .grow-glow { transform: scale(1.15); }
 .grow-hero.lv-3 .grow-glow { transform: scale(1.3); }
 .grow-hero.lv-4 .grow-glow { transform: scale(1.45); }
 .grow-hero.lv-5 .grow-glow { transform: scale(1.6); }
 .grow-hero.lv-6 .grow-glow { transform: scale(1.75); }
-.grow-hero.lv-7 .grow-glow { transform: scale(1.9); background: radial-gradient(circle, rgba(255, 236, 170, 0.5), transparent 70%); }
+.grow-hero.lv-7 .grow-glow { transform: scale(1.9); background: radial-gradient(circle, rgba(255, 236, 170, 0.45), transparent 70%); }
 .grow-hero.is-asleep .grow-glow { opacity: 0.25; }
-.grow-art { position: relative; width: 150px; animation: charm-float 3.6s ease-in-out infinite; }
+.grow-art { position: relative; width: 148px; animation: charm-float 3.6s ease-in-out infinite; }
 .grow-art svg { width: 100%; height: auto; display: block; }
 .grow-hero.is-asleep .grow-art { animation: none; filter: saturate(0.6) brightness(0.85); }
-.grow-kicker { margin: 0; font-size: 13px; color: var(--primary); text-align: center; }
-.grow-name { margin: 2px 0 6px; font-family: 'NanumSquareRound', var(--font); font-weight: 400; font-size: 22px; text-align: center; }
-.grow-say { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--text-2); text-align: center; }
-.grow-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
-.grow-bar span { display: block; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.6s ease; }
-.grow-meta { display: flex; justify-content: space-between; gap: 10px; margin: 8px 0 0; font-size: 13px; color: rgba(194, 196, 200, 0.8); }
-.grow-h3 { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 6px; font-size: 15px; font-weight: 600; }
-.grow-h3 small { font-size: 13px; font-weight: 400; color: var(--text-2); }
-.grow-list, .grow-levels { margin: 0; padding: 0; list-style: none; }
-.grow-list li { display: flex; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
-.grow-check { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.25); color: #1B1C1E; }
-.grow-list li.is-done .grow-check { border-color: var(--primary); background: var(--primary); }
-.grow-what { flex: 1; font-size: 15px; color: var(--text); text-decoration: none; }
-a.grow-what:hover { color: var(--primary); }
-.grow-list li.is-done .grow-what { color: rgba(194, 196, 200, 0.6); }
-.grow-xp { flex: none; font-size: 13px; color: var(--primary); }
-.grow-levels li { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; color: rgba(194, 196, 200, 0.6); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.grow-levels li span { flex: none; width: 18px; font-size: 13px; text-align: center; }
-.grow-levels li em { margin-left: auto; font-style: normal; font-size: 13px; color: rgba(226, 194, 122, 0.7); }
-.grow-levels li.is-past { color: var(--text-2); }
-.grow-levels li.is-now { color: var(--text); font-weight: 600; }
-.grow-levels li.is-now span { color: var(--primary); }
-.grow-note { margin: 18px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.65); }
+.grow-say { margin: 4px auto 18px; max-width: 300px; font-family: 'NanumSquareRound', var(--font); font-size: 17px; line-height: 1.6; color: var(--text); text-align: center; word-break: keep-all; }
+.grow-name { margin: 0; font-size: 14px; font-weight: 500; color: var(--primary); text-align: center; }
+.grow-dots { display: flex; justify-content: center; gap: 7px; margin: 10px 0 8px; padding: 0; list-style: none; }
+.grow-dots li { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.14); }
+.grow-dots li.is-past { background: rgba(226, 194, 122, 0.55); }
+.grow-dots li.is-now { background: var(--primary); box-shadow: 0 0 0 3px rgba(226, 194, 122, 0.2); }
+.grow-meta { margin: 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.75); text-align: center; word-break: keep-all; }
+.grow-h3 { margin: 30px 0 12px; font-size: 15px; font-weight: 600; }
+.grow-stamps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; margin: 0; padding: 0; list-style: none; }
+.grow-stamps a, .grow-stamps li > span { display: grid; justify-items: center; gap: 7px; color: inherit; text-decoration: none; }
+.grow-seal { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 6px; border: 1.5px dashed rgba(255, 255, 255, 0.18); font-family: 'ChosunSm', serif; font-size: 26px; line-height: 1; color: rgba(255, 255, 255, 0.22); transition: transform 0.15s ease; }
+.grow-stamps a:hover .grow-seal { border-color: rgba(226, 194, 122, 0.5); color: rgba(226, 194, 122, 0.6); }
+.grow-stamps li.is-done .grow-seal { border: 0; background: #b8392f; color: #f6e7cf; box-shadow: inset 0 0 0 2px rgba(246, 231, 207, 0.25); }
+.grow-stamps li.is-done:nth-child(odd) .grow-seal { transform: rotate(-5deg); }
+.grow-stamps li.is-done:nth-child(even) .grow-seal { transform: rotate(4deg); }
+.grow-cap { font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.grow-stamps li.is-done .grow-cap { color: var(--text); }
+.grow-note { margin: 22px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.6); }
+.diary .grow-h3 { display: block; margin: 26px 0 6px; }
 
 /* ── 운세 일기 /my/diary (2026-11-19 리텐션 ③) ── */
 .diary-lead { margin: 6px 0 14px; font-size: 14px; line-height: 1.7; color: var(--text-2); }
 .diary-lead a { color: var(--text); }
 .diary-form { display: grid; gap: 8px; padding-bottom: 20px; border-bottom: 1px solid var(--line-soft); }
 .diary-days { display: flex; gap: 18px; margin-bottom: 4px; }
-.diary-days button, .diary-hits button { padding: 4px 0; border: 0; border-bottom: 1.5px solid transparent; background: none; color: rgba(194, 196, 200, 0.8); font: inherit; font-size: 15px; cursor: pointer; }
+.diary-days button { padding: 4px 0; border: 0; border-bottom: 1.5px solid transparent; background: none; color: rgba(194, 196, 200, 0.8); font: inherit; font-size: 15px; cursor: pointer; }
 .diary-days button small { font-size: 13px; color: rgba(194, 196, 200, 0.6); }
-.diary-days button.on, .diary-hits button.on { color: var(--text); border-bottom-color: var(--primary); }
+.diary-days button.on { color: var(--text); border-bottom-color: var(--primary); }
 .diary-q { display: flex; justify-content: space-between; margin: 10px 0 2px; font-size: 14px; color: var(--text-2); }
 .diary-q small { font-size: 13px; color: rgba(194, 196, 200, 0.6); }
-.diary-moods { display: grid; }
-.diary-moods button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: none; color: var(--text-2); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
-.diary-moods button.on { color: var(--text); font-weight: 600; }
-.diary-moods button:not(.on) .diary-dot { opacity: 0.45; }
-.diary-hits { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.diary-moods { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.diary-hits { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+/* 선택 버튼 (2026-11-19 사용자 지시: 글자만 있어 버튼으로 안 보임 → 테두리 있는 한 줄 버튼) */
+.diary-opt { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 4px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; background: rgba(255, 255, 255, 0.03); color: var(--text-2); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
+.diary-opt:hover { border-color: rgba(255, 255, 255, 0.24); color: var(--text); }
+.diary-opt.on { border-color: var(--primary); background: rgba(226, 194, 122, 0.12); color: var(--text); font-weight: 600; }
+.diary-moods .diary-opt { flex-direction: column; gap: 5px; min-height: 58px; }
+.diary-moods .diary-opt:not(.on) .diary-dot { opacity: 0.55; }
+@media (max-width: 360px) { .diary-opt { font-size: 13px; } }
 .diary-dot { flex: none; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #8a8d93; }
 .diary-dot.m1, .m1 > .diary-dot { background: #6b9be6; }
 .diary-dot.m2, .m2 > .diary-dot { background: #8fa8c8; }
@@ -2854,3 +2854,7 @@ a.grow-what:hover { color: var(--primary); }
 .diary-pbar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
 .diary-pbar span { display: block; height: 100%; background: var(--el); border-radius: 4px; }
 .diary-pval { text-align: right; font-size: 13px; color: var(--text); }
+
+/* 인기 요금제 표시 (2026-11-19) — 상자 배지 대신 금빛 글자 한 줄 */
+.wallet-pkg-pop { display: block; margin-bottom: 2px; font-size: 13px; font-weight: 500; color: var(--primary); }
+.wallet-pkg-extra { white-space: nowrap; }

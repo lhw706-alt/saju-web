@@ -8,6 +8,9 @@ import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
 import PhoneVerifyModal from '../components/PhoneVerifyModal.jsx';
 
+// 인기 요금제 (2026-11-19 사용자 지시): 15,000원 150+20금전 — 평생 사주·신년운세·궁합을 다 볼 수 있고, 30,000원 다음으로 금전당 값이 싸요
+const POPULAR = 'p15';
+
 const when = (iso) => {
   const d = new Date(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -17,7 +20,7 @@ export default function Wallet() {
   const { auth, openLogin, notify } = useOutletContext();
   const [params, setParams] = useSearchParams();
   const [w, setW] = useState(null);
-  const [pick, setPick] = useState('p8');
+  const [pick, setPick] = useState(POPULAR) // 2026-11-19 사용자 지시: 인기 요금제를 처음부터 골라 둠;
   const [busy, setBusy] = useState(false);
   const [agree, setAgree] = useState(false);
   // 결제용 휴대폰 번호 (스마트로 필수, 2026-11-19) — 서버에 저장하지 않고 이 브라우저에만 기억
@@ -105,6 +108,7 @@ export default function Wallet() {
             <button type="button" role="radio" aria-checked={pick === p.id} className={pick === p.id ? 'on' : ''} onClick={() => setPick(p.id)}>
               <span className="wallet-radio" aria-hidden="true" />
               <span className="wallet-pkg-main">
+                {p.id === POPULAR && <span className="wallet-pkg-pop">가장 많이 골라요</span>}
                 <span className="wallet-pkg-amt">
                   <Coins n={p.base} size={26} className="wallet-pkg-coins" />
                   {p.extra > 0 && <em className="wallet-pkg-extra">+{p.extra} 더</em>}
