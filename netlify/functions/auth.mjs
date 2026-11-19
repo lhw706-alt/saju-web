@@ -845,9 +845,11 @@ export default async (req, context) => {
           ShowEasyPay: 'Y',
           EdiDate: edi,
           EncryptData: encryptData(edi, sm.mid, amt, sm.key),
-          TaxAmt: '',
-          TaxFreeAmt: '',
-          VatAmt: '',
+          // 스마트로 MID 기본값은 '부가세 직접계산' — Amt = TaxAmt + VatAmt + TaxFreeAmt 가 맞아야 함(빈 값이면 [1614] 거래금액 합계오류, 2026-11-19)
+          // 복채(디지털 콘텐츠)는 과세: 부가세 = 결제 금액의 1/11 반올림
+          VatAmt: String(Math.round(pkg.won / 11)),
+          TaxAmt: String(pkg.won - Math.round(pkg.won / 11)),
+          TaxFreeAmt: '0',
         },
       });
     }
