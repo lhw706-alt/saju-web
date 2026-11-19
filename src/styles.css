@@ -2717,15 +2717,20 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
   .bnav a, .bnav button { display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 50px; padding: 0; border: 0; border-radius: 12px; background: none; color: rgba(194, 196, 200, 0.82); font: inherit; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .bnav a:active, .bnav button:active { background: rgba(255, 255, 255, 0.05); }
   .bnav .on { color: var(--text); }
-  .bnav .on .bnav-glyph { color: var(--primary); }
-  .bnav-ic { width: 22px; height: 22px; }
-  .bnav-glyph { display: grid; place-items: center; font-family: 'ChosunSm', serif; font-size: 19px; line-height: 1; color: #D9CFB8; }
+  .bnav-ic { width: 24px; height: 24px; }
+  .bnav .on .bnav-ic { color: var(--primary); }
   .bnav-label { font-size: 13px; font-weight: 500; letter-spacing: var(--ls-body); }
   .bnav-bm { color: #EBCB86 !important; }
-  .bnav-bm .bnav-ic { color: #F3D98E; filter: drop-shadow(0 0 4px rgba(243, 217, 142, 0.7)); }
+  .bnav-bm .bnav-ic { width: 22px; height: 22px; color: #F3D98E; filter: drop-shadow(0 0 4px rgba(243, 217, 142, 0.7)); }
+  .header-menu { display: grid; place-items: center; width: 36px; height: 36px; margin-right: -6px; padding: 0; border: 0; border-radius: 10px; background: none; color: var(--text-2); cursor: pointer; }
+  .header-menu:active { background: var(--track); }
+  .user-menu-btn { max-width: 116px; }
+  .user-menu-btn > span:first-child, .user-menu-btn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* 하단 메뉴에 가리지 않게 */
   .footer { padding-bottom: calc(40px + 64px + env(safe-area-inset-bottom)); }
   .fortune-fab { bottom: calc(16px + 64px + env(safe-area-inset-bottom)); }
   .toast-wrap { bottom: calc(80px + env(safe-area-inset-bottom)); }
   .book-bottom { bottom: calc(62px + env(safe-area-inset-bottom)); }
 }
+.header-menu { display: none; }
+@media (max-width: 559px) { .header-actions .header-menu { display: grid; order: 2; } }

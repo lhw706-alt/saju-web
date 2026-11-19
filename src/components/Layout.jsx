@@ -272,6 +272,12 @@ export default function Layout() {
             로그인
           </button>
         )}
+        {/* 휴대폰: 전체 메뉴는 오른쪽 위 (2026-11-19 사용자 지시, 하단 메뉴엔 마이) */}
+        <button type="button" className="header-menu" onClick={() => setAllMenu(true)} aria-haspopup="dialog" aria-label="전체 메뉴 열기">
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+          </svg>
+        </button>
         </div>
       </header>
 
@@ -309,7 +315,7 @@ export default function Layout() {
         </p>
       </footer>
       <ConfirmHost />
-      <BottomNav onAll={() => setAllMenu(true)} allOpen={allMenu} />
+      <BottomNav member={auth.ready ? !!auth.user : null} onLogin={() => askLogin('마이페이지는 로그인하면 볼 수 있어요.')} />
       {allMenu && <AllMenu onClose={() => setAllMenu(false)} notify={showNotice} />}
       <ContactModal
         open={contact}
