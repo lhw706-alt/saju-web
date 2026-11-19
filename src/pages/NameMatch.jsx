@@ -19,7 +19,7 @@ import GlassIcon, { LineIcon } from '../components/GlassIcon.jsx';
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
 const Stage = ({ mode = 'idle', small = false }) => (
   <div className={`nm-stage${small ? ' is-small' : ''}`}>
-    <Suspense fallback={<span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('namematch') }} />}>
+    <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
       <Mascot3D prop="names" mode={mode} />
     </Suspense>
   </div>

@@ -953,6 +953,7 @@ export default function Mascot3D({ className = '', interactive = true, prop = nu
       }
 
       renderer.render(scene, camera);
+      if (!host.classList.contains('is-ready')) host.classList.add('is-ready'); // 첫 장면이 그려지면 나타남
     };
     tick();
 

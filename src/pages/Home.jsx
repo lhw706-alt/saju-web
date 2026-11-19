@@ -76,7 +76,7 @@ export default function Home() {
           <br className="br-desk" /> 천둥도사가 근거와 함께 쉽게 풀어 드려요.
         </p>
         <div className="hero-mascot">
-          <Suspense fallback={<MascotStill />}>
+          <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
             <Mascot3D />
           </Suspense>
         </div>

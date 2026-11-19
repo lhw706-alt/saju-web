@@ -72,7 +72,7 @@ export default function NewYear() {
         <p className="ny-lead">천둥도사가 내 사주와 {y}년의 기운을 맞춰 보고, 한 해의 흐름과 계절마다 운, 1월부터 12월까지 달마다의 흐름을 풀어 드려요.</p>
         {/* 3D 천동이 (2026-11-15 사용자 지시) — 불러오는 동안·WebGL 없으면 2D 그림 */}
         <div className="ny-stage">
-          <Suspense fallback={<span className="ny-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('newyear') }} />}>
+          <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
             <Mascot3D prop="stars" />
           </Suspense>
         </div>

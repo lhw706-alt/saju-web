@@ -127,7 +127,7 @@ export default function Tarot() {
     <article className="tarot" ref={top}>
       {(phase === 'setup' || phase === 'shuffle') && (
         <div className="tarot-stage">
-          <Suspense fallback={<span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('tarot') }} />}>
+          <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
             <Mascot3D prop="tarot" mode={phase === 'shuffle' ? 'drawing' : 'idle'} />
           </Suspense>
         </div>

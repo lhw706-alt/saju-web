@@ -119,7 +119,7 @@ export default function Lucky() {
 
       <div className={`lucky-stage is-${phase}`}>
         <button type="button" className="lucky-dosa" onClick={draw} aria-label={phase === 'done' ? '오늘의 행운 번호 다시 보기' : '천둥도사를 눌러 행운의 번호 뽑기'} disabled={phase === 'loading'}>
-          <Suspense fallback={<span className="lucky-dosa-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: art }} />}>
+          <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
             <Mascot3D prop="lotto" mode={phase === 'drawing' ? 'drawing' : phase === 'done' ? 'done' : 'idle'} />
           </Suspense>
         </button>

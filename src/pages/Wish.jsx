@@ -301,7 +301,7 @@ export default function Wish() {
           {floating.length === 0 && [0, 1, 2, 3].map((i) => <span key={i} className={`wish-lantern l${i}`} />)}
         </div>
         <div className="wish-stage">
-          <Suspense fallback={<span className="nm-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: dosaArtSvg('wish') }} />}>
+          <Suspense fallback={<div className="mascot3d mascot-wait" aria-hidden="true" />}>
             <Mascot3D prop="stars" mode={launch ? 'drawing' : 'idle'} />
           </Suspense>
         </div>
