@@ -1,5 +1,5 @@
 // 문자 보내기 — 솔라피(SOLAPI) API (2026-11-19, 결제 전 휴대폰 인증용)
-// 환경 변수: SOLAPI_API_KEY, SOLAPI_API_SECRET(Secret), SMS_FROM(솔라피에 등록한 발신번호, 숫자만 — 예: 07079543670)
+// 환경 변수: SOLAPI_API_KEY, SOLAPI_API_SECRET(Secret), SMS_FROM(솔라피에 등록한 발신번호, 하이픈 없이 숫자만)
 // 인증: Authorization: HMAC-SHA256 apiKey=…, date=ISO8601, salt=무작위, signature=hex(HMAC-SHA256(API Secret, date + salt))
 import { createHmac, randomBytes } from 'node:crypto';
 
