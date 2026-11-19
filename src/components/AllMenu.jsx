@@ -1,5 +1,5 @@
 // 전체 메뉴 (2026-11-15 GNB 압축) — 머리 ☰를 누르면 모든 콘텐츠를 한 화면에. 휴대폰은 아래에서 올라오는 시트.
-// 2026-11-19 사용자 지시: 묶음 탭 대신 한 화면에 여러 묶음 — 묶음마다 4칸 타일(선 아이콘 · 이름 · 유료면 가격), 설명·무료 표시는 뺌. 준비중은 맨 아래 한 줄.
+// 2026-11-19 사용자 지시: 묶음 탭 대신 한 화면에 여러 묶음 — 묶음마다 두 줄 글자 목록(작은 선 아이콘 · 이름 · 유료면 가격, 상자·아이콘 칸 없음 — 'AI 티' 빼기), 설명·무료 표시는 뺌. 준비중은 맨 아래 한 줄.
 // 누르면 메인 카드와 같은 방식으로 들어감: path 가 있으면 그 주소, 아니면 주제를 고르고 입력 화면(/start).
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -46,17 +46,12 @@ export default function AllMenu({ onClose, notify }) {
           const items = all.filter((c) => c.status === 'live');
           return (
             <section key={g.id} className="am-group" aria-labelledby={`am-${g.id}`}>
-              <h3 id={`am-${g.id}`}>
-                <MenuIcon id={g.id} size={16} />
-                {g.label}
-              </h3>
+              <h3 id={`am-${g.id}`}>{g.label}</h3>
               <ul className="am-grid">
                 {items.map((c) => (
                   <li key={c.id}>
                     <button type="button" onClick={() => open(c)}>
-                      <span className="am-ic">
-                        <MenuIcon id={c.id} size={20} />
-                      </span>
+                      <MenuIcon id={c.id} size={18} className="am-ic" />
                       <b>{c.title}</b>
                       {PRICE_COIN[c.id] && <PriceTag {...PRICE_COIN[c.id]} size={12} />}
                     </button>
@@ -67,8 +62,7 @@ export default function AllMenu({ onClose, notify }) {
           );
         })}
         <p className="am-soon">
-          <span>준비 중</span>
-          {CONTENTS.filter((c) => c.status !== 'live').map((c) => c.title).join(' · ')}
+          준비 중 — {CONTENTS.filter((c) => c.status !== 'live').map((c) => c.title).join(' · ')}
         </p>
       </div>
     </div>,

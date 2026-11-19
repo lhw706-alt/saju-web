@@ -2722,17 +2722,13 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 }
 .header-menu { display: none; }
 @media (max-width: 559px) { .header-actions .header-menu { display: grid; order: 2; } }
-/* 전체 메뉴 한 화면 (2026-11-19 사용자 지시: 여러 묶음을 한 번에, 한자 대신 선 아이콘) */
-.am-group { margin-top: 8px; }
-.am-group + .am-group { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
-.am-group h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--primary); }
-.am-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
-.am-grid button { display: grid; justify-items: center; align-content: start; gap: 5px; width: 100%; height: 100%; padding: 10px 2px 9px; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; background: rgba(255, 255, 255, 0.03); color: var(--text); font: inherit; text-align: center; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
-.am-grid button:hover, .am-grid button:active { background: rgba(226, 194, 122, 0.07); border-color: rgba(226, 194, 122, 0.22); }
-.am-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: rgba(226, 194, 122, 0.1); color: #F0DDAE; }
-.am-grid b { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: keep-all; }
-.am-free { padding: 0 6px; border-radius: 6px; background: rgba(226, 194, 122, 0.12); color: var(--primary); font-style: normal; font-size: 12px; font-weight: 500; line-height: 20px; }
-.am-grid .price-tag, .am-grid [class*=price] { font-size: 13px; }
-.am-soon { margin: 16px 2px 0; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.7); }
-.am-soon span { margin-right: 8px; padding: 1px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: rgba(206, 208, 212, 0.86); font-size: 12px; }
-.am-free { line-height: 18px; }
+/* 전체 메뉴 한 화면 (2026-11-19 사용자 지시: 여러 묶음 한 번에 · 'AI 티' 빼기 — 상자·아이콘 칸 없이 얇은 줄과 글자 계층) */
+.am-group { margin-top: 18px; }
+.am-group h3 { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: rgba(194, 196, 200, 0.75); letter-spacing: var(--ls-body); }
+.am-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; margin: 0; padding: 0; list-style: none; }
+.am-grid li { border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.am-grid button { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 48px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.am-grid button:hover b, .am-grid button:active b { color: var(--primary); }
+.am-ic { flex: none; color: rgba(226, 194, 122, 0.8); }
+.am-grid b { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.3; word-break: keep-all; }
+.am-grid button > :last-child:not(b) { flex: none; font-size: 13px; }
