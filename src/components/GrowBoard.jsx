@@ -91,7 +91,7 @@ export default function GrowBoard() {
           );
         })}
       </ul>
-      <p className="grow-note">도장은 하루에 한 번씩 찍혀요. 안 찍힌 도장을 누르면 하러 갈 수 있어요. 단계 보상은 무상 금전이에요(환불 대상 아님).</p>
+      <p className="grow-note">도장은 하루에 한 번씩 찍혀요. 안 찍힌 도장을 누르면 하러 갈 수 있어요. 단계 보상은 무상 금전이에요.</p>
     </section>
   );
 }
