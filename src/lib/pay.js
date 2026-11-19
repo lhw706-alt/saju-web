@@ -42,8 +42,8 @@ function makeForm(id, action, fields) {
   return f;
 }
 
-export async function startCharge(pkg) {
-  const r = await fetch('/api/pay/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pkg }) });
+export async function startCharge(pkg, tel) {
+  const r = await fetch('/api/pay/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pkg, tel }) });
   const o = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(o.error || '주문을 만들지 못했어요.');
   const mobile = isMobile();

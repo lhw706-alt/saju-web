@@ -33,6 +33,7 @@ import { pollOf, kstDate } from '../../src/lib/poll.js';
 import { BADGES } from '../../src/lib/badges.js';
 import { PACKAGES, packageById, PRICES, PAID_ITEMS, wishOfferOk, cosmeticById } from '../../src/lib/wallet.js';
 import { smartroEnv, ediDate, encryptData } from '../lib/smartro.mjs';
+import { smsEnv, sendSms } from '../lib/sms.mjs';
 import { walletOf, credit, grant, spend, deduct, refundPlan, itemKey, owned, markOwned, listRecords, deleteRecord, deleteAllRecords } from '../lib/wallet.mjs';
 
 const SESSION = 'sc_session';
@@ -762,20 +763,66 @@ export default async (req, context) => {
     if (!s) return json({ error: '로그인이 필요해요.', login: true, enabled: payOn }, 401);
     if (historyLimited(s.sub)) return json({ error: '요청이 많아요. 잠시 뒤 다시 시도해 주세요.' }, 429);
     const orders = getStore({ name: 'orders', consistency: 'strong' });
+    // 결제 연락처 휴대폰 (2026-11-19 사용자 지시: 처음 결제할 때 한 번 문자 인증). 문자 업체 키가 없으면 인증 없이 입력만 받음
+    const smsOn = smsEnv().ready;
+    const maskTel = (t) => (t ? `${t.slice(0, 3)}-****-${t.slice(-4)}` : null);
+    const TEL_RE = /^01[016789][0-9]{7,8}$/;
     if (req.method === 'GET' && path === '/api/wallet') {
       const w = await walletOf(s.sub);
-      return json({ enabled: payOn, mode: sm.mode, balance: w.balance || 0, ledger: (w.ledger || []).slice(0, 50), packages: PACKAGES });
+      const me = (await users().get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      return json({ enabled: payOn, mode: sm.mode, smsOn, phone: maskTel(me.phone),  balance: w.balance || 0, ledger: (w.ledger || []).slice(0, 50), packages: PACKAGES });
     }
     if (req.method !== 'POST') return json({ error: '잘못된 요청이에요.' }, 405);
     const body = await readJson();
+    // POST /api/pay/phone/send {tel} → 인증번호 문자 (3분, 같은 회원 1시간 5번·60초 간격)
+    // POST /api/pay/phone/verify {code} → 맞으면 회원 기록 phone 에 저장(탈퇴하면 함께 지워짐)
+    if (path === '/api/pay/phone/send' || path === '/api/pay/phone/verify') {
+      if (!smsOn) return json({ error: '휴대폰 인증이 아직 준비되지 않았어요.' }, 503);
+      const otp = getStore({ name: 'phone-otp', consistency: 'strong' });
+      const cur = (await otp.get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      const now = Date.now();
+      const codeHash = (c) => createHash('sha256').update(`otp:${s.sub}:${c}:${secret}`).digest('base64url');
+      if (path === '/api/pay/phone/send') {
+        const tel = String(body?.tel || '').replace(/[^0-9]/g, '');
+        if (!TEL_RE.test(tel)) return json({ error: '휴대폰 번호를 확인해 주세요.', field: 'tel' }, 400);
+        const sends = (cur.sends || []).filter((t) => now - t < 3600e3);
+        if (sends.length && now - sends[sends.length - 1] < 60e3) return json({ error: '1분 뒤에 다시 받을 수 있어요.' }, 429);
+        if (sends.length >= 5) return json({ error: '인증번호를 너무 많이 받았어요. 1시간 뒤 다시 시도해 주세요.' }, 429);
+        const code = String(randomInt(0, 1000000)).padStart(6, '0');
+        try {
+          await sendSms(tel, `[사주천문] 인증번호 ${code} (3분 안에 입력해 주세요)`);
+        } catch (e) {
+          console.error('sms send failed:', e?.message);
+          return json({ error: '문자를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, 502);
+        }
+        await otp.setJSON(s.sub, { tel, code: codeHash(code), exp: now + 180e3, tries: 0, sends: [...sends, now] });
+        return json({ ok: true });
+      }
+      const code = String(body?.code || '').replace(/[^0-9]/g, '');
+      if (!cur.tel || !cur.code || cur.exp < now) return json({ error: '인증번호가 만료됐어요. 다시 받아 주세요.' }, 400);
+      if ((cur.tries || 0) >= 5) return json({ error: '5번 틀려서 인증번호가 막혔어요. 다시 받아 주세요.' }, 429);
+      if (codeHash(code) !== cur.code) {
+        await otp.setJSON(s.sub, { ...cur, tries: (cur.tries || 0) + 1 });
+        return json({ error: '인증번호가 맞지 않아요.', field: 'code' }, 400);
+      }
+      const rec = (await users().get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      await users().setJSON(s.sub, { ...rec, phone: cur.tel, phoneAt: new Date().toISOString() });
+      await otp.delete(s.sub).catch(() => {});
+      return json({ ok: true, phone: maskTel(cur.tel) });
+    }
     if (path === '/api/pay/order') {
       // 스마트로 결제창에 넣을 값 (netlify/lib/smartro.mjs). 주문번호(Moid)는 특수문자 없이
       if (!payOn) return json({ error: '결제가 아직 준비되지 않았어요.' }, 503);
       const pkg = packageById(body?.pkg);
       if (!pkg) return json({ error: '충전 금액을 다시 골라 주세요.' }, 400);
+      // 구매자 휴대폰 번호 — 스마트로 필수 값(BuyerTel). 문자 인증이 켜져 있으면 인증한 번호(회원 기록 phone)만, 아니면 입력값
+      const me = (await users().get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      const tel = smsOn ? me.phone || '' : String(body?.tel || '').replace(/[^0-9]/g, '');
+      if (smsOn && !TEL_RE.test(tel)) return json({ error: '처음 결제할 때 휴대폰 인증이 필요해요.', needPhone: true }, 403);
+      if (!TEL_RE.test(tel)) return json({ error: '휴대폰 번호를 확인해 주세요.', field: 'tel' }, 400);
       const orderId = `SC${Date.now().toString(36)}${randomBytes(6).toString('hex')}`;
       await orders.setJSON(orderId, { uid: s.sub, pkg: pkg.id, won: pkg.won, credits: pkg.credits, status: 'ready', pg: 'smartro', createdAt: new Date().toISOString() });
-      const u = (await users().get(s.sub, { type: 'json' }).catch(() => null)) || {};
+      const u = me;
       const edi = ediDate();
       const amt = String(pkg.won);
       return json({
@@ -791,7 +838,7 @@ export default async (req, context) => {
           ReturnUrl: `${url.origin}/api/pay/smartro/return`,
           StopUrl: `${url.origin}/api/pay/smartro/stop`,
           BuyerName: String(u.displayNick || '사주천문 회원').slice(0, 20),
-          BuyerTel: '',
+          BuyerTel: tel,
           BuyerEmail: u.provider === 'email' && u.email ? u.email : '',
           MallUserId: s.sub.replace(/[^A-Za-z0-9]/g, '').slice(0, 20),
           ShowEasyPay: 'Y',
@@ -1129,6 +1176,7 @@ export default async (req, context) => {
       await Promise.all(pk.map((b) => pur.delete(b.key)));
       await deleteAllRecords(s.sub).catch(() => {}); // 유료 풀이 기록
       await getStore({ name: 'cosmetics', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 별마루 꾸미기
+      await getStore({ name: 'phone-otp', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 결제 휴대폰 인증번호
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });
@@ -1156,7 +1204,7 @@ export default async (req, context) => {
     const { blobs } = await store.list();
     const list = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }))))
       .filter(Boolean)
-      .map(({ passHash, ...u }) => u); // 비밀번호 해시는 절대 내보내지 않음
+      .map(({ passHash, phone, ...u }) => ({ ...u, phone: phone ? `${phone.slice(0, 3)}-****-${phone.slice(-4)}` : undefined })); // 비밀번호 해시는 절대 내보내지 않음, 휴대폰은 가려서
     // 몇 번째 회원인지: 가입일 순 1, 2, 3… (탈퇴한 회원은 목록에 없어서 빠진 채로 다시 매김)
     list.sort((a, b) => String(a.joinedAt).localeCompare(String(b.joinedAt)));
     list.forEach((u, i) => (u.no = i + 1));
@@ -1341,4 +1389,4 @@ export default async (req, context) => {
   return json({ error: '없는 주소예요.' }, 404);
 };
 
-export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
+export const config = { path: ['/api/auth/kakao/login', '/api/auth/kakao/callback', '/api/auth/me', '/api/auth/logout', '/api/auth/delete', '/api/auth/birth', '/api/auth/nickname', '/api/auth/nickname/suggest', '/api/auth/age', '/api/auth/email/signup', '/api/auth/email/verify', '/api/auth/email/login', '/api/auth/email/reset-request', '/api/auth/email/reset', '/api/auth/email/password', '/api/inquiry', '/api/history', '/api/charms', '/api/invite', '/api/invite/done', '/api/admin/users', '/api/admin/inquiry', '/api/admin/lucky', '/api/admin/credit', '/api/admin/test-account', '/api/admin/wallet', '/api/admin/wallet/refund', '/api/admin/wallet/debit', '/api/lucky', '/api/wish', '/api/wish/cheer', '/api/wish/done', '/api/wish/report', '/api/poll', '/api/badges', '/api/wallet', '/api/wallet/owned', '/api/wallet/buy', '/api/pay/order', '/api/pay/phone/send', '/api/pay/phone/verify', '/api/records', '/api/cosmetics', '/api/cosmetics/buy', '/api/cosmetics/equip'] };
