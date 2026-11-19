@@ -2003,6 +2003,13 @@ body:has(.wish) .app::before { content: ''; position: fixed; inset: 0; z-index: 
 .wallet-pkg-price > b { font-size: 16px; font-weight: 600; }
 .wallet-tel-label { display: block; margin: 18px 0 0; }
 .wallet-tel { width: 100%; max-width: 320px; }
+.pv-row { display: flex; gap: 8px; }
+.pv-row .contact-input { flex: 1; min-width: 0; }
+.pv-btn { flex: none; margin: 0; padding: 0 14px; white-space: nowrap; }
+.pv-msg { margin: 8px 0 0; font-size: 14px; color: var(--danger); }
+.pv-msg.is-ok { color: rgba(194, 196, 200, 0.85); }
+.phone-verify .contact-form { display: grid; gap: 8px; }
+.pv-submit { margin-top: 10px; width: 100%; }
 .wallet-tel-row { display: flex; gap: 8px; max-width: 420px; margin-top: 8px; }
 .wallet-tel-row .wallet-tel { flex: 1; min-width: 0; }
 .wallet-tel-btn { flex: none; margin: 0; padding: 0 14px; white-space: nowrap; }

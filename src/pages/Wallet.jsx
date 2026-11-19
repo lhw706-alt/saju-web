@@ -1,11 +1,12 @@
-// 복채 충전 (/wallet, 2026-11-14) — 잔액 · 충전 패키지 3가지 · 결제(스마트로 — 연동 전까지는 예전 토스 코드) · 충전·사용 내역 · 환불 안내.
-// 결제창에서 돌아오면(?pay=success&paymentKey&orderId&amount) 서버 승인 후 잔액을 다시 불러옴. 주소의 결제 정보는 바로 지움.
+// 복채 충전 (/wallet, 2026-11-14) — 잔액 · 충전 패키지 3가지 · 결제(스마트로) · 충전·사용 내역 · 환불 안내.
+// 스마트로 결제창 → 서버가 승인·적립 후 /wallet?pay=success&c=금전 로 보냄. 처음 결제면 결제하기를 누를 때 휴대폰 인증 창(PhoneVerifyModal)부터.
 import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { PACKAGES, fmtCredits } from '../lib/wallet.js';
 import { startCharge } from '../lib/pay.js';
 import { trackEvent } from '../lib/analytics.js';
 import { PouchIcon, Coins, announceBalance } from '../components/BokchaLink.jsx';
+import PhoneVerifyModal from '../components/PhoneVerifyModal.jsx';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -28,35 +29,9 @@ export default function Wallet() {
     }
   });
   const telOk = /^01[016789][0-9]{7,8}$/.test(tel);
-  // 문자 인증 (w.smsOn 일 때 — 처음 결제할 때 한 번, 인증한 번호는 계정에 저장)
-  const [code, setCode] = useState('');
-  const [sent, setSent] = useState(false);
-  const [changing, setChanging] = useState(false);
-  const [phoneBusy, setPhoneBusy] = useState(false);
-  const [phoneMsg, setPhoneMsg] = useState('');
-  const postJson = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ ok: r.ok, d: await r.json().catch(() => ({})) }));
-  const sendCode = async () => {
-    setPhoneBusy(true);
-    setPhoneMsg('');
-    const { ok, d } = await postJson('/api/pay/phone/send', { tel }).catch(() => ({ ok: false, d: {} }));
-    setPhoneBusy(false);
-    if (!ok) return setPhoneMsg(d.error || '문자를 보내지 못했어요.');
-    setSent(true);
-    setCode('');
-    setPhoneMsg('인증번호를 보냈어요. 3분 안에 입력해 주세요.');
-  };
-  const verifyCode = async () => {
-    setPhoneBusy(true);
-    const { ok, d } = await postJson('/api/pay/phone/verify', { code }).catch(() => ({ ok: false, d: {} }));
-    setPhoneBusy(false);
-    if (!ok) return setPhoneMsg(d.error || '인증하지 못했어요.');
-    setW((old) => ({ ...old, phone: d.phone }));
-    setSent(false);
-    setChanging(false);
-    setPhoneMsg('');
-  };
-  const needVerify = w?.smsOn && (!w?.phone || changing);
-  const phoneReady = w?.smsOn ? Boolean(w?.phone) && !changing : telOk; // 결제 전 동의 (2026-11-17 사용자 지시 — 환불 정책은 이용약관 제7조의3에 포함)
+  // 첫 결제 휴대폰 인증 (2026-11-19 사용자 지시: 결제하기를 누르면 처음 한 번 모달로) — 문자 인증이 켜져 있을 때만
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const phoneReady = w?.smsOn ? true : telOk;
   const [msg, setMsg] = useState(null); // { ok, text }
   const handled = useRef(false);
 
@@ -96,6 +71,7 @@ export default function Wallet() {
   const guest = auth?.ready && !auth.user;
 
   const charge = async () => {
+    if (w?.smsOn && !w?.phone) return setVerifyOpen(true); // 처음 결제 → 인증 창부터
     setBusy(true);
     setMsg(null);
     trackEvent('charge_start', { pkg: pick });
@@ -103,7 +79,7 @@ export default function Wallet() {
       try {
         localStorage.setItem('saju:buyer-tel', tel);
       } catch {}
-      await startCharge(pick, tel); // 결제창으로 이동 (돌아오면 위에서 처리)
+      await startCharge(pick, w?.smsOn ? '' : tel); // 결제창으로 이동 (돌아오면 위에서 처리). 인증한 번호는 서버가 계정에서 씀
     } catch (e) {
       if (!/취소|cancel/i.test(e?.message || '')) notify(e?.message || '결제창을 열지 못했어요.', 'negative');
     }
@@ -156,36 +132,22 @@ export default function Wallet() {
         </button>
       ) : (
         <>
-        {w?.smsOn && w?.phone && !changing ? (
-          <p className="wallet-phone">
-            결제 연락처 <b>{w.phone}</b>
-            <button type="button" className="wallet-phone-change" onClick={() => setChanging(true)}>
-              번호 바꾸기
-            </button>
-          </p>
+        {w?.smsOn ? (
+          w?.phone && (
+            <p className="wallet-phone">
+              결제 연락처 <b>{w.phone}</b>
+              <button type="button" className="wallet-phone-change" onClick={() => setVerifyOpen(true)}>
+                번호 바꾸기
+              </button>
+            </p>
+          )
         ) : (
           <>
-            <label className="contact-label wallet-tel-label" htmlFor="wallet-tel">
-              휴대폰 번호{needVerify ? ' (처음 한 번 인증)' : ''}
-            </label>
+            <label className="contact-label wallet-tel-label" htmlFor="wallet-tel">휴대폰 번호</label>
             <div className="wallet-tel-row">
               <input id="wallet-tel" className="contact-input wallet-tel" type="tel" inputMode="numeric" autoComplete="tel" placeholder="01012345678" value={tel} onChange={(e) => setTel(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))} />
-              {needVerify && (
-                <button type="button" className="btn-ghost wallet-tel-btn" onClick={sendCode} disabled={!telOk || phoneBusy}>
-                  {sent ? '다시 받기' : '인증번호 받기'}
-                </button>
-              )}
             </div>
-            {needVerify && sent && (
-              <div className="wallet-tel-row">
-                <input className="contact-input wallet-tel" inputMode="numeric" autoComplete="one-time-code" placeholder="인증번호 6자리" aria-label="인증번호" value={code} onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} />
-                <button type="button" className="btn-ghost wallet-tel-btn" onClick={verifyCode} disabled={code.length !== 6 || phoneBusy}>
-                  확인
-                </button>
-              </div>
-            )}
-            {phoneMsg && <p className="wallet-tel-note" role="status">{phoneMsg}</p>}
-            <p className="wallet-tel-note">{w?.smsOn ? '결제대행사(스마트로) 결제 확인에 쓰여요. 한 번 인증하면 다음부터는 바로 결제할 수 있어요.' : '결제대행사(스마트로) 결제 확인에만 쓰이고, 사주천문에는 저장하지 않아요.'}</p>
+            <p className="wallet-tel-note">결제대행사(스마트로) 결제 확인에만 쓰이고, 사주천문에는 저장하지 않아요.</p>
           </>
         )}
         <label className="login-keep wallet-agree">
@@ -219,6 +181,21 @@ export default function Wallet() {
         </>
       )}
 
+      <PhoneVerifyModal
+        open={verifyOpen}
+        onClose={() => setVerifyOpen(false)}
+        onDone={(phone) => {
+          const first = !w?.phone;
+          setW((old) => ({ ...old, phone }));
+          setVerifyOpen(false);
+          if (first) {
+            setBusy(true);
+            startCharge(pick, '')
+              .catch((e) => notify(e?.message || '결제창을 열지 못했어요.', 'negative'))
+              .finally(() => setBusy(false));
+          } else notify('결제 연락처를 바꿨어요.');
+        }}
+      />
     </section>
   );
 }
