@@ -1,9 +1,10 @@
 // 마이페이지 '복채' 탭 (/my/wallet, 2026-11-15 사용자 지시) — 충전 화면이 아니라 내 보유 복채와 충전·사용 내역을 보여 줌.
 // 충전은 '충전하기' → /wallet. 데이터는 /api/wallet (최근 50건).
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Coins, announceBalance } from './BokchaLink.jsx';
 import Select from './Select.jsx';
+import PhoneVerifyModal from './PhoneVerifyModal.jsx';
 
 const when = (iso) => {
   const d = new Date(iso);
@@ -20,6 +21,8 @@ const FILTERS = [
 export default function WalletHistory() {
   const [w, setW] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const { notify } = useOutletContext() || {};
 
   useEffect(() => {
     fetch('/api/wallet', { cache: 'no-store' })
@@ -44,6 +47,15 @@ export default function WalletHistory() {
         </Link>
       </div>
       {w?.error && <p className="rec-empty">{w.error}</p>}
+      {w?.smsOn && (
+        <p className="mw-phone">
+          <span>결제 연락처</span>
+          <b>{w.phone || '없음'}</b>
+          <button type="button" className="mw-phone-btn" onClick={() => setVerifyOpen(true)}>
+            {w.phone ? '번호 바꾸기' : '휴대폰 인증하기'}
+          </button>
+        </p>
+      )}
 
       <div className="mw-head">
         <h3>충전·사용 내역</h3>
@@ -66,6 +78,16 @@ export default function WalletHistory() {
           ))}
         </ul>
       )}
+      <PhoneVerifyModal
+        open={verifyOpen}
+        mode="manage"
+        onClose={() => setVerifyOpen(false)}
+        onDone={(phone) => {
+          setW((old) => ({ ...old, phone }));
+          setVerifyOpen(false);
+          notify?.('결제 연락처를 저장했어요.');
+        }}
+      />
     </section>
   );
 }

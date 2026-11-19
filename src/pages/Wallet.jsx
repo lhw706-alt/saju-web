@@ -32,7 +32,6 @@ export default function Wallet() {
   // 첫 결제 휴대폰 인증 (2026-11-19 사용자 지시: 결제하기를 누르면 처음 한 번 모달로) — 문자 인증이 켜져 있을 때만
   const [verifyOpen, setVerifyOpen] = useState(false);
   const phoneReady = w?.smsOn ? true : telOk;
-  const [msg, setMsg] = useState(null); // { ok, text }
   const handled = useRef(false);
 
   const load = () =>
@@ -58,11 +57,11 @@ export default function Wallet() {
     const failMsg = params.get('message');
     setParams({}, { replace: true });
     if (pay === 'fail') {
-      setMsg({ ok: false, text: failMsg || '결제를 마치지 못했어요. 결제된 금액은 없어요.' });
+      notify(failMsg || '결제를 마치지 못했어요. 결제된 금액은 없어요.', 'negative'); // 2026-11-19 사용자 지시: 아래쪽 토스트로
       return;
     }
     trackEvent('charge_done', { credits });
-    setMsg({ ok: true, text: credits ? `${fmtCredits(credits)}이 충전됐어요.` : '충전됐어요.' });
+    notify(credits ? `${fmtCredits(credits)}이 충전됐어요.` : '충전됐어요.');
     if (auth.user) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.ready, auth?.user]);
@@ -73,7 +72,6 @@ export default function Wallet() {
   const charge = async () => {
     if (w?.smsOn && !w?.phone) return setVerifyOpen(true); // 처음 결제 → 인증 창부터
     setBusy(true);
-    setMsg(null);
     trackEvent('charge_start', { pkg: pick });
     try {
       try {
@@ -98,12 +96,6 @@ export default function Wallet() {
         <span>내 복채</span>
         {w && !w.error ? <Coins n={w.balance} size={30} className="wallet-bal" /> : <b>…</b>}
       </div>
-      )}
-
-      {msg && (
-        <p className={`wallet-msg${msg.ok ? ' is-ok' : ''}`} role="status">
-          {msg.text}
-        </p>
       )}
 
       <h2 className="wallet-h2">충전할 금액</h2>
@@ -133,14 +125,7 @@ export default function Wallet() {
       ) : (
         <>
         {w?.smsOn ? (
-          w?.phone && (
-            <p className="wallet-phone">
-              결제 연락처 <b>{w.phone}</b>
-              <button type="button" className="wallet-phone-change" onClick={() => setVerifyOpen(true)}>
-                번호 바꾸기
-              </button>
-            </p>
-          )
+          null /* 결제 연락처는 마이페이지 '복채' 탭에서 관리 (2026-11-19 사용자 지시) */
         ) : (
           <>
             <label className="contact-label wallet-tel-label" htmlFor="wallet-tel">휴대폰 번호</label>
@@ -185,15 +170,12 @@ export default function Wallet() {
         open={verifyOpen}
         onClose={() => setVerifyOpen(false)}
         onDone={(phone) => {
-          const first = !w?.phone;
           setW((old) => ({ ...old, phone }));
           setVerifyOpen(false);
-          if (first) {
-            setBusy(true);
-            startCharge(pick, '')
-              .catch((e) => notify(e?.message || '결제창을 열지 못했어요.', 'negative'))
-              .finally(() => setBusy(false));
-          } else notify('결제 연락처를 바꿨어요.');
+          setBusy(true);
+          startCharge(pick, '')
+            .catch((e) => notify(e?.message || '결제창을 열지 못했어요.', 'negative'))
+            .finally(() => setBusy(false));
         }}
       />
     </section>

@@ -10,7 +10,8 @@ const post = (url, body) =>
     .then(async (r) => ({ ok: r.ok, d: await r.json().catch(() => ({})) }))
     .catch(() => ({ ok: false, d: {} }));
 
-export default function PhoneVerifyModal({ open, onClose, onDone }) {
+export default function PhoneVerifyModal({ open, onClose, onDone, mode = 'pay' }) {
+  const manage = mode === 'manage'; // 마이페이지에서 번호 바꾸기
   const [tel, setTel] = useState('');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
@@ -63,7 +64,7 @@ export default function PhoneVerifyModal({ open, onClose, onDone }) {
           </button>
         </div>
         <form className="contact-form" onSubmit={verify} noValidate>
-          <p className="contact-lead">처음 결제할 때 한 번만 휴대폰 인증이 필요해요.</p>
+          <p className="contact-lead">{manage ? '결제할 때 쓸 휴대폰 번호를 인증해요.' : '처음 결제할 때 한 번만 휴대폰 인증이 필요해요.'}</p>
           <label className="contact-label" htmlFor="pv-tel">
             휴대폰 번호
           </label>
@@ -87,7 +88,7 @@ export default function PhoneVerifyModal({ open, onClose, onDone }) {
             </p>
           )}
           <button type="submit" className="btn-primary pv-submit" disabled={!sent || code.length !== 6 || busy}>
-            {busy && sent ? '확인 중…' : '인증하고 결제 계속하기'}
+            {busy && sent ? '확인 중…' : manage ? '인증하고 저장하기' : '인증하고 결제 계속하기'}
           </button>
         </form>
       </div>
