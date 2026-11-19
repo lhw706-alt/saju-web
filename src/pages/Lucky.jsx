@@ -36,6 +36,7 @@ function Ball({ n, delay = 0, size = 'lg' }) {
 export default function Lucky() {
   const { auth, openLogin, notify } = useOutletContext();
   const member = !!auth?.user;
+  const looksMember = member || !auth?.ready; // 로그인 확인 전엔 회원 문구로 — 새로고침 깜빡임 방지
   const [phase, setPhase] = useState('loading'); // loading | idle | drawing | done
   const [numbers, setNumbers] = useState(null);
   const [date, setDate] = useState('');
@@ -127,8 +128,8 @@ export default function Lucky() {
       <div className="lucky-panel" aria-live="polite">
         {phase === 'idle' && (
           <>
-            <LiquidMetalButton label={member ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'} width={member ? 196 : 224} onClick={draw} />
-            <p className="lucky-hint">{member ? '천둥도사를 눌러도 뽑을 수 있어요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
+            <LiquidMetalButton label={looksMember ? '행운의 번호 뽑기' : '로그인하고 번호 뽑기'} width={looksMember ? 196 : 224} onClick={draw} />
+            <p className="lucky-hint">{looksMember ? '천둥도사를 눌러도 뽑을 수 있어요' : '로그인하면 천둥도사가 하루 한 번 행운의 번호를 뽑아 드려요'}</p>
           </>
         )}
         {phase === 'drawing' && <p className="lucky-hint is-busy">{DRAW_LINES[line]}</p>}

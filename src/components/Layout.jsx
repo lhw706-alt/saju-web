@@ -262,7 +262,9 @@ export default function Layout() {
         {/* 복채(복주머니) + 로그인 (로그인하면 닉네임 → 누르면 마이페이지) */}
         <div className="header-actions">
         <BokchaLink member={Boolean(auth.user)} />
-        {auth.user ? (
+        {!auth.ready ? (
+          <span className="header-auth-wait" aria-hidden="true" />
+        ) : auth.user ? (
           <UserMenu nick={auth.user.nick} onLogout={() => logout().then(() => pathname.startsWith('/my') && navigate('/'))} />
         ) : (
           <button type="button" className="header-contact" aria-haspopup="dialog" onClick={() => setLogin(true)}>

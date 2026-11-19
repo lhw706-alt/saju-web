@@ -201,7 +201,7 @@ export default function Tarot() {
           </button>
           {cost ? <RefundNote what="타로 풀이" /> : null}
           <p className="tarot-left">
-            {auth?.user ? '다 본 풀이는 마이페이지 ‘풀이 기록’에 남아요.' : '타로는 회원만 복채로 볼 수 있어요.'}
+            {!auth?.ready ? ' ' : auth?.user ? '다 본 풀이는 마이페이지 ‘풀이 기록’에 남아요.' : '타로는 회원만 복채로 볼 수 있어요.'}
           </p>
         </section>
       )}

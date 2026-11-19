@@ -2693,3 +2693,5 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .refund-note { margin: 10px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.8); word-break: keep-all; }
 .refund-note a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 .login-age { margin: 4px 0 2px; }
+/* 로그인 상태 확인 전 머리 오른쪽 자리 (2026-11-19 새로고침 깜빡임 방지) */
+.header-auth-wait { display: inline-block; width: 56px; height: 36px; }

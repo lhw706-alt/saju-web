@@ -70,6 +70,7 @@ export default function NewYearMonthly({ input, member, openLogin }) {
 
   // 산 적 있으면 바로 펼침
   useEffect(() => {
+    if (member === null || member === undefined) return; // 로그인 확인 전 (새로고침 깜빡임 방지)
     if (!member) return setState({ owned: false, balance: 0 });
     post('/api/wallet/owned', { item: KEY, input }).then((r) => {
       if (!r.ok) return setState({ owned: false, balance: 0 });

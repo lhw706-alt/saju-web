@@ -14,10 +14,11 @@ const post = (url, body) =>
 export default function PaidGate({ item, input, member, openLogin, title, desc, points = [], onBought, same = '같은 사람의', children }) {
   const navigate = useNavigate();
   const price = PRICES[item].credits;
-  const [state, setState] = useState({ owned: member ? null : false, balance: 0 });
+  const [state, setState] = useState({ owned: member === false ? false : null, balance: 0 }); // member null = 로그인 확인 전
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (member === null || member === undefined) return; // 로그인 확인 전 — 새로고침 때 결제 카드가 잠깐 보이지 않게
     if (!member) return setState({ owned: false, balance: 0 });
     post('/api/wallet/owned', { item, input }).then((r) => setState(r.ok ? { owned: !!r.data.owned, balance: r.data.balance || 0 } : { owned: false, balance: 0 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -124,9 +124,8 @@ export default function Wallet() {
         </button>
       ) : (
         <>
-        {w?.smsOn ? (
-          null /* 결제 연락처는 마이페이지 '복채' 탭에서 관리 (2026-11-19 사용자 지시) */
-        ) : (
+        {/* 결제 연락처는 마이페이지 '복채' 탭에서 관리 (2026-11-19). 서버 응답 전에는 아무것도 안 그림 — 새로고침 때 예전 입력칸이 잠깐 보이던 문제 */}
+        {w && !w.error && w.enabled && !w.smsOn && (
           <>
             <label className="contact-label wallet-tel-label" htmlFor="wallet-tel">휴대폰 번호</label>
             <div className="wallet-tel-row">
@@ -143,7 +142,7 @@ export default function Wallet() {
           </span>
         </label>
         <button type="button" className="btn-primary wallet-pay" onClick={charge} disabled={busy || !ready || !agree || !phoneReady}>
-          {busy ? '처리 중…' : ready ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
+          {busy ? '처리 중…' : ready || !w ? `${PACKAGES.find((p) => p.id === pick).label} 결제하기` : '결제 준비중이에요'}
         </button>
         </>
       )}

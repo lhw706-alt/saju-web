@@ -27,7 +27,7 @@ const DAY_MASTER_IMAGE = {
 export default function Result() {
   const input = loadInput();
   const { auth, openLogin } = useOutletContext();
-  const member = !!auth.user;
+  const member = auth.ready ? !!auth.user : null; // null = 로그인 확인 전 (PaidGate 가 결제 카드를 잠깐 띄우지 않게)
   const [params] = useSearchParams();
   const life = params.get("v") === "life"; // 평생 사주 리포트 화면
   const match = params.get('v') === 'match'; // 궁합 화면
