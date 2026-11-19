@@ -13,6 +13,7 @@ import { PriceTag, CoinIcon, announceBalance } from '../components/BokchaLink.js
 import { WISH_OFFERS, WISH_OFFER_MAX, fmtCredits } from '../lib/wallet.js';
 import { askConfirm, showAlert } from '../components/ConfirmHost.jsx';
 import { createPortal } from 'react-dom';
+import { growAction } from '../lib/grow.js';
 
 // 3D 천동이 + 둘레를 도는 빛나는 별 (2026-11-14 사용자 지시). 불러오는 동안·WebGL 이 없으면 2D 그림
 const Mascot3D = lazy(() => import('../components/Mascot3D.jsx'));
@@ -255,6 +256,7 @@ export default function Wish() {
     const r = await api('/api/wish/cheer', { method: 'POST', body: JSON.stringify({ id: w.id }) });
     if (!r.ok) return notify(r.data.error || '응원하지 못했어요.', 'negative');
     trackEvent('wish_cheer');
+    growAction('cheer'); // 천동이 키우기 (2026-11-19)
     setFeed((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
     setTop((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));
     setPinned((f) => f.map((x) => (x.id === w.id ? { ...x, cheered: true, cheers: r.data.cheers } : x)));

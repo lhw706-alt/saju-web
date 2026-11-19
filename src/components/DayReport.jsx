@@ -12,6 +12,7 @@ import Markdown from './Markdown.jsx';
 import { FreshLoader } from './LifeReport.jsx';
 import { dosaFaceSvg } from '../brand/dosaArt.js';
 import { computeSaju } from '../lib/saju.js';
+import { growAction } from '../lib/grow.js';
 import { zodiacSvg } from '../brand/zodiacArt.js';
 
 const AXES = ['총운', '재물운', '연애운', '사업운', '건강운', '학업운'];
@@ -222,6 +223,9 @@ const ANIMAL_BRANCH = { 쥐: '子', 소: '丑', 호랑이: '寅', 토끼: '卯',
 export default function DayReport({ input, member = false, initial = 'today', pickedDate = null }) {
   const topic = DAY_TOPICS.some((t) => t.id === initial) ? initial : 'today';
   const label = DAY_TOPICS.find((t) => t.id === topic).label;
+  useEffect(() => {
+    if (member) growAction('fortune'); // 천동이 키우기 (2026-11-19)
+  }, [member]);
   const [view, setView] = useState('day'); // 위쪽 탭: 'day'(그날 운세) | 'tti'(띠 운세)
   const [picked, setPicked] = useState('');
   const [pickedFor, setPickedFor] = useState(() => (topic === 'date' && dayInRange(pickedDate) ? pickedDate : null));

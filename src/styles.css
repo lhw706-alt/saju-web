@@ -2732,3 +2732,125 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .am-ic { flex: none; color: rgba(226, 194, 122, 0.8); }
 .am-grid b { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.3; word-break: keep-all; }
 .am-grid button > :last-child:not(b) { flex: none; font-size: 13px; }
+
+/* ── 일주 캐릭터 /iljoo (2026-11-19 리텐션 ①) — 오행 색은 카드 한 장에만, 나머지는 얇은 줄·글자 계층 ── */
+.ij-eyebrow { margin: 8px 0 4px; font-size: 13px; color: var(--primary); }
+.ij-card { position: relative; margin: 22px 0 14px; padding: 22px 20px 6px; border-radius: 20px; background: linear-gradient(160deg, color-mix(in srgb, var(--el) 22%, #212225), #212225 70%); border: 1px solid color-mix(in srgb, var(--el) 30%, transparent); color: var(--text); }
+.ij-card-top { display: flex; align-items: center; justify-content: space-between; }
+.ij-hanja { font-family: 'ChosunSm', serif; font-size: 54px; line-height: 1; letter-spacing: 0.04em; color: color-mix(in srgb, var(--el) 70%, #fff); }
+.ij-art { width: 92px; height: 92px; }
+.ij-art svg { width: 100%; height: 100%; }
+.ij-kicker { margin: 14px 0 2px; font-size: 13px; color: rgba(194, 196, 200, 0.85); }
+.ij-nick { margin: 0 0 10px; font-family: 'NanumSquareRound', var(--font); font-weight: 400; font-size: 24px; line-height: 1.35; letter-spacing: var(--ls-title); }
+.ij-intro { margin: 0 0 12px; font-size: 15px; line-height: 1.7; color: var(--text-2); }
+.ij-lines { margin: 0; }
+.ij-lines > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.ij-lines dt { font-size: 13px; color: rgba(194, 196, 200, 0.8); padding-top: 2px; }
+.ij-lines dd { margin: 0; font-size: 15px; line-height: 1.6; }
+.ij-matches { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.ij-matches a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.3); text-underline-offset: 4px; }
+.ij-matches a:hover { color: var(--primary); }
+.ij-sub { margin: 0 0 10px; font-size: 14px; color: var(--text-2); }
+.ij-link { padding: 0; border: 0; background: none; color: var(--text-2); font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ij-link:hover { color: var(--text); }
+.ij-block { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+.ij-row { display: flex; align-items: baseline; justify-content: space-between; }
+.ij-h2 { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
+.ij-h3 { margin: 18px 0 10px; font-size: 15px; font-weight: 600; }
+.ij-count { font-size: 14px; color: var(--text-2); }
+.ij-form { display: grid; gap: 12px; }
+.ij-seg { display: inline-flex; gap: 16px; }
+.ij-seg button { padding: 4px 0; border: 0; border-bottom: 1.5px solid transparent; background: none; color: rgba(194, 196, 200, 0.8); font: inherit; font-size: 15px; cursor: pointer; }
+.ij-seg button.on { color: var(--text); border-bottom-color: var(--primary); }
+.ij-date { display: grid; grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.ij-date span { font-size: 14px; color: var(--text-2); }
+.ij-note { margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.7); }
+.ij-note a { color: var(--text-2); }
+.ij-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; margin: 0 0 14px; padding: 0; list-style: none; }
+.ij-grid a, .ij-grid span { display: grid; place-items: center; aspect-ratio: 1; border-radius: 8px; font-size: 12px; text-decoration: none; }
+.ij-grid span { color: rgba(194, 196, 200, 0.35); background: rgba(255, 255, 255, 0.03); }
+.ij-grid a { font-family: 'ChosunSm', serif; font-size: 14px; color: var(--el); background: color-mix(in srgb, var(--el) 16%, transparent); }
+.ij-grid a.is-mine { box-shadow: inset 0 0 0 1.5px var(--primary); }
+.ij-grid a.is-on { color: #fff; background: color-mix(in srgb, var(--el) 40%, transparent); }
+.ij-friend { margin-bottom: 8px; }
+@media (max-width: 380px) { .ij-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } .ij-hanja { font-size: 46px; } }
+
+/* ── 천동이 키우기 /my/grow (2026-11-19 리텐션 ②) ── */
+.grow-hero { position: relative; display: grid; place-items: center; height: 170px; margin: 4px 0 6px; }
+.grow-glow { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(243, 217, 142, 0.35), transparent 70%); transition: transform 0.6s ease; }
+.grow-hero.lv-2 .grow-glow { transform: scale(1.15); }
+.grow-hero.lv-3 .grow-glow { transform: scale(1.3); }
+.grow-hero.lv-4 .grow-glow { transform: scale(1.45); }
+.grow-hero.lv-5 .grow-glow { transform: scale(1.6); }
+.grow-hero.lv-6 .grow-glow { transform: scale(1.75); }
+.grow-hero.lv-7 .grow-glow { transform: scale(1.9); background: radial-gradient(circle, rgba(255, 236, 170, 0.5), transparent 70%); }
+.grow-hero.is-asleep .grow-glow { opacity: 0.25; }
+.grow-art { position: relative; width: 150px; animation: charm-float 3.6s ease-in-out infinite; }
+.grow-art svg { width: 100%; height: auto; display: block; }
+.grow-hero.is-asleep .grow-art { animation: none; filter: saturate(0.6) brightness(0.85); }
+.grow-kicker { margin: 0; font-size: 13px; color: var(--primary); text-align: center; }
+.grow-name { margin: 2px 0 6px; font-family: 'NanumSquareRound', var(--font); font-weight: 400; font-size: 22px; text-align: center; }
+.grow-say { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--text-2); text-align: center; }
+.grow-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.grow-bar span { display: block; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.6s ease; }
+.grow-meta { display: flex; justify-content: space-between; gap: 10px; margin: 8px 0 0; font-size: 13px; color: rgba(194, 196, 200, 0.8); }
+.grow-h3 { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 6px; font-size: 15px; font-weight: 600; }
+.grow-h3 small { font-size: 13px; font-weight: 400; color: var(--text-2); }
+.grow-list, .grow-levels { margin: 0; padding: 0; list-style: none; }
+.grow-list li { display: flex; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.grow-check { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.25); color: #1B1C1E; }
+.grow-list li.is-done .grow-check { border-color: var(--primary); background: var(--primary); }
+.grow-what { flex: 1; font-size: 15px; color: var(--text); text-decoration: none; }
+a.grow-what:hover { color: var(--primary); }
+.grow-list li.is-done .grow-what { color: rgba(194, 196, 200, 0.6); }
+.grow-xp { flex: none; font-size: 13px; color: var(--primary); }
+.grow-levels li { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; color: rgba(194, 196, 200, 0.6); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.grow-levels li span { flex: none; width: 18px; font-size: 13px; text-align: center; }
+.grow-levels li em { margin-left: auto; font-style: normal; font-size: 13px; color: rgba(226, 194, 122, 0.7); }
+.grow-levels li.is-past { color: var(--text-2); }
+.grow-levels li.is-now { color: var(--text); font-weight: 600; }
+.grow-levels li.is-now span { color: var(--primary); }
+.grow-note { margin: 18px 0 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.65); }
+
+/* ── 운세 일기 /my/diary (2026-11-19 리텐션 ③) ── */
+.diary-lead { margin: 6px 0 14px; font-size: 14px; line-height: 1.7; color: var(--text-2); }
+.diary-lead a { color: var(--text); }
+.diary-form { display: grid; gap: 8px; padding-bottom: 20px; border-bottom: 1px solid var(--line-soft); }
+.diary-days { display: flex; gap: 18px; margin-bottom: 4px; }
+.diary-days button, .diary-hits button { padding: 4px 0; border: 0; border-bottom: 1.5px solid transparent; background: none; color: rgba(194, 196, 200, 0.8); font: inherit; font-size: 15px; cursor: pointer; }
+.diary-days button small { font-size: 13px; color: rgba(194, 196, 200, 0.6); }
+.diary-days button.on, .diary-hits button.on { color: var(--text); border-bottom-color: var(--primary); }
+.diary-q { display: flex; justify-content: space-between; margin: 10px 0 2px; font-size: 14px; color: var(--text-2); }
+.diary-q small { font-size: 13px; color: rgba(194, 196, 200, 0.6); }
+.diary-moods { display: grid; }
+.diary-moods button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: none; color: var(--text-2); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.diary-moods button.on { color: var(--text); font-weight: 600; }
+.diary-moods button:not(.on) .diary-dot { opacity: 0.45; }
+.diary-hits { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.diary-dot { flex: none; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #8a8d93; }
+.diary-dot.m1, .m1 > .diary-dot { background: #6b9be6; }
+.diary-dot.m2, .m2 > .diary-dot { background: #8fa8c8; }
+.diary-dot.m3, .m3 > .diary-dot { background: #b8b6ad; }
+.diary-dot.m4, .m4 > .diary-dot { background: #e2c27a; }
+.diary-dot.m5, .m5 > .diary-dot { background: #f0a25a; }
+.diary-msg { margin: 4px 0 0; font-size: 14px; color: var(--text-2); }
+.diary-cal-head { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 22px 0 10px; }
+.diary-cal-head b { font-size: 15px; font-weight: 600; }
+.diary-cal-head button { width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--text-2); font-size: 20px; cursor: pointer; }
+.diary-cal-head button:disabled { opacity: 0.3; cursor: default; }
+.diary-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; text-align: center; }
+.diary-wd { padding: 4px 0; font-size: 12px; color: rgba(194, 196, 200, 0.55); }
+.diary-cell { display: grid; justify-items: center; align-content: start; gap: 3px; min-height: 40px; padding-top: 6px; font-size: 13px; color: var(--text-2); }
+.diary-cell.is-today { color: var(--primary); font-weight: 600; }
+.diary-list { margin: 16px 0 0; padding: 0; list-style: none; }
+.diary-list li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.diary-list-date { font-size: 14px; color: var(--text); }
+.diary-list-date small { display: block; font-size: 12px; color: rgba(194, 196, 200, 0.6); }
+.diary-list-body { font-size: 14px; line-height: 1.6; color: var(--text-2); }
+.diary-list-body .diary-dot { margin-right: 6px; }
+.diary-list-body small { display: block; margin-top: 2px; font-size: 14px; color: var(--text); }
+.diary-pattern { margin: 6px 0 0; padding: 0; list-style: none; }
+.diary-pattern li { display: grid; grid-template-columns: 82px minmax(0, 1fr) 30px; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; color: var(--text-2); }
+.diary-pbar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.diary-pbar span { display: block; height: 100%; background: var(--el); border-radius: 4px; }
+.diary-pval { text-align: right; font-size: 13px; color: var(--text); }

@@ -24,15 +24,18 @@ export const CONTENTS = [
   { id: 'tomorrow', group: 'fortune', title: '내일의 운세', desc: '내일을 미리 준비하는 조언', glyph: '明', el: 'fire', status: 'live', topic: 'tomorrow' },
   { id: 'date', group: 'fortune', title: '지정일 운세', desc: '중요한 날, 그날의 기운 미리 보기', glyph: '日', el: 'metal', status: 'live', topic: 'date' },
 
+  { id: 'diary', group: 'fortune', title: '운세 일기', desc: '하루를 한 줄로 남기고 나에게 맞는 일진 찾기', glyph: '記', el: 'wood', status: 'live', path: '/my/diary' }, // 2026-11-19 리텐션 ③
   { id: 'tti', group: 'fortune', title: '오늘의 띠별 운세', desc: '입력 없이 바로 보는 12띠 오늘 운세', glyph: '支', el: 'earth', status: 'live', path: '/tti' },
 
   { id: 'match', group: 'saju', title: '궁합', desc: '두 사람의 사주가 얼마나 잘 맞는지', glyph: '合', el: 'fire', status: 'live', topic: 'match' },
+  { id: 'iljoo', group: 'saju', title: '일주 캐릭터', desc: '태어난 날로 보는 60가지 나의 천동이', glyph: '日', el: 'fire', status: 'live', path: '/iljoo' }, // 2026-11-19 리텐션 ①
   { id: 'namematch', group: 'saju', title: '이름 궁합', desc: '이름 두 개로 알아보는 우리 사이의 케미', glyph: '緣', el: 'wood', status: 'live', path: '/name-match' },
 
   { id: 'byeolmaru', group: 'luck', title: '별마루', desc: '밤하늘 마당을 걸으며 별을 헤아리고 쉬어 가기', glyph: '星', el: 'water', status: 'live', path: '/byeolmaru', feature: true },
   { id: 'number', group: 'luck', title: '행운의 번호', desc: '천둥도사가 하루 한 번 뽑아 주는 6개의 숫자', glyph: '數', el: 'water', status: 'live', path: '/lucky' },
   { id: 'blessing', group: 'luck', title: '천생복덕운', desc: '타고난 복을 활용하는 방법', glyph: '福', el: 'earth', status: 'soon' },
   { id: 'moving', group: 'luck', title: '이사택일', desc: '한눈에 보는 이사하기 좋은 날', glyph: '移', el: 'wood', status: 'soon' },
+  { id: 'grow', group: 'luck', title: '천동이 키우기', desc: '매일 할 일로 기운을 모아 천동이를 깨워요', glyph: '育', el: 'earth', status: 'live', path: '/my/grow' }, // 2026-11-19 리텐션 ②
   { id: 'wish', group: 'luck', title: '소원 빌기', desc: '소원을 하늘에 띄우고 서로 응원하기', glyph: '願', el: 'water', status: 'live', path: '/wish' },
   { id: 'charm', group: 'luck', title: '행운의 부적', desc: '지금 나에게 필요한 행운을 펼치기', glyph: '符', el: 'fire', status: 'live', path: '/talisman' },
   { id: 'sal', group: 'luck', title: '살풀이', desc: '원국의 살(煞), 겁내지 않고 이해하기', glyph: '解', el: 'metal', status: 'hold' },

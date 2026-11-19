@@ -1180,6 +1180,10 @@ export default async (req, context) => {
       await deleteAllRecords(s.sub).catch(() => {}); // 유료 풀이 기록
       await getStore({ name: 'cosmetics', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 별마루 꾸미기
       await getStore({ name: 'phone-otp', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 결제 휴대폰 인증번호
+      await getStore({ name: 'grow', consistency: 'strong' }).delete(s.sub).catch(() => {}); // 천동이 키우기 (2026-11-19)
+      const diary = getStore({ name: 'diary', consistency: 'strong' }); // 운세 일기 (2026-11-19)
+      const { blobs: dk } = await diary.list({ prefix: `u/${s.sub}/` }).catch(() => ({ blobs: [] }));
+      await Promise.all(dk.map((b) => diary.delete(b.key)));
       // 행운의 번호 기록도 지움
       const lucky = getStore({ name: 'lucky', consistency: 'strong' });
       const { blobs: lk } = await lucky.list({ prefix: `u/${s.sub}/` });

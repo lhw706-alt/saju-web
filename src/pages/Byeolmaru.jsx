@@ -13,6 +13,7 @@ import { askConfirm } from '../components/ConfirmHost.jsx';
 import { computeSaju } from '../lib/saju.js';
 import { MANSIONS, GROUPS as M_GROUPS, loadMansions, unlockToday, todayOracle, drawOracle } from '../lib/byeolmaruCollect.js';
 import { startAmbient, stopAmbient, startPad, stopPad, bowBell, starTing, stopAll } from '../lib/bmSound.js';
+import { growAction } from '../lib/grow.js';
 
 const Byeolmaru3D = lazy(() => import('../components/Byeolmaru3D.jsx'));
 
@@ -418,6 +419,7 @@ export default function Byeolmaru() {
     const d = await r?.json().catch(() => ({}));
     if (!r?.ok) return notify?.(d?.error || '응원하지 못했어요.');
     trackEvent('plaza_wish_cheer');
+    growAction('cheer');
     setCard({ kind: 'wish', wish: { ...w, cheered: true, cheers: d.cheers ?? w.cheers + 1 } });
   };
 
@@ -454,6 +456,7 @@ export default function Byeolmaru() {
     else if (a.id === 'star') {
       if (stars >= STAR_GOAL) return notify?.('오늘의 별 108개를 모두 헤아렸어요. 내일 또 와요.');
       api.star();
+      if (auth?.user) growAction('star'); // 천동이 키우기 (2026-11-19)
       if (prefs.sound) starTing();
       const n = stars + 1;
       setStars(n);

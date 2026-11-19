@@ -16,6 +16,7 @@ import Terms from './pages/Terms.jsx';
 import NewYear from './pages/NewYear.jsx';
 import Dict from './pages/Dict.jsx';
 import Tti from './pages/Tti.jsx';
+import Iljoo from './pages/Iljoo.jsx';
 import NameMatch from './pages/NameMatch.jsx';
 import Wish from './pages/Wish.jsx';
 import Byeolmaru from './pages/Byeolmaru.jsx';
@@ -47,6 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/newyear" element={<NewYear />} />
           <Route path="/dict/:slug?" element={<Dict />} />
           <Route path="/tti" element={<Tti />} />
+          <Route path="/iljoo" element={<Iljoo />} />
           <Route path="/name-match" element={<NameMatch />} />
           <Route path="/wish" element={<Wish />} />
           <Route path="/byeolmaru" element={<Byeolmaru />} />

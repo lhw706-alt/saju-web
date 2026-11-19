@@ -10,6 +10,7 @@ import UserMenu from './UserMenu.jsx';
 import BokchaLink from './BokchaLink.jsx';
 import AllMenu from './AllMenu.jsx';
 import BottomNav from './BottomNav.jsx';
+import { growAction } from '../lib/grow.js';
 import { syncLocalToAccount } from '../lib/history.js';
 import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
@@ -88,6 +89,19 @@ export default function Layout() {
     } catch {}
     askLogin('천둥도사에게 문의를 남기려면 로그인이 필요해요.');
   };
+  // 천동이 키우기 (2026-11-19): 들르기 + 단계가 오르면 알림
+  useEffect(() => {
+    if (auth.user) growAction('visit');
+  }, [auth.user]);
+  useEffect(() => {
+    const on = (e) => {
+      const d = e.detail;
+      if (d?.levelUp) showNotice(`천동이가 '${d.name}'(으)로 자랐어요!${d.reward ? ` ${d.reward}금전을 넣어 드렸어요.` : ''}`);
+    };
+    window.addEventListener('saju:grow', on);
+    return () => window.removeEventListener('saju:grow', on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (!auth.user) return;
     // 'fortune'(카카오 공유하려다 로그인)은 FortuneFab 이 처리

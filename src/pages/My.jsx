@@ -8,6 +8,8 @@ import CharmBook from './CharmBook.jsx';
 import BadgeBoard from '../components/BadgeBoard.jsx';
 import PaidRecords from '../components/PaidRecords.jsx';
 import WalletHistory from '../components/WalletHistory.jsx';
+import GrowBoard from '../components/GrowBoard.jsx';
+import DiaryBoard from '../components/DiaryBoard.jsx';
 import PhoneVerifyModal from '../components/PhoneVerifyModal.jsx';
 import ChartTable from '../components/ChartTable.jsx';
 import { GlossaryProvider, Help } from '../components/Glossary.jsx';
@@ -23,6 +25,8 @@ import SavedPresets from '../components/SavedPresets.jsx';
 // 마이페이지 탭 (주소 /my, /my/saju, /my/charms, /my/support). 풀이 내역 탭은 2026-11-13 사용자 지시로 뺌 (풀이 기억하기 기능은 유지). 세로로 길어지지 않게 기능별로 나눔 (2026-11-13)
 const MY_TABS = [
   { id: 'account', label: '계정 정보', to: '/my' },
+  { id: 'grow', label: '내 천동이', to: '/my/grow' }, // 2026-11-19 리텐션 ②
+  { id: 'diary', label: '운세 일기', to: '/my/diary' }, // 2026-11-19 리텐션 ③
   { id: 'saju', label: '내 사주 정보', to: '/my/saju' },
   { id: 'records', label: '풀이 기록', to: '/my/records' },
   { id: 'badges', label: '내 배지', to: '/my/badges' },
@@ -449,6 +453,18 @@ export default function My() {
         <SavedPresets key={presets.length} mine={null} manage />
       </div>
         </>
+      )}
+
+      {tab === 'grow' && (
+      <div className="my-sec card">
+        <GrowBoard />
+      </div>
+      )}
+
+      {tab === 'diary' && (
+      <div className="my-sec card">
+        <DiaryBoard />
+      </div>
       )}
 
       {tab === 'wallet' && (
