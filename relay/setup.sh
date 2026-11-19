@@ -15,7 +15,7 @@ sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg /etc/apt/sou
 sudo apt-get update -y
 sudo apt-get install -y caddy
 
-NODE_MAJOR=$(node -v | sed "s/v([0-9]*).*//")
+NODE_MAJOR=$(node -p "process.versions.node.split('.')[0]")
 if [ "$NODE_MAJOR" -lt 18 ]; then echo "Node.js 18 이상이 필요해요(지금 $(node -v)). Ubuntu 24.04 로 서버를 만들어 주세요."; exit 1; fi
 
 sudo mkdir -p /opt/sms-relay
