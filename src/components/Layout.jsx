@@ -9,6 +9,7 @@ import LoginModal from './LoginModal.jsx';
 import UserMenu from './UserMenu.jsx';
 import BokchaLink from './BokchaLink.jsx';
 import AllMenu from './AllMenu.jsx';
+import BottomNav from './BottomNav.jsx';
 import { syncLocalToAccount } from '../lib/history.js';
 import { syncBook } from '../lib/fortunes.js';
 import { clearInput } from '../lib/storage.js';
@@ -308,6 +309,7 @@ export default function Layout() {
         </p>
       </footer>
       <ConfirmHost />
+      <BottomNav onAll={() => setAllMenu(true)} allOpen={allMenu} />
       {allMenu && <AllMenu onClose={() => setAllMenu(false)} notify={showNotice} />}
       <ContactModal
         open={contact}

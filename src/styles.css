@@ -2695,3 +2695,37 @@ body:has(.bm) .header, body:has(.bm) .footer, body:has(.bm) .sky, body:has(.bm) 
 .login-age { margin: 4px 0 2px; }
 /* 로그인 상태 확인 전 머리 오른쪽 자리 (2026-11-19 새로고침 깜빡임 방지) */
 .header-auth-wait { display: inline-block; width: 56px; height: 36px; }
+/* 전체 메뉴 묶음 탭 (2026-11-19 사용자 지시: 메뉴가 많아 구별이 안 됨 → 한 묶음씩) */
+.all-menu-top { position: sticky; top: 0; z-index: 1; background: #212225; padding-bottom: 6px; }
+.all-menu .all-menu-top .contact-head { position: static; padding-bottom: 12px; }
+.all-menu-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+.all-menu-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 38px; border: 0; border-radius: 9px; background: none; color: rgba(206, 208, 212, 0.86); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.all-menu-tabs button span { font-size: 13px; color: rgba(194, 196, 200, 0.6); }
+.all-menu-tabs button.on { background: #2E2F33; color: var(--text); font-weight: 600; }
+.all-menu-tabs button.on span { color: var(--primary); }
+.all-menu .all-menu-group { margin-top: 4px; }
+.all-menu .all-menu-group ul { border-top: 0; }
+.all-menu-soon { margin: 14px 2px 0; font-size: 13px; line-height: 1.6; color: rgba(194, 196, 200, 0.7); }
+.all-menu-soon span { margin-right: 8px; padding: 1px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); color: rgba(206, 208, 212, 0.86); font-size: 12px; }
+
+/* 휴대폰 하단 내비게이션 (2026-11-19 사용자 지시) — 559px 이하만. 그때 헤더 아래 메뉴 줄은 숨겨 머리가 한 줄이 됨 */
+.bnav { display: none; }
+@media (max-width: 559px) {
+  .header .nav { display: none; }
+  .header { flex-wrap: nowrap; padding-top: 0; height: 60px; }
+  .bnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; /* 부적(60) 위, 확인 창(80)·시트(110) 아래 */ display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); background: rgba(27, 28, 30, 0.94); border-top: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .bnav a, .bnav button { display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 50px; padding: 0; border: 0; border-radius: 12px; background: none; color: rgba(194, 196, 200, 0.82); font: inherit; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .bnav a:active, .bnav button:active { background: rgba(255, 255, 255, 0.05); }
+  .bnav .on { color: var(--text); }
+  .bnav .on .bnav-glyph { color: var(--primary); }
+  .bnav-ic { width: 22px; height: 22px; }
+  .bnav-glyph { display: grid; place-items: center; font-family: 'ChosunSm', serif; font-size: 19px; line-height: 1; color: #D9CFB8; }
+  .bnav-label { font-size: 13px; font-weight: 500; letter-spacing: var(--ls-body); }
+  .bnav-bm { color: #EBCB86 !important; }
+  .bnav-bm .bnav-ic { color: #F3D98E; filter: drop-shadow(0 0 4px rgba(243, 217, 142, 0.7)); }
+  /* 하단 메뉴에 가리지 않게 */
+  .footer { padding-bottom: calc(40px + 64px + env(safe-area-inset-bottom)); }
+  .fortune-fab { bottom: calc(16px + 64px + env(safe-area-inset-bottom)); }
+  .toast-wrap { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .book-bottom { bottom: calc(62px + env(safe-area-inset-bottom)); }
+}
