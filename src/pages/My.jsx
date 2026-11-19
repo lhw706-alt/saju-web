@@ -8,6 +8,7 @@ import CharmBook from './CharmBook.jsx';
 import BadgeBoard from '../components/BadgeBoard.jsx';
 import PaidRecords from '../components/PaidRecords.jsx';
 import WalletHistory from '../components/WalletHistory.jsx';
+import PhoneVerifyModal from '../components/PhoneVerifyModal.jsx';
 import ChartTable from '../components/ChartTable.jsx';
 import { GlossaryProvider, Help } from '../components/Glossary.jsx';
 import { computeSaju, ELEMENT_KO } from '../lib/saju.js';
@@ -182,6 +183,8 @@ export default function My() {
     setPwDone('비밀번호를 바꿨어요.');
   };
   const [phoneMsg, setPhoneMsg] = useState('');
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const [phoneNow, setPhoneNow] = useState(undefined); // 인증·변경 직후 보여 줄 가린 번호
   const pwMsg = (f) => (pwErr.field === f ? pwErr.text : '');
 
   if (!auth.ready) return <section className="my" />;
@@ -330,12 +333,12 @@ export default function My() {
             {pwDone}
           </p>
         )}
-        {/* 휴대폰 본인인증: 가입 때는 필요 없고, 나중에 코인 결제 전에 받음. 인증 업체 연결 전이라 지금은 '준비중' */}
+        {/* 휴대폰 번호 (2026-11-19): 결제할 때 쓰는 번호 — 문자 인증했거나 관리자가 등록한 번호(/api/auth/me 의 가린 번호). 인증·변경은 PhoneVerifyModal */}
         <div className="my-row">
           <span className="my-row-label">휴대폰 번호</span>
-          <span className={`my-row-value${p.phone ? '' : ' my-muted'}`}>{p.phone || '인증 전'}</span>
-          <button type="button" className="my-set" onClick={() => setPhoneMsg('휴대폰 본인인증은 준비중이에요. 결제 기능과 함께 열릴 예정이에요.')}>
-            {p.phone ? '변경' : '인증하기'}
+          <span className={`my-row-value${(phoneNow ?? p.phone) ? '' : ' my-muted'}`}>{(phoneNow ?? p.phone) || '인증 전'}</span>
+          <button type="button" className="my-set" onClick={() => { setPhoneMsg(''); setPhoneOpen(true); }}>
+            {(phoneNow ?? p.phone) ? '변경' : '인증하기'}
           </button>
         </div>
         {phoneMsg && (
@@ -343,6 +346,16 @@ export default function My() {
             {phoneMsg}
           </p>
         )}
+        <PhoneVerifyModal
+          open={phoneOpen}
+          mode="manage"
+          onClose={() => setPhoneOpen(false)}
+          onDone={(ph) => {
+            setPhoneNow(ph);
+            setPhoneOpen(false);
+            setPhoneMsg('휴대폰 번호를 인증했어요. 결제할 때 이 번호를 써요.');
+          }}
+        />
       </div>
 
       {/* 로그아웃은 상단 닉네임 메뉴로 옮김 */}

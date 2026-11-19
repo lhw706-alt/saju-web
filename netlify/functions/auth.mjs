@@ -319,7 +319,7 @@ export default async (req, context) => {
     return json({
       enabled,
       emailEnabled: mailOn,
-      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ageOk, ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null, ...(profile.email ? { email: profile.email } : {}) } : {}) },
+      user: { nick: s.nick || '', provider: String(s.sub).startsWith('e_') ? 'email' : 'kakao', ageOk, ...(profile ? { joinedAt: profile.joinedAt, lastLoginAt: profile.lastLoginAt, loginCount: profile.loginCount, birth: profile.birth || null, phone: profile.phone ? `${profile.phone.slice(0, 3)}-****-${profile.phone.slice(-4)}` : null, ...(profile.email ? { email: profile.email } : {}) } : {}) },
     });
   }
 
