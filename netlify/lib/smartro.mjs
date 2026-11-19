@@ -45,6 +45,6 @@ export async function approve(mode, Tid, TrAuthKey) {
 
 // 성공 결과 코드 — 통합코드조회 https://manual.smartropay.co.kr/code.do (2026-11-19 카카오페이 KP00 을 실패로 본 문제 고침)
 //   카드·애플페이 3001, 계좌이체 4000, 휴대폰 A000, 카카오페이 KP00, 네이버페이 NP00, 페이코 PP00, L.PAY LP00, PINPAY PI00,
-//   삼성페이·토스페이·스마일페이·티머니페이 0000. 가상계좌 발급(4100)은 입금 전이라 성공으로 보지 않음
+//   삼성페이·토스페이·스마일페이·티머니페이 0000. 가상계좌는 쓰지 않음(2026-11-19 사용자 결정 — 카드·간편결제만)
 //   (SignValue·주문 금액·Mid 를 따로 확인하므로 0000 을 넣어도 안전)
 export const PAID_CODES = new Set(['3001', '4000', 'A000', 'KP00', 'NP00', 'PP00', 'LP00', 'PI00', '0000']);

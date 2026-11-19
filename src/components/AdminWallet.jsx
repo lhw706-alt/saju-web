@@ -35,7 +35,7 @@ export default function AdminWallet({ userId, name, pw, phone, onBalance, onPhon
     const ok = await askConfirm({
       title: `${won(c.refundable)} 환불 처리할까요?`,
       message: `${day(c.at)} ${won(c.won)} 충전(${c.credits}금전)에서 ${c.used}금전을 썼어요. 남은 ${c.left}금전을 회원 복채에서 빼고, 이 충전을 환불 완료로 표시해요.`,
-      note: '결제 취소(돈 돌려주기)는 스마트로 가맹점 관리자에서 직접 해 주세요. 카드·간편결제는 이 금액만큼 부분 취소, 가상계좌는 회원 본인 계좌로 송금이에요.',
+      note: '결제 취소(돈 돌려주기)는 스마트로 가맹점 관리자에서 직접 해 주세요. 카드·간편결제는 이 금액만큼 부분 취소, 부분 취소가 안 되면 회원 본인 계좌로 송금이에요.',
       ok: '환불 처리',
       cancel: '취소',
     });
