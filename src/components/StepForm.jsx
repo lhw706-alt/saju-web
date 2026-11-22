@@ -1,10 +1,51 @@
 // 생년월일시를 한 화면에 하나씩 순서대로 묻는 입력 (성별 → 생년월일 → 태어난 시각 → 태어난 곳).
 // 입력값은 저장하지 않고 onSubmit 으로만 넘긴다 (Start.jsx 가 sessionStorage 에 잠시 둠).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CITIES, computeSaju, SajuInputError } from '../lib/saju.js';
 import Select from './Select.jsx';
 import { loadPresets, savePreset } from '../lib/storage.js';
 import SavedPresets from './SavedPresets.jsx';
+import { iljooInfo } from '../lib/iljoo.js';
+
+// 입력하는 동안 여덟 글자가 하나씩 채워지는 미리보기 (2026-11-22 사용자 지시 — 점진적 정보 제공)
+// 생년월일을 넣으면 년·월·일 기둥, 시각을 넣으면 시 기둥이 열림. 순서는 만세력처럼 시 · 일 · 월 · 년.
+const PEEK_COLS = [['hour', '시'], ['day', '일'], ['month', '월'], ['year', '년']];
+function PeekStrip({ chart, step }) {
+  const day = chart.pillars.day;
+  const ij = iljooInfo(day.stem + day.branch);
+  const msg =
+    step === 2
+      ? `${chart.animal}띠, ${ij.ko} 일주예요. ‘${ij.nickname}’ 같은 결이 보여요. 시각을 알려 주면 마지막 두 글자가 열려요.`
+      : chart.pillars.hour
+        ? '여덟 글자가 모두 모였어요. 태어난 곳으로 실제 해의 시각을 맞추면 끝나요.'
+        : '여섯 글자로 풀어 드릴게요. 태어난 곳만 남았어요.';
+  return (
+    <div className="peek" aria-live="polite">
+      <div className="peek-cols" aria-hidden="true">
+        {PEEK_COLS.map(([k, l]) => {
+          const p = chart.pillars[k];
+          return (
+            <div key={k} className={`peek-col${k === 'day' ? ' is-day' : ''}`}>
+              <span className="peek-label">{l}</span>
+              {p ? (
+                <>
+                  <span className={`peek-g el-${p.stemElement}`}>{p.stem}</span>
+                  <span className={`peek-g el-${p.branchElement}`}>{p.branch}</span>
+                </>
+              ) : (
+                <>
+                  <span className="peek-g is-empty">?</span>
+                  <span className="peek-g is-empty">?</span>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="peek-msg">{msg}</p>
+    </div>
+  );
+}
 
 // 저장된 정보 한 줄: 큰 글씨(생년월일·성별) / 작은 글씨(양음력·시각·지역) — src/lib/presetText.js
 
@@ -17,12 +58,21 @@ const QUESTIONS = ['성별을 골라 주세요', '언제 태어났나요?', '몇
 
 // showSaved=false: 저장된 정보 목록 숨김 (마이페이지 등록용), submitLabel: 마지막 버튼 글자
 // mine: 마이페이지에 등록한 내 사주 정보(로그인 회원) — 불러오기 목록 맨 위에 '내 정보'로 미리 선택해 둠
-export default function StepForm({ initial, onSubmit, showSaved = true, submitLabel = '사주 펼쳐 보기', mine = null }) {
+export default function StepForm({ initial, onSubmit, showSaved = true, submitLabel = '사주 펼쳐 보기', mine = null, preview = false }) {
   const [f, setF] = useState({ ...EMPTY, ...initial });
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [minuteError, setMinuteError] = useState(''); // 분 칸 바로 아래에 보이는 안내
   const yearRef = useRef(null);
+  // 미리보기용 계산 (단계 2부터, 틀린 값이면 숨김) — 저장·전송 없음
+  const peek = useMemo(() => {
+    if (!preview || step < 2) return null;
+    try {
+      return computeSaju(step === 2 ? { ...f, timeKnown: false } : f);
+    } catch {
+      return null;
+    }
+  }, [preview, step, f]);
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e?.target ? (e.target.type === 'checkbox' ? e.target.checked : e.target.value) : e }));
 
   useEffect(() => {
@@ -92,6 +142,8 @@ export default function StepForm({ initial, onSubmit, showSaved = true, submitLa
       <div className="step" key={step}>
 
         {step === 0 && showSaved && (presets.length > 0 || mine) && <SavedPresets mine={mine} onPick={applyPreset} />}
+
+        {peek && <PeekStrip chart={peek} step={step} />}
 
         <h2 className="step-q">{QUESTIONS[step]}</h2>
 

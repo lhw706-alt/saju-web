@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import StepForm from '../components/StepForm.jsx';
+import StartIntro from '../components/StartIntro.jsx';
+import { introOf } from '../lib/intros.js';
 import { saveInput, savePartner, peekTopic, markFresh } from '../lib/storage.js';
 import { topicById } from '../lib/topics.js';
 import { trackEvent } from '../lib/analytics.js';
@@ -17,6 +19,10 @@ export default function Start() {
   const navigate = useNavigate();
   const topic = topicById(peekTopic());
   const isMatch = topic?.id === 'match';
+  // 입력 전 소개(두루마리 + 예시 풀이) — 2026-11-22 사용자 지시. [시작]을 누르면 ?go=1 (뒤로 가기로 소개에 돌아옴)
+  const [params] = useSearchParams();
+  const intro = introOf(topic?.id);
+  const showIntro = !!intro && params.get('go') !== '1';
   // 로그인 회원이 마이페이지에 등록한 내 사주 정보 → 입력 첫 화면에서 '내 정보'로 미리 선택
   const { auth, openLogin, notify } = useOutletContext();
   const [mine, setMine] = useState(null);
@@ -94,6 +100,21 @@ export default function Start() {
     navigate(t === 'overall' ? '/result?v=life' : t === 'newyear' ? '/result?v=newyear' : t === 'free' ? '/result?v=free' : isDayTopic(t) ? `/result?v=day&t=${t}${isPick ? `&d=${day}` : ''}` : '/result');
   };
 
+  if (showIntro) {
+    return (
+      <section className="start start-intro">
+        <StartIntro
+          intro={intro}
+          onStart={() => {
+            trackEvent('intro_start', { topic: topic.id });
+            navigate('/start?go=1');
+            window.scrollTo(0, 0);
+          }}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className="start">
       <h1 className="start-title">{topic ? (topic.id === 'overall' ? '평생 사주' : topic.label) : '내 사주 보기'}</h1>
@@ -110,7 +131,7 @@ export default function Start() {
           <p className="start-lead">{me ? '이제 궁합을 볼 상대의 생년월일시를 알려 주세요.' : '먼저 내 생년월일시를 알려 주세요.'}</p>
           {me ? (
             <>
-              <StepForm key="partner" onSubmit={onSubmit} submitLabel="궁합 보기" />
+              <StepForm key="partner" preview onSubmit={onSubmit} submitLabel="궁합 보기" />
               <div className="invite-box card">
                 {invite ? (
                   <>
@@ -140,7 +161,7 @@ export default function Start() {
               </button>
             </>
           ) : (
-            <StepForm key="me" mine={mine} onSubmit={onSubmit} submitLabel="다음: 상대 정보" />
+            <StepForm key="me" preview mine={mine} onSubmit={onSubmit} submitLabel="다음: 상대 정보" />
           )}
         </>
       ) : (
@@ -173,7 +194,7 @@ export default function Start() {
               )}
             </div>
           )}
-          <StepForm mine={mine} onSubmit={onSubmit} />
+          <StepForm preview mine={mine} onSubmit={onSubmit} />
         </>
       )}
     </section>
