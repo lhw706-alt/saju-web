@@ -9,10 +9,48 @@ import { CONTENTS, GROUPS } from '../src/lib/contents.js';
 import { SITE } from '../src/site.js';
 import { NEXT_YEAR } from '../src/lib/topics.js';
 import { GLOSSARY, DICT_SLUG, dictShort } from '../src/lib/glossary.js';
+import { PRICES, PACKAGES, UNIT } from '../src/lib/wallet.js';
+import { build } from 'esbuild';
+import { fileURLToPath } from 'node:url';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
+
+// 결제대행사 심사 자동 검사기(포트원 등)는 자바스크립트를 실행하지 않고 HTML 만 읽는다 (2026-11-23).
+// → 모든 미리 만든 HTML 에 사업자 정보 푸터, 메인·충전 화면에 가격표, 약관·처리방침은 화면 컴포넌트를 그대로 그린 전문을 넣는다.
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const B = SITE.business;
+const FOOTER = `<footer><p><a href="/terms">이용약관</a> · <a href="/privacy">개인정보 처리방침</a> · <a href="/terms#refund">환불 정책</a></p>
+<p>운영 ${esc(B.name)} · 대표 ${esc(B.ceo)} · 사업자등록번호 ${esc(B.regNo)} · 통신판매업 신고 ${esc(B.mailOrderNo)} · 주소 ${esc(B.address)} · 전화 ${esc(B.phone)} · 이메일 ${esc(B.email)} · 호스팅 제공자 ${esc(B.hosting)}</p></footer>`;
+const PRICE_HTML = `<h2>유료 콘텐츠 가격</h2><p>유료 콘텐츠는 충전식 단위 '${UNIT}'(1${UNIT} = 100원)으로 열어요. 그 밖의 풀이는 무료예요.</p>
+<ul>${Object.values(PRICES).map((x) => `<li>${esc(x.label)}: ${x.credits}${UNIT} (${(x.credits * 100).toLocaleString('ko-KR')}원)</li>`).join('')}</ul>
+<h2>${UNIT} 충전 금액</h2><ul>${PACKAGES.map((k) => `<li>${k.label} 결제 → ${k.credits}${UNIT}${k.extra ? ` (${k.base}${UNIT} + ${k.extra}${UNIT} 더)` : ''}</li>`).join('')}</ul>
+<p>결제는 신용카드·간편결제로 해요. 청약철회와 환불은 <a href="/terms#refund">이용약관 제7조의3(환불 정책)</a>을 따라요: 쓰지 않은 ${UNIT}은 결제일부터 7일 안에 청약철회할 수 있고, 7일이 지난 뒤에도 남은 ${UNIT}은 10%를 빼고 환불을 요청할 수 있어요.</p>`;
+
+// 약관·처리방침 전문: 화면 컴포넌트를 빌드 때 HTML 로 그림 (문구를 두 곳에 따로 두지 않게)
+// esbuild 로 컴포넌트만 묶고(react·라우터는 밖에 둠) node_modules/.cache 에 써서 같은 React 한 벌로 그린다.
+const CACHE = new URL('../node_modules/.cache/prerender/', import.meta.url);
+await build({
+  entryPoints: ['src/pages/Terms.jsx', 'src/pages/Privacy.jsx'],
+  bundle: true, format: 'esm', platform: 'node', jsx: 'automatic', logLevel: 'error',
+  external: ['react', 'react-dom', 'react-router-dom', 'react/jsx-runtime'],
+  outdir: fileURLToPath(CACHE),
+});
+const page = async (name) => {
+  const C = (await import(new URL(`${name}.js`, CACHE).href)).default;
+  const warn = console.error;
+  console.error = (m, ...x) => (String(m).includes('useLayoutEffect') ? null : warn(m, ...x)); // 라우터의 서버 렌더 경고는 무시해도 됨
+  try {
+    return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(C)));
+  } finally {
+    console.error = warn;
+  }
+};
+const TERMS_HTML = await page('Terms');
+const PRIVACY_HTML = await page('Privacy');
 
 const DIST = new URL('../dist/', import.meta.url);
 const base = readFileSync(new URL('index.html', DIST), 'utf8');
-const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // 받침이 있으면 '이란', 없으면 '란' (일간이란 / 지지란)
 const ran = (w) => ((w.charCodeAt(w.length - 1) - 0xac00) % 28 ? '이란' : '란');
 
@@ -46,7 +84,7 @@ const ROUTES = [
     title: `${SITE.name} — 무료 사주 풀이·만세력·신년운세`,
     desc: '생년월일시로 사주 원국·오행·대운을 계산하고, 영험한 천둥도사가 근거와 함께 풀어 드려요. 오늘·내일 운세, 띠 운세, 행운의 번호까지 무료예요.',
     body: `<h1>${SITE.name} — 궁금한 건 천둥도사에게 물어봐요</h1>
-<p>생년월일시만 알려 주면 만세력으로 사주 원국(여덟 글자)과 오행, 대운을 계산하고, 천둥도사가 근거와 함께 풀어 드려요. 회원 가입 없이도 무료로 볼 수 있어요.</p>${homeList}`,
+<p>생년월일시만 알려 주면 만세력으로 사주 원국(여덟 글자)과 오행, 대운을 계산하고, 천둥도사가 근거와 함께 풀어 드려요. 회원 가입 없이도 무료로 볼 수 있어요.</p>${homeList}${PRICE_HTML}`,
   },
   {
     path: '/start',
@@ -126,13 +164,13 @@ const ROUTES = [
     path: '/terms',
     title: `이용약관 | ${SITE.name}`,
     desc: `${SITE.name} 서비스 이용약관이에요. 서비스 내용, 풀이의 성격, 회원 가입과 탈퇴, 이용자의 의무를 안내해요.`,
-    body: `<h1>이용약관</h1><p>${SITE.name} 서비스를 이용하는 데 필요한 서비스와 이용자의 권리, 의무, 책임을 정해요. 시행일: 2026년 11월 14일.</p>`,
+    body: TERMS_HTML,
   },
   {
     path: '/privacy',
     title: `개인정보 처리방침 | ${SITE.name}`,
     desc: `${SITE.name}이(가) 처리하는 개인정보와 보관 기간, 위탁 업체, 이용자의 권리를 안내해요.`,
-    body: `<h1>개인정보 처리방침</h1><p>${SITE.name}은(는) 회원으로 가입하지 않아도 사주·운세 풀이를 볼 수 있고, 사주 풀이에는 이름과 연락처를 받지 않아요. 시행일: 2026년 11월 14일.</p>`,
+    body: PRIVACY_HTML,
   },
   // 사주 용어 사전: 목록 + 용어마다 한 페이지 ("일간이란?" 같은 검색용)
   {
@@ -153,7 +191,7 @@ const ROUTES = [
   // 개인 결과·계정 화면: 검색에 올리지 않음 (robots.txt 와 함께)
   { path: '/result', title: `사주 풀이 결과 | ${SITE.name}`, noindex: true },
   { path: '/my', title: `마이페이지 | ${SITE.name}`, noindex: true },
-  { path: '/wallet', title: `복채 충전 | ${SITE.name}`, noindex: true },
+  { path: '/wallet', title: `복채 충전 | ${SITE.name}`, noindex: true, body: `<h1>복채 충전</h1>${PRICE_HTML}` },
   { path: '/admin', title: `관리자 | ${SITE.name}`, noindex: true },
   { path: '/reset', title: `비밀번호 재설정 | ${SITE.name}`, noindex: true },
 ];
@@ -182,7 +220,7 @@ function render(r) {
       : '',
   ].filter(Boolean);
   html = html.replace('</head>', `    ${extra.join('\n    ')}\n  </head>`);
-  if (r.body) html = html.replace('<div id="root"></div>', `<div id="root"><main class="prerender">${r.body}${NAV}</main></div>`);
+  html = html.replace('<div id="root"></div>', `<div id="root"><main class="prerender">${r.body || `<h1>${esc(r.title)}</h1>`}${NAV}${FOOTER}</main></div>`);
   return html;
 }
 
